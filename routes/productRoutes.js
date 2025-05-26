@@ -1,29 +1,25 @@
 const express = require('express');
 const router = express.Router();
 const Product = require('../models/Product');
-const auth = require('../middleware/authMiddleware');
+const authMiddleware = require('../middleware/authMiddleware'); // if using auth
 
-// All routes protected by auth
-router.get('/', auth, async (req, res) => {
-  const products = await Product.find();
-  res.json(products);
-});
+// Create new product
+router.post('/add', authMiddleware, async (req, res) => {
+  try {
+    const { name, quantity, expiryDate } = req.body;
 
-router.post('/', auth, async (req, res) => {
-  const { name, expiryDate, quantity } = req.body;
-  const newProduct = new Product({ name, expiryDate, quantity });
-  await newProduct.save();
-  res.status(201).json(newProduct);
-});
+    const newProduct = new Product({
+      name,
+      quantity,
+      expiryDate,
+      userId: req.user.id,
+    });
 
-router.delete('/:id', auth, async (req, res) => {
-  await Product.findByIdAndDelete(req.params.id);
-  res.json({ message: 'Product deleted' });
-});
-
-router.put('/:id', auth, async (req, res) => {
-  const updated = await Product.findByIdAndUpdate(req.params.id, req.body, { new: true });
-  res.json(updated);
+    await newProduct.save();
+    res.status(201).json({ message: 'Product added successfully', product: newProduct });
+  } catch (err) {
+    res.status(500).json({ error: 'Something went wrong' });
+  }
 });
 
 module.exports = router;
