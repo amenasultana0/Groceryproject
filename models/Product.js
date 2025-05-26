@@ -9,12 +9,11 @@ const productSchema = new mongoose.Schema({
     type: Date,
     required: true,
   },
-  quantity: {
-    type: Number,
+  user: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
     required: true,
-  }
-}, {
-  timestamps: true
+  },
 });
 
 module.exports = mongoose.model('Product', productSchema);
