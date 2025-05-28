@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard | GroceryTrack</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/dashboard.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="dashboard-page">
+    <nav class="sidebar">
+        <div class="sidebar-header">
+            <a href="dashboard.html" class="logo">
+                <i class="fas fa-leaf"></i>
+                <span>GroceryTrack</span>
+            </a>
+            <button class="mobile-close">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+
+        <div class="nav-links">
+            <a href="dashboard.html" class="active">
+                <i class="fas fa-home"></i>
+                <span>Dashboard</span>
+            </a>
+            <a href="inventory.html">
+                <i class="fas fa-box"></i>
+                <span>Inventory</span>
+            </a>
+            <a href="expiring.html">
+                <i class="fas fa-clock"></i>
+                <span>Expiring Soon</span>
+            </a>
+            <a href="categories.html">
+                <i class="fas fa-tags"></i>
+                <span>Categories</span>
+            </a>
+            <a href="reports.html">
+                <i class="fas fa-chart-bar"></i>
+                <span>Reports</span>
+            </a>
+        </div>
+
+        <div class="user-section">
+            <div class="user-info">
+                <img src="https://ui-avatars.com/api/?name=John+Doe&background=0D6EFD&color=fff" alt="User Avatar">
+                <div>
+                    <h4>John Doe</h4>
+                    <p>Pro Plan</p>
+                </div>
+            </div>
+            <div class="user-actions">
+                <a href="settings.html" class="icon-btn" title="Settings">
+                    <i class="fas fa-cog"></i>
+                </a>
+                <button class="icon-btn" title="Logout">
+                    <i class="fas fa-sign-out-alt"></i>
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <main class="main-content">
+        <header class="top-bar">
+            <button class="mobile-menu">
+                <i class="fas fa-bars"></i>
+            </button>
+            
+            <div class="search-bar">
+                <i class="fas fa-search"></i>
+                <input type="text" placeholder="Search items...">
+            </div>
+
+            <div class="top-actions">
+                <button class="notification-btn" title="Notifications">
+                    <i class="fas fa-bell"></i>
+                    <span class="badge">3</span>
+                </button>
+                <button class="add-item-btn">
+                    <i class="fas fa-plus"></i>
+                    Add Item
+                </button>
+            </div>
+        </header>
+
+        <div class="dashboard-content">
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-icon warning">
+                        <i class="fas fa-exclamation-triangle"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h3>Expiring Soon</h3>
+                        <p class="stat-number">5</p>
+                        <span class="stat-detail">Within 7 days</span>
+                    </div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-icon success">
+                        <i class="fas fa-box"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h3>Total Items</h3>
+                        <p class="stat-number">42</p>
+                        <span class="stat-detail">In inventory</span>
+                    </div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-icon danger">
+                        <i class="fas fa-times-circle"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h3>Expired</h3>
+                        <p class="stat-number">2</p>
+                        <span class="stat-detail">Need attention</span>
+                    </div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-icon info">
+                        <i class="fas fa-shopping-basket"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h3>Low Stock</h3>
+                        <p class="stat-number">3</p>
+                        <span class="stat-detail">Items to restock</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="dashboard-grid">
+                <section class="dashboard-section expiring-items">
+                    <div class="section-header">
+                        <h2>Expiring Soon</h2>
+                        <a href="expiring.html" class="view-all">View All</a>
+                    </div>
+                    <div class="items-list" id="expiringItems">
+                        <!-- Items will be added dynamically -->
+                    </div>
+                </section>
+
+                <section class="dashboard-section recent-items">
+                    <div class="section-header">
+                        <h2>Recently Added</h2>
+                        <a href="inventory.html" class="view-all">View All</a>
+                    </div>
+                    <div class="items-list" id="recentItems">
+                        <!-- Items will be added dynamically -->
+                    </div>
+                </section>
+            </div>
+        </div>
+    </main>
+
+    <!-- Add Item Modal -->
+    <div class="modal" id="addItemModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Add New Item</h2>
+                <button class="close-modal">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <form id="addItemForm">
+                <div class="form-group">
+                    <label for="itemName">Item Name</label>
+                    <input type="text" id="itemName" required placeholder="Enter item name">
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="category">Category</label>
+                        <select id="category" required>
+                            <option value="">Select category</option>
+                            <option value="dairy">Dairy</option>
+                            <option value="fruits">Fruits</option>
+                            <option value="vegetables">Vegetables</option>
+                            <option value="meat">Meat</option>
+                            <option value="pantry">Pantry</option>
+                            <option value="frozen">Frozen</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="quantity">Quantity</label>
+                        <input type="number" id="quantity" required min="1" value="1">
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="purchaseDate">Purchase Date</label>
+                        <input type="date" id="purchaseDate" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="expiryDate">Expiry Date</label>
+                        <input type="date" id="expiryDate" required>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="notes">Notes (Optional)</label>
+                    <textarea id="notes" rows="3" placeholder="Add any additional notes"></textarea>
+                </div>
+
+                <div class="form-actions">
+                    <button type="button" class="btn-secondary cancel-modal">Cancel</button>
+                    <button type="submit" class="btn-primary">Add Item</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="js/dashboard.js"></script>
+</body>
+</html>
