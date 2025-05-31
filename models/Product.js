@@ -4,10 +4,12 @@ const productSchema = new mongoose.Schema({
   name: {
     type: String,
     required: true,
+    trim: true,
   },
   quantity: {
     type: Number,
     required: true,
+    min: 0,
   },
   expiryDate: {
     type: Date,
@@ -18,6 +20,6 @@ const productSchema = new mongoose.Schema({
     ref: 'User',
     required: true,
   },
-});
+}, { timestamps: true });
 
 module.exports = mongoose.model('Product', productSchema);

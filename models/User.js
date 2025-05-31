@@ -6,6 +6,8 @@ const userSchema = new mongoose.Schema({
     type: String,
     required: true,
     unique: true,
+    lowercase: true,
+    trim: true,
   },
   password: {
     type: String,
@@ -20,7 +22,7 @@ userSchema.pre('save', async function (next) {
   next();
 });
 
-// Compare entered password with stored hashed password
+// Compare password method
 userSchema.methods.comparePassword = async function (enteredPassword) {
   return await bcrypt.compare(enteredPassword, this.password);
 };

@@ -1,5 +1,5 @@
 // app.js
-
+/*
 document.addEventListener('DOMContentLoaded', () => {
   const getStartedBtn = document.querySelector('.btn');
 
@@ -65,4 +65,4 @@ document.addEventListener('DOMContentLoaded', () => {
 
     section.scrollIntoView({ behavior: 'smooth' });
   }
-});
+});*/
