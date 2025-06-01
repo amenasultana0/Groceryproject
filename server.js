@@ -4,14 +4,16 @@ const dotenv = require('dotenv');
 const path = require('path');
 const cors = require('cors');
 
+dotenv.config();
+const app = express();
+
 const authRoutes = require('./routes/authRoutes');
 const productRoutes = require('./routes/productRoutes');
 
-dotenv.config();
+app.use(cors({
+  origin: 'http://127.0.0.1:5500', // Your frontend URL
+}));
 
-const app = express();
-
-app.use(cors());
 app.use(express.json());
 
 // Connect to MongoDB
@@ -24,11 +26,11 @@ app.use('/api/auth', authRoutes);
 app.use('/api/products', productRoutes);
 
 // Serve frontend static files
-app.use(express.static(path.join(__dirname, 'CSS')));
+app.use(express.static(path.join(__dirname, 'public')));
 
 // SPA fallback for frontend routes
 app.get(/^\/(?!api).*/, (req, res) => {
-  res.sendFile(path.join(__dirname, 'CSS', 'index.html'));
+  res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
 // Global error handler
