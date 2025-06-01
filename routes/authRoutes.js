@@ -112,7 +112,15 @@ router.post('/login', loginLimiter, async (req, res) => {
 
     const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: '1d' });
 
-    res.json({ message: 'Login successful', token, user: { id: user._id, email: user.email } });
+    res.json({ 
+  message: 'Login successful',
+  token,
+  user: { 
+    id: user._id, 
+    email: user.email,
+    name: user.name  // ✅ Add this line
+  }
+});
   } catch (error) {
     console.error('Login Error:', error);
     res.status(500).json({ error: 'Server error' });

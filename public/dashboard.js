@@ -258,3 +258,23 @@ function showNotification(message, type = 'info') {
         notification.remove();
     }, 3000);
 }
+
+document.addEventListener('DOMContentLoaded', () => {
+  const userData = localStorage.getItem('user') || sessionStorage.getItem('user');
+  if (!userData) return;
+
+  const user = JSON.parse(userData);
+
+  if (user && user.email) {
+    const userName = user.name || user.email.split('@')[0];
+
+    const userNameEl = document.getElementById('userName');
+    if (userNameEl) userNameEl.textContent = userName;
+
+    const userAvatarEl = document.getElementById('userAvatar');
+    if (userAvatarEl) {
+      const avatarUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(userName)}&background=0D6EFD&color=fff`;
+      userAvatarEl.src = avatarUrl;
+    }
+  }
+});
