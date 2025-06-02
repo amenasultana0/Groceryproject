@@ -145,5 +145,33 @@
     </footer>
 
     <script src="main.js"></script>
+    <script>
+    // Check if browser supports notifications
+    if ("Notification" in window) {
+        // Ask permission when the user loads the page
+        window.addEventListener("load", function() {
+            if (Notification.permission !== "granted") {
+                Notification.requestPermission().then(permission => {
+                    console.log("Notification permission:", permission);
+                });
+            }
+        });
+
+        // Example: Function to show a test notification (replace this with actual expiry logic)
+        function showExpiryNotification(productName, expiryDate) {
+            if (Notification.permission === "granted") {
+                new Notification("Expiry Alert!", {
+                    body: `${productName} expires on ${expiryDate}. Use it soon!`,
+                    icon: "https://cdn-icons-png.flaticon.com/512/1046/1046840.png" // optional icon
+                });
+            }
+        }
+
+        // TEMP: Trigger a test notification after 3 seconds (you'll replace this with real logic)
+        setTimeout(() => {
+            showExpiryNotification("Milk", "2025-06-05");
+        }, 3000);
+    }
+</script>
 </body>
 </html>
