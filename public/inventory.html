@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Inventory</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="inventory.css" />
+</head>
+<body>
+  <div class="main-container">
+    <header class="top-bar">
+      <h1>Inventory</h1>
+      <button class="add-btn" id="openModal">+ Add Item</button>
+    </header>
+
+    <!-- Modal Overlay -->
+    <div id="itemModal" class="modal">
+      <div class="modal-content">
+        <span class="close-btn" id="closeModal">&times;</span>
+        <h2>Add New Item</h2>
+
+        <form id="itemForm">
+          <label>Item Name</label>
+          <input type="text" id="itemName" required placeholder="Enter item name">
+
+          <div class="flex-row">
+            <div>
+              <label>Category</label>
+              <select id="category">
+                <option value="">Select category</option>
+                <option>Dairy</option>
+                <option>Fruits</option>
+                <option>Vegetables</option>
+                <option>Snacks</option>
+              </select>
+            </div>
+
+            <div>
+              <label>Quantity</label>
+              <input type="number" id="quantity" min="1" value="1" required>
+            </div>
+          </div>
+
+          <div class="flex-row">
+            <div>
+              <label>Purchase Date</label>
+              <input type="date" id="purchaseDate">
+            </div>
+            <div>
+              <label>Expiry Date</label>
+              <input type="date" id="expiryDate" required>
+            </div>
+          </div>
+
+          <label>Notes (Optional)</label>
+          <textarea id="notes" placeholder="Add any additional notes"></textarea>
+
+          <div class="form-actions">
+            <button type="button" class="cancel-btn" id="cancelBtn">Cancel</button>
+            <button type="submit" class="submit-btn">Add Item</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <section class="inventory-card">
+      <table class="inventory-table">
+        <thead>
+          <tr>
+            <th>Item</th>
+            <th>Quantity</th>
+            <th>Expiry Date</th>
+            <th>Status</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody id="inventory-body">
+          <tr>
+            <td>Milk</td>
+            <td>2</td>
+            <td>2025-06-05</td>
+            <td><span class="status fresh">Fresh</span></td>
+            <td><button class="delete-btn">Delete</button></td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+  </div>
+
+  <script src="inventory.js"></script>
+</body>
+</html>
