@@ -8,26 +8,54 @@
   <link rel="stylesheet" href="inventory.css" />
 </head>
 <body>
-  <div class="main-container">
-    <header class="top-bar">
-        <h1 class="inventory-title">Inventory</h1>
+  <button id="goBackBtn" class="back-btn" type="button">← Back</button>
 
-      <button class="add-btn" id="openModal">+ Add Item</button>
-    </header>
+  <main class="main-container">
+    <!-- Top Bar -->
+    <div class="top-bar">
+      <h1><span class="label-box">Inventory</span></h1>
+      <button class="add-btn" id="openModal" type="button">+ Add Item</button>
+    </div>
 
-    <!-- Filters -->
-    <div style="display: flex; gap: 1rem; margin: 1rem 0;">
+    <!-- Search & Filter -->
+    <div class="summary-bar">
       <input type="text" id="searchInput" placeholder="Search items..." />
       <select id="categoryFilter">
         <option value="">All Categories</option>
-        <option value="Dairy">Dairy</option>
-        <option value="Fruits">Fruits</option>
-        <option value="Vegetables">Vegetables</option>
-        <option value="Snacks">Snacks</option>
+        <option>Dairy</option>
+        <option>Fruits</option>
+        <option>Vegetables</option>
+        <option>Snacks</option>
       </select>
     </div>
 
-    <!-- Modal Overlay -->
+    <!-- Inventory Table (Main View) -->
+    <section class="inventory-card">
+      <table class="inventory-table">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th class="sortable" data-column="item">Item</th>
+            <th class="sortable" data-column="quantity">Quantity</th>
+            <th class="sortable" data-column="expiryDate">Expiry Date</th>
+            <th>Status</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody id="inventory-body-main">
+          <tr>
+            <td>1</td>
+            <td>Milk</td>
+            <td>2</td>
+            <td>2025-06-05</td>
+            <td><span class="status fresh">Fresh</span></td>
+            <td><button class="delete-btn" type="button">Delete</button></td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <!-- Modal for Adding Items -->
     <div id="itemModal" class="modal">
       <div class="modal-content">
         <span class="close-btn" id="closeModal">&times;</span>
@@ -76,103 +104,8 @@
         </form>
       </div>
     </div>
+  </main>
 
-    <section class="inventory-card">
-      <table class="inventory-table">
-        <thead>
-          <tr>
-            <th>#</th>
-            <th class="sortable" data-column="item">Item</th>
-            <th class="sortable" data-column="quantity">Quantity</th>
-            <th class="sortable" data-column="expiryDate">Expiry Date</th>
-            <th>Status</th>
-            <th>Action</th>
-          </tr>
-        </thead>
-        <tbody id="inventory-body">
-          <tr data-category="Dairy">
-            <td>1</td>
-            <td>Milk</td>
-            <td>2</td>
-            <td>2025-06-05</td>
-            <td><span class="status fresh">Fresh</span></td>
-            <td><button type="button" class="delete-btn">Delete</button></td>
-          </tr>
-        </tbody>
-      </table>
-    </section>
-  </div>
-
-  <script>
-    // Search Filter
-    document.getElementById("searchInput").addEventListener("input", function () {
-      const filter = this.value.toLowerCase();
-      const rows = document.querySelectorAll("#inventory-body tr");
-  
-      rows.forEach(row => {
-        const item = row.cells[1].textContent.toLowerCase();
-        row.style.display = item.includes(filter) ? "" : "none";
-      });
-    });
-  
-    // Category Filter
-    document.getElementById("categoryFilter").addEventListener("change", function () {
-      const selected = this.value.toLowerCase();
-      const rows = document.querySelectorAll("#inventory-body tr");
-  
-      rows.forEach(row => {
-        const category = row.getAttribute("data-category")?.toLowerCase() || "";
-        row.style.display = !selected || category === selected ? "" : "none";
-      });
-    });
-  
-    // Sorting
-    document.querySelectorAll(".sortable").forEach(header => {
-      header.addEventListener("click", () => {
-        const column = header.dataset.column;
-        const rows = Array.from(document.querySelectorAll("#inventory-body tr"));
-        const colIndex = { item: 1, quantity: 2, expiryDate: 3 }[column];
-  
-        rows.sort((a, b) => {
-          let valA = a.cells[colIndex].textContent.toLowerCase();
-          let valB = b.cells[colIndex].textContent.toLowerCase();
-  
-          if (column === "quantity") {
-            valA = parseInt(valA);
-            valB = parseInt(valB);
-          } else if (column === "expiryDate") {
-            valA = new Date(valA);
-            valB = new Date(valB);
-          }
-  
-          return valA > valB ? 1 : -1;
-        });
-  
-        const tbody = document.getElementById("inventory-body");
-        tbody.innerHTML = "";
-        rows.forEach(row => tbody.appendChild(row));
-        updateSerialNumbers();
-      });
-    });
-  
-    function updateSerialNumbers() {
-      document.querySelectorAll("#inventory-body tr").forEach((row, index) => {
-        row.cells[0].textContent = index + 1;
-      });
-    }
-  
-    function getStatus(expiryDateStr) {
-      const expiryDate = new Date(expiryDateStr);
-      const today = new Date();
-      const diffDays = Math.ceil((expiryDate - today) / (1000 * 60 * 60 * 24));
-  
-      if (diffDays < 0) return "Expired";
-      if (diffDays <= 3) return "Expiring Soon";
-      return "Fresh";
-    }
-  </script>
-  <script src="inventory.js"></script> <!-- Keep only one -->
-  
-
+  <script src="inventory.js"></script>
 </body>
 </html>
