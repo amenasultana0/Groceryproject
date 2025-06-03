@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Categories | GroceryTrack</title>
+  <link rel="stylesheet" href="categories.css">
+</head>
+<body>
+  <div class="main-container">
+    <div class="page-header">
+      <button class="back-btn" onclick="window.location.href='dashboard.html'">← Back to Dashboard</button>
+      <h2>Grocery Categories</h2>
+      <button class="primary-btn" id="openModalBtn">+ Add Category</button>
+    </div>
+
+    <div class="search-container">
+      <div class="search-icon">🔍</div>
+      <input type="text" class="search-input" id="searchInput" placeholder="Search categories and items...">
+    </div>
+
+    <div id="categoriesWrapper" class="categories-grid">
+      <!-- Categories will be dynamically added here -->
+    </div>
+
+    <!-- Empty State -->
+    <div id="emptyState" class="empty-state">
+      <div class="empty-state-icon">📋</div>
+      <h3>No Categories Yet</h3>
+      <p>Create your first grocery category to get started organizing your shopping lists!</p>
+      <button class="primary-btn" onclick="document.getElementById('openModalBtn').click()">+ Create First Category</button>
+    </div>
+  </div>
+
+  <!-- Modal for Adding Category -->
+  <div class="modal-overlay" id="modalOverlay">
+    <div class="modal">
+      <div class="modal-header">
+        <h3>Add New Category</h3>
+        <span id="closeModalBtn" class="close">×</span>
+      </div>
+      <div class="modal-body">
+        <label for="categoryName">Category Name</label>
+        <input type="text" id="categoryName" placeholder="e.g. Fruits & Vegetables" />
+
+        <label for="categoryIcon">Category Icon</label>
+        <select id="categoryIcon">
+          <option value="🍎">🍎 Fruits</option>
+          <option value="🥦">🥦 Vegetables</option>
+          <option value="🥩">🥩 Meat</option>
+          <option value="🧀">🧀 Dairy</option>
+          <option value="🍞">🍞 Bakery</option>
+          <option value="🍫">🍫 Snacks</option>
+          <option value="💧">💧 Beverages</option>
+          <option value="🧊">🧊 Frozen</option>
+          <option value="🧴">🧴 Household</option>
+          <option value="💊">💊 Health</option>
+        </select>
+      </div>
+      <div class="modal-footer">
+        <button class="secondary-btn" id="cancelBtn">Cancel</button>
+        <button class="primary-btn" id="saveCategoryBtn">Add Category</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="categories.js"></script>
+</body>
+</html>
