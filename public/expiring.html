@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Expiring Soon | GroceryTrack</title>
+    <link rel="stylesheet" href="./style.css">
+    <link rel="stylesheet" href="./expiring-soon.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-content">
+            <div class="logo">
+                <i class="fas fa-leaf"></i>
+                <span>GroceryTrack</span>
+            </div>
+            <div class="nav-links">
+                <a href="./index.html">Home</a>
+                <a href="./expiring.html" class="active">Expiring Soon</a>
+                <a href="./login.html" class="login-btn">Login</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="expiring-dashboard">
+        <div class="header-section">
+            <button class="back-btn" id="backButton">
+                <i class="fas fa-arrow-left"></i>
+                <span>Back</span>
+            </button>
+            <h1>Expiring Items Dashboard</h1>
+        </div>
+        
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-header">
+                    <i class="fas fa-exclamation-triangle stat-icon"></i>
+                    <h3>Expiring Today</h3>
+                </div>
+                <div class="stat-number">3</div>
+                <p>Items need immediate attention</p>
+            </div>
+            <div class="stat-card">
+                <div class="stat-header">
+                    <i class="fas fa-clock stat-icon"></i>
+                    <h3>This Week</h3>
+                </div>
+                <div class="stat-number">8</div>
+                <p>Items expiring this week</p>
+            </div>
+            <div class="stat-card">
+                <div class="stat-header">
+                    <i class="fas fa-calendar stat-icon"></i>
+                    <h3>This Month</h3>
+                </div>
+                <div class="stat-number">15</div>
+                <p>Items expiring this month</p>
+            </div>
+        </div>
+
+        <div class="filters">
+            <button class="filter-btn active">All Items</button>
+            <button class="filter-btn">High Priority</button>
+            <button class="filter-btn">Medium Priority</button>
+            <button class="filter-btn">Low Priority</button>
+        </div>
+
+        <div class="search-bar">
+            <input type="text" placeholder="Search expiring items...">
+        </div>
+
+        <div class="expiring-list">
+            <div class="expiring-item">
+                <div class="priority-indicator priority-high"></div>
+                <div class="item-details">
+                    <span class="item-name">Organic Milk</span>
+                    <span class="item-category">Dairy</span>
+                </div>
+                <span class="expiry-date">Expires Today</span>
+                <div class="action-buttons">
+                    <button class="action-btn edit-btn"><i class="fas fa-edit"></i></button>
+                    <button class="action-btn delete-btn"><i class="fas fa-trash"></i></button>
+                </div>
+            </div>
+
+            <div class="expiring-item">
+                <div class="priority-indicator priority-medium"></div>
+                <div class="item-details">
+                    <span class="item-name">Fresh Bread</span>
+                    <span class="item-category">Bakery</span>
+                </div>
+                <span class="expiry-date">Expires in 2 days</span>
+                <div class="action-buttons">
+                    <button class="action-btn edit-btn"><i class="fas fa-edit"></i></button>
+                    <button class="action-btn delete-btn"><i class="fas fa-trash"></i></button>
+                </div>
+            </div>
+
+            <div class="expiring-item">
+                <div class="priority-indicator priority-low"></div>
+                <div class="item-details">
+                    <span class="item-name">Greek Yogurt</span>
+                    <span class="item-category">Dairy</span>
+                </div>
+                <span class="expiry-date">Expires in 5 days</span>
+                <div class="action-buttons">
+                    <button class="action-btn edit-btn"><i class="fas fa-edit"></i></button>
+                    <button class="action-btn delete-btn"><i class="fas fa-trash"></i></button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="./js/expiring-soon.js"></script>
+</body>
+</html>
