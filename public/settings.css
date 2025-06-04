@@ -1,0 +1,393 @@
+/* Reset and Base Styles */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+    background-color: #f8fafc;
+    color: #1e293b;
+    line-height: 1.6;
+}
+
+.container {
+    min-height: 100vh;
+    background-color: #f8fafc;
+}
+
+/* Header */
+.header {
+    background: white;
+    border-bottom: 1px solid #e2e8f0;
+    padding: 1rem 0;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+}
+
+.header-content {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.back-button {
+    color: #3b82f6;
+    cursor: pointer;
+    padding: 0.5rem;
+    border-radius: 0.5rem;
+    transition: background-color 0.2s;
+}
+
+.back-button:hover {
+    background-color: #f1f5f9;
+}
+
+.header h1 {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: #1e293b;
+}
+
+/* Settings Content */
+.settings-content {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 2rem 1.5rem;
+}
+
+.settings-section {
+    margin-bottom: 3rem;
+}
+
+.settings-section h2 {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: #1e293b;
+    margin-bottom: 1rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 2px solid #3b82f6;
+}
+
+/* Setting Cards */
+.setting-card {
+    background: white;
+    border-radius: 0.75rem;
+    padding: 1.5rem;
+    margin-bottom: 1rem;
+    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+    border: 1px solid #e2e8f0;
+}
+
+.setting-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 1px solid #f1f5f9;
+}
+
+.setting-header h3 {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #1e293b;
+}
+
+.setting-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.75rem 0;
+    border-bottom: 1px solid #f8fafc;
+}
+
+.setting-item:last-child {
+    border-bottom: none;
+}
+
+.setting-item.sub-setting {
+    padding-left: 1rem;
+    background-color: #f8fafc;
+    margin: 0 -1.5rem;
+    padding-left: 2.5rem;
+    padding-right: 1.5rem;
+}
+
+.setting-item.clickable {
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.setting-item.clickable:hover {
+    background-color: #f8fafc;
+}
+
+.setting-item label {
+    font-weight: 500;
+    color: #374151;
+    flex: 1;
+}
+
+/* Form Controls */
+.setting-input {
+    padding: 0.5rem 0.75rem;
+    border: 1px solid #d1d5db;
+    border-radius: 0.5rem;
+    font-size: 0.875rem;
+    width: 120px;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.setting-input:focus {
+    outline: none;
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.setting-select {
+    padding: 0.5rem 0.75rem;
+    border: 1px solid #d1d5db;
+    border-radius: 0.5rem;
+    font-size: 0.875rem;
+    background: white;
+    width: 160px;
+    cursor: pointer;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.setting-select:focus {
+    outline: none;
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+/* Toggle Switch */
+.toggle-switch {
+    position: relative;
+    display: inline-block;
+}
+
+.toggle-input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.toggle-label {
+    position: relative;
+    display: inline-block;
+    width: 48px;
+    height: 24px;
+    background-color: #d1d5db;
+    border-radius: 24px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.toggle-label:before {
+    content: "";
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: 20px;
+    height: 20px;
+    background-color: white;
+    border-radius: 50%;
+    transition: transform 0.3s;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+}
+
+.toggle-input:checked + .toggle-label {
+    background-color: #3b82f6;
+}
+
+.toggle-input:checked + .toggle-label:before {
+    transform: translateX(24px);
+}
+
+/* Radio Buttons */
+.radio-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.radio-label {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    cursor: pointer;
+    font-weight: normal;
+}
+
+.radio-label input[type="radio"] {
+    display: none;
+}
+
+.radio-custom {
+    width: 16px;
+    height: 16px;
+    border: 2px solid #d1d5db;
+    border-radius: 50%;
+    position: relative;
+    transition: border-color 0.2s;
+}
+
+.radio-label input[type="radio"]:checked + .radio-custom {
+    border-color: #3b82f6;
+}
+
+.radio-label input[type="radio"]:checked + .radio-custom:after {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 8px;
+    height: 8px;
+    background-color: #3b82f6;
+    border-radius: 50%;
+}
+
+/* Buttons */
+.setting-button {
+    padding: 0.5rem 1rem;
+    border: none;
+    border-radius: 0.5rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.setting-button.secondary {
+    background-color: #f1f5f9;
+    color: #374151;
+    border: 1px solid #d1d5db;
+}
+
+.setting-button.secondary:hover {
+    background-color: #e2e8f0;
+}
+
+.button-group {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.add-category-btn {
+    background-color: #3b82f6;
+    color: white;
+    border: none;
+    padding: 0.5rem 1rem;
+    border-radius: 0.5rem;
+    font-size: 0.875rem;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.add-category-btn:hover {
+    background-color: #2563eb;
+}
+
+/* Categories */
+.categories-list {
+    margin-top: 1rem;
+}
+
+.category-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.75rem;
+    background-color: #f8fafc;
+    border-radius: 0.5rem;
+    margin-bottom: 0.5rem;
+    border: 1px solid #e2e8f0;
+}
+
+.delete-btn {
+    background: none;
+    border: none;
+    color: #ef4444;
+    font-size: 1.25rem;
+    cursor: pointer;
+    padding: 0.25rem;
+    border-radius: 0.25rem;
+    transition: background-color 0.2s;
+}
+
+.delete-btn:hover {
+    background-color: #fef2f2;
+}
+
+/* Version Info */
+.version-info {
+    color: #6b7280;
+    font-size: 0.875rem;
+}
+
+/* Save Button */
+.save-section {
+    text-align: center;
+    margin-top: 2rem;
+    padding-top: 2rem;
+    border-top: 1px solid #e2e8f0;
+}
+
+.save-button {
+    background-color: #3b82f6;
+    color: white;
+    border: none;
+    padding: 0.75rem 2rem;
+    border-radius: 0.5rem;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.save-button:hover {
+    background-color: #2563eb;
+}
+
+.save-button:active {
+    transform: translateY(1px);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .settings-content {
+        padding: 1rem;
+    }
+    
+    .setting-card {
+        padding: 1rem;
+    }
+    
+    .setting-item {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.5rem;
+    }
+    
+    .setting-input,
+    .setting-select {
+        width: 100%;
+    }
+    
+    .button-group {
+        width: 100%;
+        flex-direction: column;
+    }
+    
+    .radio-group {
+        width: 100%;
+    }
+}

@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Settings - GroceryTrack</title>
+    <link rel="stylesheet" href="settings.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <div class="header-content">
+                <div class="back-button">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                        <path d="M19 12H5M12 19l-7-7 7-7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                </div>
+                <h1>Settings</h1>
+            </div>
+        </div>
+
+        <div class="settings-content">
+            <!-- General Settings -->
+            <div class="settings-section">
+                <h2>General Settings</h2>
+                
+                <div class="setting-card">
+                    <div class="setting-header">
+                        <h3>Language & Region</h3>
+                    </div>
+                    <div class="setting-item">
+                        <label for="language">Language</label>
+                        <select id="language" class="setting-select">
+                            <option value="en">English</option>
+                            <option value="es">Spanish</option>
+                            <option value="fr">French</option>
+                            <option value="de">German</option>
+                        </select>
+                    </div>
+                    <div class="setting-item">
+                        <label for="region">Region</label>
+                        <select id="region" class="setting-select">
+                            <option value="us">United States</option>
+                            <option value="uk">United Kingdom</option>
+                            <option value="ca">Canada</option>
+                            <option value="au">Australia</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="setting-card">
+                    <div class="setting-header">
+                        <h3>Default Settings</h3>
+                    </div>
+                    <div class="setting-item">
+                        <label for="expiry-reminder">Default Expiry Reminder (days before)</label>
+                        <input type="number" id="expiry-reminder" class="setting-input" value="3" min="1" max="30">
+                    </div>
+                    <div class="setting-item">
+                        <label for="low-stock">Low Stock Threshold</label>
+                        <input type="number" id="low-stock" class="setting-input" value="5" min="1" max="100">
+                    </div>
+                    <div class="setting-item">
+                        <label for="auto-delete">Auto-delete Expired Items</label>
+                        <div class="toggle-switch">
+                            <input type="checkbox" id="auto-delete" class="toggle-input">
+                            <label for="auto-delete" class="toggle-label"></label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="setting-card">
+                    <div class="setting-header">
+                        <h3>Default Categories</h3>
+                        <button class="add-category-btn" id="add-category">+ Add Category</button>
+                    </div>
+                    <div class="categories-list" id="categories-list">
+                        <div class="category-item">
+                            <span>Fruits & Vegetables</span>
+                            <button class="delete-btn">×</button>
+                        </div>
+                        <div class="category-item">
+                            <span>Dairy & Eggs</span>
+                            <button class="delete-btn">×</button>
+                        </div>
+                        <div class="category-item">
+                            <span>Meat & Seafood</span>
+                            <button class="delete-btn">×</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Notifications -->
+            <div class="settings-section">
+                <h2>Notifications</h2>
+                
+                <div class="setting-card">
+                    <div class="setting-item">
+                        <label for="expiry-alerts">Expiry Alerts</label>
+                        <div class="toggle-switch">
+                            <input type="checkbox" id="expiry-alerts" class="toggle-input" checked>
+                            <label for="expiry-alerts" class="toggle-label"></label>
+                        </div>
+                    </div>
+                    <div class="setting-item sub-setting">
+                        <label for="expiry-days">Notify how many days before expiry</label>
+                        <input type="number" id="expiry-days" class="setting-input" value="3" min="1" max="14">
+                    </div>
+                </div>
+
+                <div class="setting-card">
+                    <div class="setting-item">
+                        <label for="low-stock-alerts">Low Stock Alerts</label>
+                        <div class="toggle-switch">
+                            <input type="checkbox" id="low-stock-alerts" class="toggle-input" checked>
+                            <label for="low-stock-alerts" class="toggle-label"></label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="setting-card">
+                    <div class="setting-item">
+                        <label for="weekly-reports">Weekly Summary Emails/Reports</label>
+                        <div class="toggle-switch">
+                            <input type="checkbox" id="weekly-reports" class="toggle-input">
+                            <label for="weekly-reports" class="toggle-label"></label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Account Settings -->
+            <div class="settings-section">
+                <h2>Account Settings</h2>
+                
+                <div class="setting-card">
+                    <div class="setting-header">
+                        <h3>Profile Information</h3>
+                    </div>
+                    <div class="setting-item">
+                        <label for="full-name">Full Name</label>
+                        <input type="text" id="full-name" class="setting-input" placeholder="Enter your full name">
+                    </div>
+                    <div class="setting-item">
+                        <label for="email">Email Address</label>
+                        <input type="email" id="email" class="setting-input" placeholder="Enter your email">
+                    </div>
+                </div>
+
+                <div class="setting-card">
+                    <div class="setting-header">
+                        <h3>Login & Security</h3>
+                    </div>
+                    <div class="setting-item">
+                        <label>Change Password</label>
+                        <button class="setting-button secondary">Update Password</button>
+                    </div>
+                    <div class="setting-item">
+                        <label for="two-factor">Two-Factor Authentication</label>
+                        <div class="toggle-switch">
+                            <input type="checkbox" id="two-factor" class="toggle-input">
+                            <label for="two-factor" class="toggle-label"></label>
+                        </div>
+                    </div>
+                    <div class="setting-item">
+                        <label>Connected Accounts</label>
+                        <button class="setting-button secondary">Manage Connections</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Data Management -->
+            <div class="settings-section">
+                <h2>Data Management</h2>
+                
+                <div class="setting-card">
+                    <div class="setting-item">
+                        <label>Backup & Restore Data</label>
+                        <div class="button-group">
+                            <button class="setting-button secondary">Backup Now</button>
+                            <button class="setting-button secondary">Restore Data</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="setting-card">
+                    <div class="setting-header">
+                        <h3>Sync Options</h3>
+                    </div>
+                    <div class="setting-item">
+                        <label>Sync Method</label>
+                        <div class="radio-group">
+                            <label class="radio-label">
+                                <input type="radio" name="sync" value="cloud" checked>
+                                <span class="radio-custom"></span>
+                                Cloud Sync
+                            </label>
+                            <label class="radio-label">
+                                <input type="radio" name="sync" value="device">
+                                <span class="radio-custom"></span>
+                                Device Only
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Support & Information -->
+            <div class="settings-section">
+                <h2>Support & Information</h2>
+                
+                <div class="setting-card">
+                    <div class="setting-item">
+                        <label>App Version</label>
+                        <span class="version-info">Version 1.2.3</span>
+                    </div>
+                </div>
+
+                <div class="setting-card">
+                    <div class="setting-item clickable">
+                        <label>Privacy Policy</label>
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                            <path d="M9 18l6-6-6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                    </div>
+                    <div class="setting-item clickable">
+                        <label>Terms of Service</label>
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                            <path d="M9 18l6-6-6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                    </div>
+                    <div class="setting-item clickable">
+                        <label>Contact Support</label>
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                            <path d="M9 18l6-6-6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                    </div>
+                    <div class="setting-item clickable">
+                        <label>Give Feedback</label>
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                            <path d="M9 18l6-6-6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Save Button -->
+            <div class="save-section">
+                <button class="save-button" id="save-settings">Save Changes</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="settings.js"></script>
+</body>
+</html>
