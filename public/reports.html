@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Premium Grocery Analytics | Reports</title>
+    
+    <!-- Stylesheets -->
+    <link rel="stylesheet" href="styles/reports.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    
+    <!-- Charts -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
+    
+    <!-- Date Picker -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+</head>
+<body>
+    <!-- Header -->
+    <header class="premium-header">
+        <div class="header-content">
+            <h1><i class="fas fa-chart-line"></i> Premium Analytics</h1>
+            <div class="header-actions">
+                <button id="backToDashboard" class="btn-secondary">
+                    <i class="fas fa-arrow-left"></i> Back to Dashboard
+                </button>
+                <button id="exportReport" class="btn-primary">
+                    <i class="fas fa-download"></i> Export Report
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="premium-content">
+        <!-- Filters Section -->
+        <section class="filters-section">
+            <div class="filter-group">
+                <label>Date Range</label>
+                <input type="text" id="dateRange" class="date-picker" placeholder="Select date range">
+            </div>
+            <div class="filter-group">
+                <label>Category</label>
+                <select id="categoryFilter">
+                    <option value="all" selected>All Categories</option>
+                    <option value="fruits">Fruits</option>
+                    <option value="vegetables">Vegetables</option>
+                    <option value="dairy">Dairy</option>
+                    <option value="meat">Meat</option>
+                    <option value="bakery">Bakery</option>
+                </select>
+            </div>
+            <div class="filter-group">
+                <label>Status</label>
+                <select id="statusFilter">
+                    <option value="all">All Status</option>
+                    <option value="expiring">Expiring Soon</option>
+                    <option value="expired">Expired</option>
+                    <option value="fresh">Fresh</option>
+                </select>
+            </div>
+            <button id="generateReport" class="btn-primary">
+                <i class="fas fa-sync"></i> Update Report
+            </button>
+        </section>
+
+        <!-- Key Metrics -->
+        <section class="metrics-grid">
+            <div class="metric-card" data-tooltip="Items expiring within 7 days">
+                <div class="metric-icon warning">
+                    <i class="fas fa-exclamation-triangle"></i>
+                </div>
+                <div class="metric-content">
+                    <h3>Expiring Soon</h3>
+                    <p id="expiringSoon">0</p>
+                    <span>Items expiring in 7 days</span>
+                </div>
+            </div>
+
+            <div class="metric-card" data-tooltip="Items that have expired">
+                <div class="metric-icon danger">
+                    <i class="fas fa-times-circle"></i>
+                </div>
+                <div class="metric-content">
+                    <h3>Expired Items</h3>
+                    <p id="expiredItems">0</p>
+                    <span>Items to remove</span>
+                </div>
+            </div>
+
+            <div class="metric-card" data-tooltip="Items in good condition">
+                <div class="metric-icon success">
+                    <i class="fas fa-check-circle"></i>
+                </div>
+                <div class="metric-content">
+                    <h3>Fresh Items</h3>
+                    <p id="freshItems">0</p>
+                    <span>Items in good condition</span>
+                </div>
+            </div>
+
+            <div class="metric-card" data-tooltip="Total inventory value">
+                <div class="metric-icon primary">
+                    <i class="fas fa-dollar-sign"></i>
+                </div>
+                <div class="metric-content">
+                    <h3>Total Value</h3>
+                    <p id="totalValue">$0</p>
+                    <span>Current inventory value</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- Charts Grid -->
+        <section class="charts-grid">
+            <!-- Expiry Timeline -->
+            <div class="chart-card full-width">
+                <div class="chart-header">
+                    <h3>Expiry Timeline</h3>
+                    <div class="chart-controls">
+                        <button data-chart="line" class="active">Line</button>
+                        <button data-chart="bar">Bar</button>
+                    </div>
+                </div>
+                <div class="chart-container">
+                    <canvas id="expiryChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Category Distribution -->
+            <div class="chart-card">
+                <h3>Category Distribution</h3>
+                <div class="chart-container">
+                    <div id="categoryChart"></div>
+                </div>
+            </div>
+
+            <!-- Status by Category -->
+            <div class="chart-card">
+                <h3>Status by Category</h3>
+                <div class="chart-container">
+                    <div id="statusChart"></div>
+                </div>
+            </div>
+
+            <!-- Weekly Trend -->
+            <div class="chart-card">
+                <h3>Weekly Trend</h3>
+                <div class="chart-container">
+                    <div id="trendChart"></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Premium Insights -->
+        <section class="premium-insights">
+            <h2>Premium Insights</h2>
+            <div class="insights-grid">
+                <!-- Expiry Timeline -->
+                <div class="insight-card">
+                    <div class="insight-header">
+                        <i class="fas fa-clock"></i>
+                        <h3>Expiry Timeline</h3>
+                    </div>
+                    <div class="timeline-metrics">
+                        <div class="timeline-item critical">
+                            <span class="count" id="criticalCount">0</span>
+                            <span class="label">Critical (0-2 days)</span>
+                        </div>
+                        <div class="timeline-item warning">
+                            <span class="count" id="warningCount">0</span>
+                            <span class="label">Warning (3-5 days)</span>
+                        </div>
+                        <div class="timeline-item attention">
+                            <span class="count" id="attentionCount">0</span>
+                            <span class="label">Attention (6-7 days)</span>
+                        </div>
+                        <div class="timeline-item safe">
+                            <span class="count" id="safeCount">0</span>
+                            <span class="label">Safe (>7 days)</span>
+                        </div>
+                    </div>
+                    <div class="risk-level">
+                        Risk Level: <span id="riskLevel">Low</span>
+                    </div>
+                </div>
+
+                <!-- Freshness Index -->
+                <div class="insight-card">
+                    <div class="insight-header">
+                        <i class="fas fa-leaf"></i>
+                        <h3>Freshness Index</h3>
+                    </div>
+                    <div class="freshness-metrics">
+                        <div class="overall-freshness">
+                            <span id="overallFreshness">0</span>%
+                            <span class="label">Overall Freshness</span>
+                        </div>
+                        <div class="quality-distribution">
+                            <div class="quality-item">
+                                <span class="label">Excellent</span>
+                                <div class="progress-bar">
+                                    <div class="progress" id="excellentQuality" style="width: 0%"></div>
+                                </div>
+                            </div>
+                            <div class="quality-item">
+                                <span class="label">Good</span>
+                                <div class="progress-bar">
+                                    <div class="progress" id="goodQuality" style="width: 0%"></div>
+                                </div>
+                            </div>
+                            <div class="quality-item">
+                                <span class="label">Fair</span>
+                                <div class="progress-bar">
+                                    <div class="progress" id="fairQuality" style="width: 0%"></div>
+                                </div>
+                            </div>
+                            <div class="quality-item">
+                                <span class="label">Poor</span>
+                                <div class="progress-bar">
+                                    <div class="progress" id="poorQuality" style="width: 0%"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Storage Optimization -->
+                <div class="insight-card">
+                    <div class="insight-header">
+                        <i class="fas fa-box"></i>
+                        <h3>Storage Optimization</h3>
+                    </div>
+                    <div class="storage-metrics">
+                        <div class="storage-score">
+                            <span id="storageOptScore">0</span>%
+                            <span class="label">Optimization Score</span>
+                        </div>
+                        <div class="storage-details">
+                            <div class="storage-item">
+                                <span class="label">Space Utilization</span>
+                                <div class="progress-bar">
+                                    <div class="progress" id="spaceUtilization" style="width: 0%"></div>
+                                </div>
+                            </div>
+                            <div class="storage-item">
+                                <span class="label">Temperature Compliance</span>
+                                <div class="progress-bar">
+                                    <div class="progress" id="tempCompliance" style="width: 0%"></div>
+                                </div>
+                            </div>
+                            <div class="storage-item">
+                                <span class="label">Organization</span>
+                                <div class="progress-bar">
+                                    <div class="progress" id="orgScore" style="width: 0%"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Value Analysis -->
+                <div class="insight-card">
+                    <div class="insight-header">
+                        <i class="fas fa-chart-line"></i>
+                        <h3>Value Analysis</h3>
+                    </div>
+                    <div class="value-metrics">
+                        <div class="savings-opportunities">
+                            <div class="opportunity-item">
+                                <span class="label">Immediate Action Required</span>
+                                <span class="value" id="immediateAction">₹0</span>
+                            </div>
+                            <div class="opportunity-item">
+                                <span class="label">Short-term Action</span>
+                                <span class="value" id="shortTermAction">₹0</span>
+                            </div>
+                        </div>
+                        <div class="preventive-measures" id="preventiveMeasures">
+                            <!-- Populated by JavaScript -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Category Analysis -->
+            <div class="category-analysis">
+                <h3>Category Analysis</h3>
+                <div class="category-grid" id="categoryAnalysis">
+                    <!-- Populated by JavaScript -->
+                </div>
+            </div>
+
+            <!-- Storage Zones -->
+            <div class="storage-zones">
+                <h3>Storage Zone Analysis</h3>
+                <div class="zones-grid" id="storageZones">
+                    <!-- Populated by JavaScript -->
+                </div>
+            </div>
+        </section>
+
+        <!-- Detailed Items Table -->
+        <section class="items-table">
+            <div class="table-header">
+                <h2>Detailed Items Report</h2>
+                <div class="table-actions">
+                    <input type="text" id="tableSearch" placeholder="Search items...">
+                    <button id="exportCSV" class="btn-secondary">
+                        <i class="fas fa-file-csv"></i> Export CSV
+                    </button>
+                </div>
+            </div>
+            <div class="table-container">
+                <table id="expiryTable">
+                    <thead>
+                        <tr>
+                            <th data-sort="name">Item Name</th>
+                            <th data-sort="category">Category</th>
+                            <th data-sort="price">Price</th>
+                            <th data-sort="quantity">Quantity</th>
+                            <th data-sort="value">Value</th>
+                            <th data-sort="expiry">Expiry Date</th>
+                            <th data-sort="daysLeft">Days Left</th>
+                            <th data-sort="status">Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+            <div class="table-footer">
+                <div class="pagination">
+                    <button id="prevPage" class="btn-icon">
+                        <i class="fas fa-chevron-left"></i>
+                    </button>
+                    <span>Page <span id="currentPage">1</span> of <span id="totalPages">1</span></span>
+                    <button id="nextPage" class="btn-icon">
+                        <i class="fas fa-chevron-right"></i>
+                    </button>
+                </div>
+                <div class="items-count">
+                    Total Items: <span id="itemCount">0</span>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="premium-footer">
+        <p>Premium Analytics Dashboard | Grocery Expiry Tracking System</p>
+    </footer>
+
+    <!-- Scripts -->
+    <script src="scripts/reports.js"></script>
+</body>
+</html> 
