@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Recipe Suggestions - GroceryTrack</title>
+    <link rel="stylesheet" href="suggestions.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <!-- Header with Back Button -->
+        <div class="top-header">
+            <div class="header-left">
+                <button onclick="javascript:history.back()" class="back-button">
+                    <i class="fas fa-arrow-left"></i>
+                    <span>Back</span>
+                </button>
+                <div class="logo">
+                    <i class="fas fa-shopping-cart"></i>
+                    <span>GroceryTrack</span>
+                </div>
+            </div>
+            <div class="search-container">
+                <i class="fas fa-search"></i>
+                <input type="text" placeholder="Search recipes..." class="search-input">
+            </div>
+            <button class="add-button" onclick="showIngredientModal()">
+                <i class="fas fa-plus"></i>
+                Add Ingredients
+            </button>
+        </div>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <!-- Ingredient Input Section -->
+            <div class="ingredient-section">
+                <h2>Your Available Ingredients</h2>
+                <div class="ingredient-tags" id="ingredientTags">
+                    <!-- Dynamic ingredient tags will be added here -->
+                </div>
+                <div class="ingredient-input-container">
+                    <input type="text" id="ingredientInput" placeholder="Type an ingredient and press Enter..." class="ingredient-input">
+                    <button onclick="addIngredient()" class="add-ingredient-btn">
+                        <i class="fas fa-plus"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Generate Recipes Button -->
+            <div class="generate-section">
+                <button onclick="generateRecipes()" class="generate-btn" id="generateBtn">
+                    <i class="fas fa-magic"></i>
+                    Generate Recipe Suggestions
+                </button>
+            </div>
+
+            <!-- Loading State -->
+            <div class="loading" id="loadingState" style="display: none;">
+                <div class="loading-spinner"></div>
+                <p>Finding delicious recipes for you...</p>
+            </div>
+
+            <!-- Recipe Results -->
+            <div class="recipes-container" id="recipesContainer">
+                <!-- Dynamic recipe cards will be added here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Ingredient Modal -->
+    <div class="modal" id="ingredientModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Add Ingredients from Inventory</h3>
+                <button onclick="closeIngredientModal()" class="close-btn">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <p>Select ingredients from your inventory:</p>
+                <div class="inventory-items" id="inventoryItems">
+                    <!-- Mock inventory items - replace with your actual inventory data -->
+                    <div class="inventory-item" onclick="selectInventoryItem('Tomatoes')">
+                        <i class="fas fa-seedling"></i>
+                        <span>Tomatoes</span>
+                    </div>
+                    <div class="inventory-item" onclick="selectInventoryItem('Chicken Breast')">
+                        <i class="fas fa-drumstick-bite"></i>
+                        <span>Chicken Breast</span>
+                    </div>
+                    <div class="inventory-item" onclick="selectInventoryItem('Rice')">
+                        <i class="fas fa-seedling"></i>
+                        <span>Rice</span>
+                    </div>
+                    <div class="inventory-item" onclick="selectInventoryItem('Onions')">
+                        <i class="fas fa-seedling"></i>
+                        <span>Onions</span>
+                    </div>
+                    <div class="inventory-item" onclick="selectInventoryItem('Garlic')">
+                        <i class="fas fa-seedling"></i>
+                        <span>Garlic</span>
+                    </div>
+                    <div class="inventory-item" onclick="selectInventoryItem('Bell Peppers')">
+                        <i class="fas fa-seedling"></i>
+                        <span>Bell Peppers</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="suggestions.js"></script>
+</body>
+</html>
