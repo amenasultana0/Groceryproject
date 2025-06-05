@@ -454,3 +454,109 @@ textarea:focus {
         grid-template-columns: 1fr;
     }
 }
+
+.notification-wrapper {
+    position: relative;
+}
+
+.notification-dropdown {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    width: 320px;
+    background-color: var(--bg-primary);
+    border: 1px solid var(--border-light);
+    border-radius: 0.5rem;
+    box-shadow: var(--shadow-lg);
+    margin-top: 0.5rem;
+    display: none;
+    z-index: 1000;
+}
+
+.notification-dropdown.active {
+    display: block;
+}
+
+.notification-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem;
+    border-bottom: 1px solid var(--border-light);
+}
+
+.notification-header h3 {
+    font-size: 1rem;
+    font-weight: 600;
+}
+
+.mark-all-read {
+    background: none;
+    border: none;
+    color: var(--primary);
+    font-size: 0.875rem;
+    cursor: pointer;
+}
+
+.notification-list {
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+.notification-item {
+    display: flex;
+    gap: 1rem;
+    padding: 1rem;
+    border-bottom: 1px solid var(--border-light);
+    transition: background-color 0.2s ease;
+    cursor: pointer;
+}
+
+.notification-item:hover {
+    background-color: var(--bg-secondary);
+}
+
+.notification-item.unread {
+    background-color: rgba(0, 102, 255, 0.05);
+}
+
+.notification-item i {
+    font-size: 1.25rem;
+    margin-top: 0.25rem;
+}
+
+.notification-item i.warning {
+    color: var(--warning);
+}
+
+.notification-item i.info {
+    color: var(--info);
+}
+
+.notification-item i.danger {
+    color: var(--danger);
+}
+
+.notification-content p {
+    margin-bottom: 0.25rem;
+    font-size: 0.875rem;
+}
+
+.notification-time {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+}
+
+.view-all-notifications {
+    display: block;
+    text-align: center;
+    padding: 0.75rem;
+    color: var(--primary);
+    font-size: 0.875rem;
+    font-weight: 500;
+    border-top: 1px solid var(--border-light);
+}
+
+.view-all-notifications:hover {
+    background-color: var(--bg-secondary);
+}

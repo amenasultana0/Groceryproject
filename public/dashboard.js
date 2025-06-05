@@ -278,3 +278,59 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 });
+
+// Notification functionality
+document.addEventListener('DOMContentLoaded', function() {
+    const notificationBtn = document.getElementById('notificationBtn');
+    const notificationDropdown = document.getElementById('notificationDropdown');
+    const markAllReadBtn = document.querySelector('.mark-all-read');
+    const notificationItems = document.querySelectorAll('.notification-item');
+    let unreadCount = document.querySelectorAll('.notification-item.unread').length;
+    const badge = document.querySelector('.badge');
+
+    // Update badge count
+    function updateBadgeCount() {
+        badge.textContent = unreadCount;
+        if (unreadCount === 0) {
+            badge.style.display = 'none';
+        } else {
+            badge.style.display = 'block';
+        }
+    }
+
+    // Toggle notification dropdown
+    notificationBtn.addEventListener('click', function(e) {
+        e.stopPropagation();
+        notificationDropdown.classList.toggle('active');
+    });
+
+    // Close dropdown when clicking outside
+    document.addEventListener('click', function(e) {
+        if (!notificationDropdown.contains(e.target) && e.target !== notificationBtn) {
+            notificationDropdown.classList.remove('active');
+        }
+    });
+
+    // Mark all notifications as read
+    markAllReadBtn.addEventListener('click', function() {
+        notificationItems.forEach(item => {
+            item.classList.remove('unread');
+        });
+        unreadCount = 0;
+        updateBadgeCount();
+    });
+
+    // Mark individual notification as read
+    notificationItems.forEach(item => {
+        item.addEventListener('click', function() {
+            if (this.classList.contains('unread')) {
+                this.classList.remove('unread');
+                unreadCount--;
+                updateBadgeCount();
+            }
+        });
+    });
+
+    // Initialize badge count
+    updateBadgeCount();
+});
