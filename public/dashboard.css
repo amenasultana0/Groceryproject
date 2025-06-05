@@ -263,6 +263,11 @@
     font-size: 1.5rem;
 }
 
+.stat-icon.warning{
+    background-color: rgba(245,158,11,0.1);
+    color: var(--warning);
+}
+
 .stat-icon.success {
     background-color: rgba(16, 185, 129, 0.1);
     color: var(--success);
@@ -271,6 +276,11 @@
 .stat-icon.info {
     background-color: rgba(59, 130, 246, 0.1);
     color: var(--info);
+}
+
+.stat-icon.danger{
+    background-color: rgba(239,68,68,0.1);
+    color: var(--danger);
 }
 
 .stat-info h3 {
