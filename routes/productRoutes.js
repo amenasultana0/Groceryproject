@@ -4,114 +4,27 @@ const authMiddleware = require('../middleware/authMiddleware');
 
 const router = express.Router();
 
-function startOfDay(date) {
-  return new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate(), 0, 0, 0));
-}
-
-function endOfDay(date) {
-  return new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate(), 23, 59, 59, 999));
-}
-
-// router.get('/expiring', authMiddleware, async (req, res) => {
-//   try {
-//     const today = new Date();
-//     const todayStart = startOfDay(today);
-
-//     // Calculate date ranges for today, next 7 days, next 1 month
-//     const todayEnd = new Date(todayStart);
-//     todayEnd.setDate(todayEnd.getDate() + 1); // tomorrow start
-
-//     const weekEnd = new Date(todayStart);
-//     weekEnd.setDate(weekEnd.getDate() + 7);
-//     const weekEndEnd = endOfDay(weekEnd);
-
-//     const monthEnd = new Date(weekEnd);
-//     monthEnd.setMonth(monthEnd.getMonth() + 1);
-//     const monthEndEnd = endOfDay(monthEnd);
-
-//     // Query MongoDB for products expiring today
-//     const todayItems = await Product.find({
-//       userId: req.user._id,
-//       expiryDate: { $gte: todayStart, $lt: todayEnd }
-//     });
-
-//     // Products expiring in the next 7 days (excluding today)
-//     const weekItems = await Product.find({
-//       userId: req.user._id,
-//       expiryDate: { $gte: weekStart, $lt: weekEndEnd }
-//     });
-
-//     // Products expiring in the next 1 month (excluding the next 7 days)
-//     const monthItems = await Product.find({
-//       userId: req.user._id,
-//       expiryDate: { $gte: monthStart, $lt: monthEndEnd }
-//     });
-
-//     // All products for the user
-//     const allProducts = await Product.find({ userId: req.user._id });
-
-//     res.json({
-//       today: todayItems,
-//       week: weekItems,
-//       month: monthItems,
-//       all: allProducts
-//     });
-
-//   } catch (error) {
-//     console.error(error);
-//     res.status(500).json({ message: 'Server error' });
-//   }
-// });
-
 router.get('/expiring', authMiddleware, async (req, res) => {
+  const today = new Date();
+  const oneWeekFromNow = new Date(today);
+  oneWeekFromNow.setDate(today.getDate() + 7);
+  const oneMonthFromNow = new Date(today);
+  oneMonthFromNow.setMonth(today.getMonth() + 1);
+
   try {
-    const userId = req.user._id;
-
-    const now = new Date();
-
-    // Today range
-    const todayStart = new Date(now);
-    todayStart.setUTCHours(0, 0, 0, 0);
-    const todayEnd = new Date(todayStart);
-    todayEnd.setUTCDate(todayEnd.getUTCDate() + 1);
-
-    // Week range: tomorrow to next 7 days
-    const weekStart = new Date(todayEnd);
-    const weekEnd = new Date(weekStart);
-    weekEnd.setUTCDate(weekEnd.getUTCDate() + 7);
-
-    // Month range: after 7 days to next 1 month
-    const monthStart = new Date(weekEnd);
-    const monthEnd = new Date(monthStart);
-    monthEnd.setUTCMonth(monthEnd.getUTCMonth() + 1);
-
-    // Queries
-    const todayItems = await Product.find({
-      userId,
-      expiryDate: { $gte: todayStart, $lt: todayEnd },
-    });
-
-    const weekItems = await Product.find({
-      userId,
-      expiryDate: { $gte: weekStart, $lt: weekEnd },
-    });
-
-    const monthItems = await Product.find({
-      userId,
-      expiryDate: { $gte: monthStart, $lt: monthEnd },
-    });
-
-    const allProducts = await Product.find({ userId });
+    const products = await Product.find({ userId: req.user.id });
+    const todayItems = products.filter(p => isSameDay(new Date(p.expiryDate), today));
+    const weekItems = products.filter(p => new Date(p.expiryDate) > today && new Date(p.expiryDate) <= oneWeekFromNow);
+    const monthItems = products.filter(p => new Date(p.expiryDate) > oneWeekFromNow && new Date(p.expiryDate) <= oneMonthFromNow);
 
     res.json({
       today: todayItems,
       week: weekItems,
       month: monthItems,
-      all: allProducts,
+      all: products
     });
   } catch (error) {
-    console.error('Expiring route error:', error);
-    res.status(500).json({ error: 'Server error' });
+    res.status(500).json({ message: 'Server error' });
   }
 });
 
@@ -167,15 +80,13 @@ router.get('/', authMiddleware, async (req, res) => {
 // GET /api/products/expiring-soon - Get products expiring within next 3 days
 router.get('/expiring-soon', authMiddleware, async (req, res) => {
   try {
-    const now = new Date();
-    now.setUTCHours(0, 0, 0, 0); // Start of today in UTC
-
-    const threeDaysLater = new Date(now);
-    threeDaysLater.setUTCDate(threeDaysLater.getUTCDate() + 3); // 3 days ahead
+    const today = new Date();
+    const threeDaysLater = new Date();
+    threeDaysLater.setDate(today.getDate() + 3);
 
     const expiringProducts = await Product.find({
       userId: req.user._id,
-      expiryDate: { $gte: now, $lt: threeDaysLater },
+      expiryDate: { $gte: today, $lte: threeDaysLater },
     }).sort({ expiryDate: 1 });
 
     res.json(expiringProducts);

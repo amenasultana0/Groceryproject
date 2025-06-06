@@ -77,7 +77,7 @@ async function handleAddItem(e) {
 const token = user?.token;
 
 try {
-  const response = await fetch('http://localhost:3000/api/products/add', {
+  const response = await fetch('http://localhost:3000/api/products', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -140,7 +140,7 @@ function renderItems(container, items, type) {
     }
 
     container.innerHTML = items.map(item => `
-        <div class="item-card ${isExpired(item.expiryDate) ? 'expired' : ''}" data-id="${item._id}">
+        <div class="item-card ${isExpired(item.expiryDate) ? 'expired' : ''}" data-id="${item.id}">
             <div class="item-header">
                 <h3>${item.name}</h3>
                 <span class="category-badge">${item.category}</span>
@@ -156,10 +156,10 @@ function renderItems(container, items, type) {
                 </div>
             </div>
             <div class="item-actions">
-                <button class="icon-btn" onclick="editItem('${item._id}')">
+                <button class="icon-btn" onclick="editItem(${item.id})">
                     <i class="fas fa-edit"></i>
                 </button>
-                <button class="icon-btn delete" onclick="deleteItem('${item._id}')">
+                <button class="icon-btn delete" onclick="deleteItem(${item.id})">
                     <i class="fas fa-trash"></i>
                 </button>
             </div>
@@ -222,7 +222,7 @@ async function deleteItem(id) {
 }
 
 function editItem(id) {
-    const item = currentItems.find(item => item._id === id);
+    const item = currentItems.find(item => item.id === id);
     if (!item) return;
 
     // Populate form
@@ -240,7 +240,7 @@ function editItem(id) {
         e.preventDefault();
         
         const updatedItem = {
-            _id: item._id,
+            id: item.id,
             name: document.getElementById('itemName').value,
             category: document.getElementById('category').value,
             quantity: document.getElementById('quantity').value,
@@ -253,7 +253,7 @@ function editItem(id) {
             const user = JSON.parse(localStorage.getItem('user') || sessionStorage.getItem('user'));
             const token = user?.token;
 
-            const response = await fetch(`http://localhost:3000/api/products/${updatedItem._id}`, {
+            const response = await fetch(`http://localhost:3000/api/products/${updatedItem.id}`, {
                 method: 'PUT', // or PATCH depending on your backend
                 headers: {
                     'Content-Type': 'application/json',

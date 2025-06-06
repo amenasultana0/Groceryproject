@@ -1,3 +1,5 @@
+const BACKEND_URL = 'http://127.0.0.1:3000';
+let allItems = [];
 // DOM Elements
 const backButton = document.getElementById('backButton');
 const filterButtons = document.querySelectorAll('.filter-btn');
@@ -17,23 +19,44 @@ categoryFilter?.addEventListener('change', handleFilters);
 sortBy?.addEventListener('change', handleSort);
 
 // Initialize
-document.addEventListener('DOMContentLoaded', () => {
-    loadItems();
-    updateStats();
+document.addEventListener('DOMContentLoaded', async () => {
+    await loadItems();
 });
 
 // Functions
-function loadItems() {
-    const items = JSON.parse(localStorage.getItem('items') || '[]');
-    
-    if (items.length === 0) {
+async function fetchItems() {
+   try {
+        const token = localStorage.getItem('token'); // or sessionStorage, depending on where you stored it
+        console.log("Using token:", token);
+        const response = await fetch(`${BACKEND_URL}/api/products/expiring-soon`, {
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
+
+        if (!response.ok) {
+            throw new Error('Failed to fetch items from backend');
+        }
+
+        const data = await response.json();
+        return data.items || []; // Adjust based on your API response structure
+    } catch (error) {
+        console.error(error);
+        return [];
+    }
+}
+
+async function loadItems() {
+    allItems = await fetchItems();
+
+    if (allItems.length === 0) {
         showEmptyState();
         return;
     }
 
     hideEmptyState();
-    renderItems(items);
-    updateStats();
+    renderItems(allItems);
+    updateStats(allItems); // pass items so updateStats can use it
 }
 
 function renderItems(items) {
@@ -74,8 +97,7 @@ function renderItems(items) {
     `).join('');
 }
 
-function updateStats() {
-    const items = JSON.parse(localStorage.getItem('items') || '[]');
+function updateStats(items) {
     const today = new Date();
     const oneWeek = new Date(today.getTime() + (7 * 24 * 60 * 60 * 1000));
     const oneMonth = new Date(today.getTime() + (30 * 24 * 60 * 60 * 1000));
@@ -90,12 +112,13 @@ function updateStats() {
     document.querySelector('.stat-card.info .stat-number').textContent = expiringThisMonth;
 
     // Update progress bars
+    const total = items.length || 1; // prevent division by zero
     document.querySelector('.stat-card.urgent .progress-bar').style.width = 
-        `${(expiringToday / items.length) * 100}%`;
+        `${(expiringToday / total) * 100}%`;
     document.querySelector('.stat-card.warning .progress-bar').style.width = 
-        `${(expiringThisWeek / items.length) * 100}%`;
+        `${(expiringThisWeek / total) * 100}%`;
     document.querySelector('.stat-card.info .progress-bar').style.width = 
-        `${(expiringThisMonth / items.length) * 100}%`;
+        `${(expiringThisMonth / total) * 100}%`;
 }
 
 function handleFilterClick(e) {
@@ -123,7 +146,7 @@ function handleSort() {
 }
 
 function applyFilters() {
-    let items = JSON.parse(localStorage.getItem('items') || '[]');
+    let items = [...allItems];
     const searchTerm = searchInput.value.toLowerCase();
     const category = categoryFilter.value;
     const sortValue = sortBy.value;
@@ -165,24 +188,20 @@ function applyFilters() {
     renderItems(items);
 }
 
-function markAsUsed(id) {
-    const items = JSON.parse(localStorage.getItem('items') || '[]');
-    const index = items.findIndex(item => item.id === id);
-    
-    if (index !== -1) {
-        if (items[index].quantity > 1) {
-            items[index].quantity--;
-            localStorage.setItem('items', JSON.stringify(items));
-        } else {
-            items.splice(index, 1);
-            localStorage.setItem('items', JSON.stringify(items));
-        }
+async function markAsUsed(id) {
+    try {
+        const response = await fetch(`${BACKEND_URL}/api/items/${id}/use`, { method: 'POST' }); // example endpoint
+        if (!response.ok) throw new Error('Failed to mark as used');
         
-        loadItems();
+        await loadItems(); // reload fresh items from backend
         showNotification('Item marked as used!', 'success');
+    } catch (error) {
+        console.error(error);
+        showNotification('Failed to mark item as used', 'error');
     }
 }
 
+    
 // Utility Functions
 function getPriority(expiryDate) {
     const daysUntilExpiry = getDaysUntilExpiry(expiryDate);
@@ -259,10 +278,14 @@ function showNotification(message, type = 'info') {
 
 // Export functionality
 document.querySelector('.export-btn')?.addEventListener('click', () => {
-    const items = JSON.parse(localStorage.getItem('items') || '[]');
+    if (allItems.length === 0) {
+        showNotification('No items to export', 'error');
+        return;
+    }
+
     const csvContent = "data:text/csv;charset=utf-8," 
         + "Name,Category,Quantity,Expiry Date,Location\n"
-        + items.map(item => 
+        + allItems.map(item => 
             `${item.name},${item.category},${item.quantity},${item.expiryDate},${item.location || 'Not specified'}`
         ).join("\n");
 
