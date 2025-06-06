@@ -48,6 +48,13 @@
         </div>
 
         <div class="user-section">
+            <!-- <div class="user-info">
+                <img src="https://ui-avatars.com/api/?name=John+Doe&background=0D6EFD&color=fff" alt="User Avatar">
+                <div>
+                    <h4>John Doe</h4>
+                    <p>Pro Plan</p>
+                </div> 
+            </div>-->
             <div class="user-info">
                 <img id="userAvatar" src="" alt="User Avatar">
                 <div>
@@ -78,44 +85,9 @@
             </div>
 
             <div class="top-actions">
-                <div class="notification-wrapper">
-                    <button class="notification-btn" title="Notifications" id="notificationBtn">
-                        <i class="fas fa-bell"></i>
-                        <span class="badge">3</span>
-                    </button>
-                    <div class="notification-dropdown" id="notificationDropdown">
-                        <div class="notification-header">
-                            <h3>Notifications</h3>
-                            <button class="mark-all-read">Mark all as read</button>
-                        </div>
-                        <div class="notification-list">
-                            <div class="notification-item unread">
-                                <i class="fas fa-exclamation-circle warning"></i>
-                                <div class="notification-content">
-                                    <p>Milk is expiring in 2 days</p>
-                                    <span class="notification-time">2 hours ago</span>
-                                </div>
-                            </div>
-                            <div class="notification-item unread">
-                                <i class="fas fa-box-open info"></i>
-                                <div class="notification-content">
-                                    <p>Yogurt is running low (1 left)</p>
-                                    <span class="notification-time">5 hours ago</span>
-                                </div>
-                            </div>
-                            <div class="notification-item unread">
-                                <i class="fas fa-times-circle danger"></i>
-                                <div class="notification-content">
-                                    <p>Bread has expired</p>
-                                    <span class="notification-time">1 day ago</span>
-                                </div>
-                            </div>
-                        </div>
-                        <a href="#" class="view-all-notifications">View All Notifications</a>
-                    </div>
-                </div>
-                <button class="scanner-btn" title="Scan Item">
-                    <i class="fas fa-qrcode"></i>
+                <button class="notification-btn" title="Notifications">
+                    <i class="fas fa-bell"></i>
+                    <span class="badge">3</span>
                 </button>
                 <button class="add-item-btn">
                     <i class="fas fa-plus"></i>
@@ -156,6 +128,17 @@
                         <h3>Expired</h3>
                         <p class="stat-number">2</p>
                         <span class="stat-detail">Need attention</span>
+                    </div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-icon info">
+                        <i class="fas fa-shopping-basket"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h3>Low Stock</h3>
+                        <p class="stat-number">3</p>
+                        <span class="stat-detail">Items to restock</span>
                     </div>
                 </div>
             </div>
@@ -239,31 +222,6 @@
                     <button type="submit" class="btn-primary">Add Item</button>
                 </div>
             </form>
-        </div>
-    </div>
-
-    <!-- Scanner Modal -->
-    <div class="modal" id="scannerModal">
-        <div class="modal-content scanner-modal">
-            <div class="modal-header">
-                <h2>Scan Item</h2>
-                <button class="close-scanner">
-                    <i class="fas fa-times"></i>
-                </button>
-            </div>
-            <div class="scanner-content">
-                <div class="scanner-area">
-                    <div class="scanner-frame">
-                        <div class="scanner-line"></div>
-                        <i class="fas fa-qrcode scanner-icon"></i>
-                    </div>
-                    <p class="scanner-text">Position the barcode/QR code within the frame</p>
-                </div>
-                <div class="scanner-actions">
-                    <button class="btn-secondary" id="manualEntry">Manual Entry</button>
-                    <button class="btn-primary" id="captureBtn">Capture</button>
-                </div>
-            </div>
         </div>
     </div>
 

@@ -26,11 +26,11 @@ app.use('/api/auth', authRoutes);
 app.use('/api/products', productRoutes);
 
 // Serve frontend static files
-app.use(express.static(path.join(__dirname, 'Frontend')));
+app.use(express.static(path.join(__dirname, 'public')));
 
 // SPA fallback for frontend routes
 app.get(/^\/(?!api).*/, (req, res) => {
-  res.sendFile(path.join(__dirname, 'Frontend', 'index.html'));
+  res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
 // Global error handler
@@ -41,5 +41,3 @@ app.use((err, req, res, next) => {
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`Server running on http://localhost:${PORT}`));
-
-
