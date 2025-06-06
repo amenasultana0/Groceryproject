@@ -10,14 +10,14 @@ const sortBy = document.querySelector('.sort-by');
 const expiringList = document.querySelector('.expiring-list');
 const emptyState = document.querySelector('.empty-state');
 
-
 // Event Listeners
 backButton?.addEventListener('click', () => window.history.back());
 filterButtons.forEach(btn => btn.addEventListener('click', handleFilterClick));
 viewButtons.forEach(btn => btn.addEventListener('click', handleViewChange));
-searchInput?.addEventListener('input', handleSearch);
-categoryFilter?.addEventListener('change', handleFilters);
-sortBy?.addEventListener('change', handleSort);
+searchInput?.addEventListener('input', debounce(loadItems, 300));
+categoryFilter?.addEventListener('change', loadItems);
+sortBy?.addEventListener('change', loadItems);
+
 
 // Initialize
 document.addEventListener('DOMContentLoaded', async () => {
@@ -37,17 +37,29 @@ function getToken() {
   }
 }
 
-// Functions
+// fetch from backend
 async function fetchItems() {
    try {
         const token = getToken();
-        console.log("Using token:", token);
         if (!token) throw new Error('No auth token found');
-        const response = await fetch(`${BACKEND_URL}/api/products/expiring-soon`, {
+        
+        const searchText = document.querySelector('.search-bar input').value.trim();
+        const category = document.querySelector('.category-filter').value;
+        const sortBy = document.querySelector('.sort-by').value;
+
+        const queryParams = new URLSearchParams();
+        if (searchText) queryParams.append('searchText', searchText);
+        if (category) queryParams.append('category', category);
+        if (sortBy) queryParams.append('sortBy', sortBy);
+        
+        const url = `${BACKEND_URL}/api/products/expiring-soon?${queryParams.toString()}`;
+
+        const response = await fetch(url, {
             headers: {
                 'Authorization': `Bearer ${token}`
             }
-        });
+});
+
 
         if (!response.ok) {
             throw new Error('Failed to fetch items from backend');
@@ -62,6 +74,13 @@ async function fetchItems() {
     }
 }
 
+function debounce(func, delay) {
+    let timeout;
+    return (...args) => {
+        clearTimeout(timeout);
+        timeout = setTimeout(() => func(...args), delay);
+    };
+}
 
 
 async function loadItems() {
@@ -75,7 +94,7 @@ async function loadItems() {
     hideEmptyState();
 
     updatePriorityCounts(allItems);
-
+    applyFilters();
     renderItems(allItems);
     updateStats(allItems); // pass items so updateStats can use it
 }
@@ -98,7 +117,7 @@ function updatePriorityCounts(items) {
 }
 
 function renderItems(items) {
-    const currentView = document.querySelector('.view-btn.active').dataset.view;
+    const currentView = document.querySelector('.view-btn.active')?.dataset.view || 'list';
     expiringList.className = `expiring-list ${currentView}-view`;
     
     expiringList.innerHTML = items.map(item => `
@@ -121,19 +140,55 @@ function renderItems(items) {
                 </div>
             </div>
             <div class="action-buttons">
-                <button class="action-btn mark-used-btn" title="Mark as Used" onclick="markAsUsed(${item.id})">
+                <button class="action-btn mark-used-btn" title="Mark as Used" data-id="${item.id}">
                     <i class="fas fa-check"></i>
                 </button>
-                <button class="action-btn edit-btn" title="Edit Item" onclick="editItem(${item.id})">
+                <button class="action-btn edit-btn" title="Edit Item" data-id="${item.id}">
                     <i class="fas fa-edit"></i>
                 </button>
-                <button class="action-btn delete-btn" title="Delete Item" onclick="deleteItem(${item.id})">
+                <button class="action-btn delete-btn" title="Delete Item" data-id="${item.id}">
                     <i class="fas fa-trash"></i>
                 </button>
             </div>
         </div>
     `).join('');
+
+    addDeleteListener();
+    addEditListeners();
+    addMarkUsedListeners();
 }
+
+
+function filterAndSortItems() {
+  const searchText = searchInput.value.toLowerCase();
+  const selectedCategory = categoryFilter.value;
+  const sortValue = sortBy.value;
+
+  let filteredItems = items.filter(item => {
+    const matchesText =
+      item.name.toLowerCase().includes(searchText) ||
+      item.category.toLowerCase().includes(searchText) ||
+      (item.location && item.location.toLowerCase().includes(searchText));
+
+    const matchesCategory = selectedCategory === '' || item.category === selectedCategory;
+
+    return matchesText && matchesCategory;
+  });
+
+    filteredItems.sort((a, b) => {
+    switch (sortValue) {
+      case 'name':
+        return (a.name || '').localeCompare(b.name || '');
+      case 'category':
+        return (a.category || '').localeCompare(b.category || '');
+      case 'priority':
+        return getPriorityValue(b.expiryDate) - getPriorityValue(a.expiryDate);
+      default: // expiry
+        return new Date(a.expiryDate) - new Date(b.expiryDate);
+    }
+  });
+  renderItems(filteredItems);
+}  
 
 function updateStats(items) {
     const today = new Date();
@@ -230,6 +285,11 @@ function applyFilters() {
     const activeFilterBtn = document.querySelector('.filter-btn.active');
     const activeFilter = activeFilterBtn ? getFilterName(activeFilterBtn) : 'All Items';
     
+    console.log("Active Filter (raw):", activeFilter);
+    console.log("Sanitized:", activeFilter.trim().toLowerCase());
+
+    console.log("Active Filter (exact):", JSON.stringify(activeFilter));
+    console.log("Items count before filter:", items.length);
     // Apply search filter
     if (searchTerm) {
         items = items.filter(item => 
@@ -247,6 +307,7 @@ function applyFilters() {
     if (activeFilter.trim().toLowerCase() !== 'all items') {
         const priority = activeFilter.replace(' Priority', '').toLowerCase();
         items = items.filter(item => getPriority(item.expiryDate) === priority);
+        console.log("Items count after priority filter:", items.length);
     }
     
     // Apply sorting
@@ -262,7 +323,56 @@ function applyFilters() {
                 return new Date(a.expiryDate) - new Date(b.expiryDate);
         }
     });
+    if (items.length === 0) {
+        showEmptyState();
+    } else {
+        hideEmptyState();
+    }
     renderItems(items);
+}
+
+function addDeleteListener(){
+    document.querySelectorAll('.delete-btn').forEach(button => {
+        button.addEventListener('click', (e) => {
+            const id = e.currentTarget.getAttribute('data-id');
+            if (id) {
+            deleteItem(id);
+        }else{
+            console.error('Delete ID is missing');
+        }
+          // Call your delete function with the correct id
+        });
+    });
+}
+
+function addMarkUsedListeners() {
+  document.querySelectorAll('.mark-used-btn').forEach(button => {
+    button.addEventListener('click', () => {
+      const id = button.getAttribute('data-id');
+      if (id) {
+        markAsUsed(id);
+      }
+    });
+  });
+}
+
+async function deleteItem(id) {
+    try {
+        const token = getToken();
+        if (!token) throw new Error('No auth token found');
+        const response = await fetch(`${BACKEND_URL}/api/items/${id}`, {
+            method: 'DELETE',
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
+        if (!response.ok) throw new Error('Failed to delete item');
+        await loadItems();
+        showNotification('Item deleted successfully!', 'success');
+    } catch (error) {
+        console.error(error);
+        showNotification('Failed to delete item', 'error');
+    }
 }
 
 async function markAsUsed(id) {
@@ -393,4 +503,4 @@ document.querySelector('.export-btn')?.addEventListener('click', () => {
 // Print functionality
 document.querySelector('.print-btn')?.addEventListener('click', () => {
     window.print();
-});
+}); 

@@ -32,6 +32,8 @@ async function handleLogin(e) {
 
         if (response.ok) {
             const user = {
+                id: data.user.id,       // Add this
+                name: data.user.name,
                 email,
                 token: data.token
             };

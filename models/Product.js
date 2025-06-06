@@ -6,6 +6,11 @@ const productSchema = new mongoose.Schema({
     required: true,
     trim: true,
   },
+  category: {
+    type: String,  // Add this field
+    required: true,
+    trim: true,
+  },
   quantity: {
     type: Number,
     required: true,
