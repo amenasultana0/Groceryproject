@@ -37,10 +37,11 @@ function getToken() {
   }
 }
 
-// fetch from backend
+// Functions
 async function fetchItems() {
    try {
         const token = getToken();
+        console.log("Using token:", token);
         if (!token) throw new Error('No auth token found');
         
         const searchText = document.querySelector('.search-bar input').value.trim();
@@ -94,7 +95,7 @@ async function loadItems() {
     hideEmptyState();
 
     updatePriorityCounts(allItems);
-    applyFilters();
+
     renderItems(allItems);
     updateStats(allItems); // pass items so updateStats can use it
 }
@@ -140,22 +141,18 @@ function renderItems(items) {
                 </div>
             </div>
             <div class="action-buttons">
-                <button class="action-btn mark-used-btn" title="Mark as Used" data-id="${item.id}">
+                <button class="action-btn mark-used-btn" title="Mark as Used" onclick="markAsUsed(${JSON.stringify(item.id)})">
                     <i class="fas fa-check"></i>
                 </button>
-                <button class="action-btn edit-btn" title="Edit Item" data-id="${item.id}">
+                <button class="action-btn edit-btn" title="Edit Item" onclick="editItem(${JSON.stringify(item.id)})">
                     <i class="fas fa-edit"></i>
                 </button>
-                <button class="action-btn delete-btn" title="Delete Item" data-id="${item.id}">
+                <button class="action-btn delete-btn" title="Delete Item" onclick="deleteItem(${JSON.stringify(item.id)})">
                     <i class="fas fa-trash"></i>
                 </button>
             </div>
         </div>
     `).join('');
-
-    addDeleteListener();
-    addEditListeners();
-    addMarkUsedListeners();
 }
 
 
@@ -323,56 +320,8 @@ function applyFilters() {
                 return new Date(a.expiryDate) - new Date(b.expiryDate);
         }
     });
-    if (items.length === 0) {
-        showEmptyState();
-    } else {
-        hideEmptyState();
-    }
+    console.log("Items after filters:", items.length);
     renderItems(items);
-}
-
-function addDeleteListener(){
-    document.querySelectorAll('.delete-btn').forEach(button => {
-        button.addEventListener('click', (e) => {
-            const id = e.currentTarget.getAttribute('data-id');
-            if (id) {
-            deleteItem(id);
-        }else{
-            console.error('Delete ID is missing');
-        }
-          // Call your delete function with the correct id
-        });
-    });
-}
-
-function addMarkUsedListeners() {
-  document.querySelectorAll('.mark-used-btn').forEach(button => {
-    button.addEventListener('click', () => {
-      const id = button.getAttribute('data-id');
-      if (id) {
-        markAsUsed(id);
-      }
-    });
-  });
-}
-
-async function deleteItem(id) {
-    try {
-        const token = getToken();
-        if (!token) throw new Error('No auth token found');
-        const response = await fetch(`${BACKEND_URL}/api/items/${id}`, {
-            method: 'DELETE',
-            headers: {
-                'Authorization': `Bearer ${token}`
-            }
-        });
-        if (!response.ok) throw new Error('Failed to delete item');
-        await loadItems();
-        showNotification('Item deleted successfully!', 'success');
-    } catch (error) {
-        console.error(error);
-        showNotification('Failed to delete item', 'error');
-    }
 }
 
 async function markAsUsed(id) {

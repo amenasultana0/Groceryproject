@@ -291,7 +291,7 @@
                     <button class="action-btn mark-used-btn" title="Mark as Used">
                         <i class="fas fa-check"></i>
                     </button>
-                    <button class="action-btn edit-btn" title="Edit Item">
+                    <button class="action-btn edit-btn" title="Edit Item" data-id="{{item._id}}">
                         <i class="fas fa-edit"></i>
                     </button>
                     <button class="action-btn delete-btn" title="Delete Item" data-id="{{item._id}}">
@@ -308,6 +308,7 @@
             <p>No items are expiring soon. You're doing great at managing your inventory!</p>
         </div>
     </div>
+    
 
     <script src="./js/expiring-soon.js"></script>
 </body>

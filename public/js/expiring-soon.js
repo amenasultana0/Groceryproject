@@ -8,6 +8,18 @@ const searchInput = document.querySelector('.search-bar input');
 const categoryFilter = document.querySelector('.category-filter');
 const sortBy = document.querySelector('.sort-by');
 const expiringList = document.querySelector('.expiring-list');
+expiringList.addEventListener('click', (e) => {
+    const deleteBtn = e.target.closest('.delete-btn');
+    if (!deleteBtn) return; // clicked outside delete button, ignore
+
+    const id = deleteBtn.dataset.id;
+    if (id) {
+        // Confirm before deleting (optional)
+        if (confirm('Are you sure you want to delete this item?')) {
+            deleteItem(id);
+        }
+    }
+});
 const emptyState = document.querySelector('.empty-state');
 
 // Event Listeners
@@ -89,6 +101,10 @@ async function loadItems() {
 
     allItems = allItems.filter(item => !item.used);
 
+    allItems = filterExpiringWithinMonth(allItems);
+
+    console.log('Filtered allItems:', allItems);
+
     if (allItems.length === 0) {
         showEmptyState();
         return;
@@ -97,8 +113,9 @@ async function loadItems() {
     hideEmptyState();
 
     updatePriorityCounts(allItems);
+    updateStats(allItems);
 
-     applyFilters(); 
+    applyFilters(); 
 }
 
 function updatePriorityCounts(items) {
@@ -121,7 +138,7 @@ function updatePriorityCounts(items) {
 function renderItems(items) {
     const currentView = document.querySelector('.view-btn.active')?.dataset.view || 'list';
     console.log('Items passed to renderItems:', items);
-    
+
     expiringList.className = `expiring-list ${currentView}-view`;
     
     const visibleItems = items.filter(item => !item.used);
@@ -146,13 +163,13 @@ function renderItems(items) {
                 </div>
             </div>
             <div class="action-buttons">
-                <button class="action-btn mark-used-btn" title="Mark as Used" onclick="markAsUsed(${JSON.stringify(item.id)})">
+                <button class="action-btn mark-used-btn" title="Mark as Used" data-id="${item._id}">
                     <i class="fas fa-check"></i>
                 </button>
-                <button class="action-btn edit-btn" title="Edit Item" onclick="editItem(${JSON.stringify(item.id)})">
+                <button class="action-btn edit-btn" title="Edit Item" data-id="${item._id}">
                     <i class="fas fa-edit"></i>
                 </button>
-                <button class="action-btn delete-btn" title="Delete Item" onclick="deleteItem(${JSON.stringify(item.id)})">
+                <button class="action-btn delete-btn" title="Delete Item" data-id="${item._id}">
                     <i class="fas fa-trash"></i>
                 </button>
             </div>
@@ -192,35 +209,83 @@ function filterAndSortItems() {
   renderItems(filteredItems);
 }  
 
+// function resetTime(date) {
+//   return new Date(date.getFullYear(), date.getMonth(), date.getDate());
+// }
+
+// function updateStats(items) {
+//   const today = resetTime(new Date());
+//   const oneWeek = new Date(today.getTime() + (7 * 24 * 60 * 60 * 1000));
+//   const oneMonth = new Date(today.getTime() + (30 * 24 * 60 * 60 * 1000));
+
+//   const expiringWithin24Hours = items.filter(item => {
+//     const expiry = resetTime(new Date(item.expiryDate));
+//     return expiry.getTime() === today.getTime();
+//   }).length;
+
+//   const expiringThisWeek = items.filter(item => {
+//     const expiry = resetTime(new Date(item.expiryDate));
+//     return expiry > today && expiry <= oneWeek;
+//   }).length;
+
+//   const expiringThisMonth = items.filter(item => {
+//     const expiry = resetTime(new Date(item.expiryDate));
+//     return expiry > oneWeek && expiry <= oneMonth;
+//   }).length;
+
+//   const total = expiringWithin24Hours + expiringThisWeek + expiringThisMonth;
+
+//   // ✅ Make sure IDs have '#' prefix
+//   document.querySelector('#critical-count').textContent = expiringWithin24Hours;
+//   document.querySelector('#medium-count').textContent = expiringThisWeek;
+//   document.querySelector('#low-count').textContent = expiringThisMonth;
+
+//   document.querySelector('#critical-progress').style.width = `${(expiringWithin24Hours / (total || 1)) * 100}%`;
+//   document.querySelector('#medium-progress').style.width = `${(expiringThisWeek / (total || 1)) * 100}%`;
+//   document.querySelector('#low-progress').style.width = `${(expiringThisMonth / (total || 1)) * 100}%`;
+
+//   // 🔍 Log for debugging
+//   console.log({ today, oneWeek, oneMonth, expiringWithin24Hours, expiringThisWeek, expiringThisMonth });
+// }
+
 function updateStats(items) {
-    const today = new Date();
-    const oneWeek = new Date(today.getTime() + (7 * 24 * 60 * 60 * 1000));
-    const oneMonth = new Date(today.getTime() + (30 * 24 * 60 * 60 * 1000));
+  const now = new Date();
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const oneWeek = new Date(today.getTime() + (7 * 24 * 60 * 60 * 1000));
+  const oneMonth = new Date(today.getTime() + (30 * 24 * 60 * 60 * 1000));
 
-    const expiringWithin24Hours = items.filter(item => isExpiringWithin24Hours(item.expiryDate)).length;
-    const expiringThisWeek = items.filter(item => isExpiringBefore(item.expiryDate, oneWeek)).length;
-    const expiringThisMonth = items.filter(item => isExpiringBefore(item.expiryDate, oneMonth)).length;
+  const expiringWithin24Hours = items.filter(item => {
+    const expiry = new Date(item.expiryDate);
+    return expiry.getTime() - now.getTime() <= 24 * 60 * 60 * 1000 && expiry.getTime() >= now.getTime();
+  }).length;
 
-    // Update stats
-    document.querySelector('.stat-card.urgent .stat-number').textContent = expiringWithin24Hours;
-    document.querySelector('.stat-card.warning .stat-number').textContent = expiringThisWeek;
-    document.querySelector('.stat-card.info .stat-number').textContent = expiringThisMonth;
+  const expiringThisWeek = items.filter(item => {
+    const expiry = new Date(item.expiryDate);
+    return expiry > now && expiry <= oneWeek;
+  }).length;
 
-    // Update progress bars
-    const total = items.length || 1; // prevent division by zero
-    document.querySelector('.stat-card.urgent .progress-bar').style.width = 
-    `${(expiringWithin24Hours / total) * 100}%`;
-    document.querySelector('.stat-card.warning .progress-bar').style.width = 
-        `${(expiringThisWeek / total) * 100}%`;
-    document.querySelector('.stat-card.info .progress-bar').style.width = 
-        `${(expiringThisMonth / total) * 100}%`;
+  const expiringThisMonth = items.filter(item => {
+    const expiry = new Date(item.expiryDate);
+    return expiry > oneWeek && expiry <= oneMonth;
+  }).length;
+
+  const total = expiringWithin24Hours + expiringThisWeek + expiringThisMonth;
+
+  document.querySelector('#critical-count').textContent = expiringWithin24Hours;
+  document.querySelector('#medium-count').textContent = expiringThisWeek;
+  document.querySelector('#low-count').textContent = expiringThisMonth;
+
+  document.querySelector('#critical-progress').style.width = `${(expiringWithin24Hours / (total || 1)) * 100}%`;
+  document.querySelector('#medium-progress').style.width = `${(expiringThisWeek / (total || 1)) * 100}%`;
+  document.querySelector('#low-progress').style.width = `${(expiringThisMonth / (total || 1)) * 100}%`;
 }
+
 
 async function deleteItem(id) {
     try {
         const token = getToken();
         if (!token) throw new Error('No auth token found');
-        const response = await fetch(`${BACKEND_URL}/api/items/${id}`, {
+        const response = await fetch(`${BACKEND_URL}/api/products/${id}`, {
             method: 'DELETE',
             headers: {
                 'Authorization': `Bearer ${token}`
@@ -372,14 +437,16 @@ function getDaysUntilExpiry(expiryDate) {
     const today = new Date();
     const expiry = new Date(expiryDate);
     const diffTime = expiry - today;
-    return Math.floor(diffTime / (1000 * 60 * 60 * 24));
+    const days = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+    console.log(`Expiry: ${expiryDate}, Days until expiry: ${days}`);
+    return days;
 }
 
 function isExpiringWithin24Hours(expiryDate) {
     const now = new Date();
     const expiry = new Date(expiryDate);
-    const diffMs = expiry - now;
-    return diffMs > 0 && diffMs <= 24 * 60 * 60 * 1000; // between now and 24 hours
+    
+    
 }
 
 function getExpiryProgress(expiryDate) {
@@ -406,6 +473,16 @@ function isExpiringToday(date) {
 function isExpiringBefore(date, beforeDate) {
     return new Date(date) <= beforeDate;
 }
+
+function filterExpiringWithinMonth(items) {
+  return items.filter(item => {
+    const days = getDaysUntilExpiry(item.expiryDate);
+    return days >= 0 && days <= 30;
+  });
+  console.log('Items before filter:', items.length, 'Items after 30-day filter:', filtered.length);
+  return filtered;
+}
+
 
 function showEmptyState() {
     expiringList.style.display = 'none';
@@ -458,3 +535,79 @@ document.querySelector('.export-btn')?.addEventListener('click', () => {
 document.querySelector('.print-btn')?.addEventListener('click', () => {
     window.print();
 }); 
+
+document.addEventListener('click', (e) => {
+  if (e.target.closest('.edit-btn')) {
+    const id = e.target.closest('.edit-btn').dataset.id;
+    openEditForm(id);
+  }
+});
+
+function openEditForm(id) {
+  const item = allItems.find(item => item._id === id);
+  if (!item) {
+    alert('Item not found');
+    return;
+}
+  document.getElementById('itemName').value = item.name;
+  document.getElementById('category').value = item.category;
+  document.getElementById('quantity').value = item.quantity;
+  document.getElementById('expiryDate').value = item.expiryDate.split('T')[0];
+  document.getElementById('location').value = item.location || '';
+
+  // Show the edit form/modal
+  document.getElementById('editForm').style.display = 'block';
+
+  // Optionally, save the id in a hidden input for submission
+  document.getElementById('editItemId').value = id;
+}
+
+
+async function submitEditForm(event) {
+  event.preventDefault();
+
+  const id = document.getElementById('editItemId').value;
+  const updatedData = {
+    name: document.getElementById('itemName').value.trim(),
+    category: document.getElementById('category').value.trim(),
+    quantity: Number(document.getElementById('quantity').value),
+    expiryDate: document.getElementById('expiryDate').value,
+    location: document.getElementById('location').value.trim()
+  };
+
+  try {
+    const token = getToken(); // Your function to get auth token
+    if (!token) throw new Error('No auth token found');
+
+    const response = await fetch(`${BACKEND_URL}/api/products/${id}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+      body: JSON.stringify(updatedData)
+    });
+
+    if (!response.ok) throw new Error('Failed to update item');
+
+    alert('Item updated successfully!');
+    await loadItems(); // reload items to reflect update
+    document.getElementById('editForm').style.display = 'none'; // hide form
+
+  } catch (error) {
+    console.error(error);
+    alert('Failed to update item');
+  }
+}
+
+document.querySelectorAll('.edit-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const id = btn.getAttribute('data-id');
+    if (id) {
+      openEditForm(id);
+    } else {
+      console.error('Edit button missing data-id');
+    }
+  });
+});
+
