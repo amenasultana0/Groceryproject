@@ -7,6 +7,7 @@ const path = require('path');
 const cors = require('cors');
 const Notification = require('./models/Notification');
 const authMiddleware = require('./middleware/authMiddleware');
+const categoryRoutes = require('./routes/categoryRoutes');
 
 const authRoutes = require('./routes/authRoutes');
 const productRoutes = require('./routes/productRoutes');
@@ -37,6 +38,7 @@ mongoose.connect(process.env.MONGO_URI)
 // API Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/products', productRoutes);
+app.use('/api/categories', categoryRoutes);
 
 // API route to fetch notifications
 app.get('/api/notifications', async (req, res) => {
