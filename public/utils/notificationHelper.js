@@ -1,5 +1,5 @@
 // utils/notificationHelper.js
-const Notification = require('../models/Notification');
+const Notification = require('../../models/Notification');
 
 async function createNotification(message, userId = null, io) {
   const notification = new Notification({ message, userId });

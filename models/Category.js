@@ -1,16 +1,11 @@
 const mongoose = require('mongoose');
 
-const categorySchema = new mongoose.Schema({
+const CategorySchema = new mongoose.Schema({
   name: { type: String, required: true },
-  icon: { type: String, default: '' },
-  color: { type: String, default: '#000000' },
-  items: [
-    {
-      text: String,
-      createdAt: { type: Date, default: Date.now },
-      id: Number, // optional unique id for each item
-    },
-  ],
-}, { timestamps: true });
+  icon: { type: String, required: true },
+  color: { type: String },
+  items: [{ text: String }],
+  user: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true } // ✅ this line is important
+});
 
-module.exports = mongoose.model('Category', categorySchema);
+module.exports = mongoose.model('Category', CategorySchema);

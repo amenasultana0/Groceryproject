@@ -1,3 +1,5 @@
+import { populateCategoryDropdown } from './utils/categoryHelper.js'; 
+
 // DOM Elements
 const addItemBtn = document.querySelector('.add-item-btn');
 const modal = document.getElementById('addItemModal');
@@ -37,6 +39,7 @@ window.addEventListener('DOMContentLoaded', () => {
   loadItems();
   setUserInfo();
   fetchUnreadNotificationCount();
+  populateCategoryDropdown('category'); // For <select id="category">
 });
 
 // Notification socket

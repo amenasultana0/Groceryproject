@@ -1,3 +1,4 @@
+import { populateCategoryDropdown } from './utils/categoryHelper.js';
 const BACKEND_URL = 'http://localhost:3000';
 
 // Category colors
@@ -65,12 +66,7 @@ saveCategoryBtn.onclick = async () => {
     return;
   }
 
-  const newCategory = {
-    name,
-    icon,
-    items: [],
-    color: CATEGORY_COLORS[categories.length % CATEGORY_COLORS.length]
-  };
+  const newCategoryData = { name, icon };
 
   // POST to backend
   try {
@@ -83,12 +79,16 @@ saveCategoryBtn.onclick = async () => {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${token}`
       },
-      body: JSON.stringify(newCategory)
+      body: JSON.stringify(newCategoryData)
     });
 
     if (!response.ok) throw new Error('Failed to save category');
 
     const savedCategory = await response.json();
+
+    savedCategory.color = CATEGORY_COLORS[categories.length % CATEGORY_COLORS.length];
+    savedCategory.items = savedCategory.items || [];
+
     categories.push(savedCategory);
 
     updateDisplay();
@@ -134,31 +134,31 @@ function createCategoryCard(category) {
   `;
 
   // ✅ Add delete button handler here
-  const deleteBtn = card.querySelector(".delete-icon");
-  deleteBtn.onclick = async () => {
-    if (confirm(`Delete "${category.name}" and all its items?`)) {
-      try {
-        const token = getToken();
-        if (!token) throw new Error('No auth token');
+const deleteBtn = card.querySelector(".delete-icon");
+deleteBtn.onclick = async () => {
+  if (confirm(`Delete "${category.name}" and all its items?`)) {
+    try {
+      const token = getToken();
+      if (!token) throw new Error('No auth token');
 
-        const response = await fetch(`${BACKEND_URL}/api/categories/${category.id}`, {
-          method: 'DELETE',
-          headers: { Authorization: `Bearer ${token}` }
-        });
-        if (!response.ok) throw new Error('Failed to delete category');
+      const response = await fetch(`${BACKEND_URL}/api/categories/${category.id}`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (!response.ok) throw new Error('Failed to delete category');
 
-        categories = categories.filter(cat => cat.id !== category.id);
-        updateDisplay();
-      } catch (error) {
-        alert('Error deleting category, please try again.');
-        console.error(error);
-      }
+      categories = categories.filter(cat => cat.id !== category.id);
+      updateDisplay();
+    } catch (error) {
+      alert('Error deleting category, please try again.');
+      console.error(error);
     }
-  };
+  }
+};
 
-  setupCardEventListeners(card, category);
-  renderItems(card, category);
-  categoriesWrapper.appendChild(card);
+setupCardEventListeners(card, category);
+renderItems(card, category);
+categoriesWrapper.appendChild(card);
 }
 
 function setupCardEventListeners(card, category) {
@@ -166,15 +166,34 @@ function setupCardEventListeners(card, category) {
   const input = card.querySelector('.inline-form input');
   const addBtn = card.querySelector('.inline-form button');
 
-  addBtn.onclick = () => {
+  addBtn.onclick = async () => {
     const text = input.value.trim();
     if (!text) return;
 
     category.items.push({ text });
     input.value = '';
-    saveCategories();
-    renderItems(card, category);
-    updateCategoryCount(card, category);
+
+    try {
+      const token = getToken();
+      if (!token) throw new Error('No auth token');
+
+      const res = await fetch(`${BACKEND_URL}/api/categories/${category.id}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({ items: category.items }) // send the full updated list
+      });
+
+      if (!res.ok) throw new Error('Failed to update items');
+
+      renderItems(card, category);
+      updateCategoryCount(card, category);
+    } catch (err) {
+      alert('Failed to add item');
+      console.error(err);
+    }
   };
 
   input.addEventListener('keypress', (e) => {
@@ -191,14 +210,33 @@ function setupCardEventListeners(card, category) {
     colorPicker.classList.toggle('show');
   };
 
-  // Color option selection
+  // ✅ Fixed: Add click listeners to all color options
   const colorOptions = card.querySelectorAll('.color-option');
   colorOptions.forEach(option => {
-    option.onclick = () => {
+    option.onclick = async () => {
       const selectedColor = option.dataset.color;
       category.color = selectedColor;
-      saveCategories();
-      updateDisplay();
+
+      try {
+        const token = getToken();
+        if (!token) throw new Error('No auth token');
+
+        const response = await fetch(`${BACKEND_URL}/api/categories/${category.id}`, {
+          method: 'PATCH',
+          headers: { 
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({ color: selectedColor })
+        });
+
+        if (!response.ok) throw new Error('Failed to update category color');
+
+        updateDisplay();
+      } catch (error) {
+        alert('Error updating category color');
+        console.error(error);
+      }
     };
   });
 }
@@ -207,57 +245,98 @@ function setupCardEventListeners(card, category) {
 function renderItems(card, category) {
   const itemList = card.querySelector('.item-list');
   itemList.innerHTML = '';
-  
+
   category.items.forEach((item, index) => {
     const itemElement = document.createElement("div");
     itemElement.className = "item";
     itemElement.draggable = true;
     itemElement.dataset.itemIndex = index;
-      
+
     itemElement.innerHTML = `
       <span class="item-text">${item.text}</span>
       <span class="delete-item" title="Remove Item">×</span>
     `;
-  
-    // Delete item handler
-    itemElement.querySelector(".delete-item").onclick = () => {
+
+    // Delete item
+    itemElement.querySelector(".delete-item").onclick = async () => {
       category.items.splice(index, 1);
-      saveCategories();
-      renderItems(card, category);
-      updateCategoryCount(card, category);
+
+      try {
+        const token = getToken();
+        if (!token) throw new Error('No auth token');
+
+        const res = await fetch(`${BACKEND_URL}/api/categories/${category.id}`, {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`
+          },
+          body: JSON.stringify({ items: category.items })
+        });
+
+        if (!res.ok) throw new Error('Failed to update items after deletion');
+
+        renderItems(card, category);
+        updateCategoryCount(card, category);
+      } catch (err) {
+        alert('Failed to delete item');
+        console.error(err);
+      }
     };
-  
-      // Drag and drop for items
-    itemElement.addEventListener('dragstart', (e) => {
+
+    // Drag & Drop logic
+    itemElement.addEventListener('dragstart', () => {
       draggedElement = { type: 'item', categoryId: category.id, itemIndex: index };
       itemElement.classList.add('dragging');
     });
-  
+
     itemElement.addEventListener('dragend', () => {
       itemElement.classList.remove('dragging');
       draggedElement = null;
     });
-  
+
     itemElement.addEventListener('dragover', (e) => {
       e.preventDefault();
     });
-  
-    itemElement.addEventListener('drop', (e) => {
+
+    itemElement.addEventListener('drop', async (e) => {
       e.preventDefault();
-      if (draggedElement && draggedElement.type === 'item' && 
-        draggedElement.categoryId === category.id) {
+      if (
+        draggedElement &&
+        draggedElement.type === 'item' &&
+        draggedElement.categoryId === category.id
+      ) {
         const fromIndex = draggedElement.itemIndex;
         const toIndex = index;
-          
+
         if (fromIndex !== toIndex) {
           const [movedItem] = category.items.splice(fromIndex, 1);
           category.items.splice(toIndex, 0, movedItem);
-          saveCategories();
-          renderItems(card, category);
+
+          try {
+            const token = getToken();
+            if (!token) throw new Error('No auth token');
+
+            const res = await fetch(`${BACKEND_URL}/api/categories/${category.id}`, {
+              method: 'PATCH',
+              headers: {
+                'Content-Type': 'application/json',
+                Authorization: `Bearer ${token}`
+              },
+              body: JSON.stringify({ items: category.items })
+            });
+
+            if (!res.ok) throw new Error('Failed to update item order');
+
+            renderItems(card, category);
+          } catch (err) {
+            alert('Failed to save reordered items');
+            console.error(err);
+          }
         }
       }
     });
-  
+
     itemList.appendChild(itemElement);
   });
 }
@@ -323,9 +402,9 @@ async function loadCategories() {
     }
 
     const data = await response.json();
-    categories = data.map(category => ({
+    categories = data.map((category, index) => ({
       ...category,
-      color: category.color || CATEGORY_COLORS[categories.length % CATEGORY_COLORS.length],
+      color: category.color || CATEGORY_COLORS[index % CATEGORY_COLORS.length],
       items: category.items || []
     }));
 

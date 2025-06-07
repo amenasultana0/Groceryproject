@@ -14,14 +14,22 @@ router.get('/', authMiddleware, async (req, res) => {
   }
 });
 
-
 // Add a new category
-router.post('/', async (req, res) => {
+router.post('/', authMiddleware, async (req, res) => {
   try {
-    const newCategory = new Category(req.body);
+    const { name, icon } = req.body;
+
+    const newCategory = new Category({
+      name,
+      icon,
+      user: req.user.id,
+      items: []
+    });
+
     await newCategory.save();
     res.status(201).json(newCategory);
   } catch (err) {
+    console.error(err);
     res.status(400).json({ error: 'Invalid data' });
   }
 });

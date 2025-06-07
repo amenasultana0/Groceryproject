@@ -1,3 +1,5 @@
+import { populateCategoryDropdown } from '../utils/categoryHelper.js'; 
+
 const BACKEND_URL = 'http://127.0.0.1:3000';
 let allItems = [];
 // DOM Elements
@@ -33,7 +35,8 @@ sortBy?.addEventListener('change', loadItems);
 
 // Initialize
 document.addEventListener('DOMContentLoaded', async () => {
-    await loadItems();
+  await loadItems();
+  populateCategoryDropdown('categoryFilter')
 });
 
 function getToken() {
@@ -363,7 +366,8 @@ function applyFilters() {
 
     // Apply category filter
     if (category) {
-        items = items.filter(item => item.category?.toLowerCase().trim() === category.toLowerCase().trim());
+      const selectedCategory = category.trim().toLowerCase();
+      items = items.filter(item => (item.category || '').toLowerCase() === selectedCategory);
     }
 
     // Apply priority filter

@@ -123,14 +123,8 @@
                 <input type="text" placeholder="Search items by name, category, or location...">
             </div>
             <div class="search-filters">
-                <select class="category-filter">
+                <select id="categoryFilter" class="category-filter">
                     <option value="">All Categories</option>
-                    <option value="dairy">Dairy</option>
-                    <option value="produce">Produce</option>
-                    <option value="meat">Meat</option>
-                    <option value="Fruits">Fruits</option>
-                    <option value="vegetables">Vegetables</option>
-                    <option value="snack">Snack</option>
                 </select>
                 <select class="sort-by">
                     <option value="expiry">Sort by Expiry Date</option>
@@ -310,6 +304,6 @@
     </div>
     
 
-    <script src="./js/expiring-soon.js"></script>
+    <script type="module" src="./js/expiring-soon.js"></script>
 </body>
 </html>
