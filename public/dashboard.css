@@ -714,3 +714,34 @@ textarea:focus {
         flex-direction: column;
     }
 }
+
+.notification-toast {
+    position: fixed;
+    bottom: 2rem;
+    right: 2rem;
+    background-color: var(--bg-primary);
+    color: var(--text-primary);
+    border-left: 5px solid var(--info);
+    padding: 1rem 1.5rem;
+    border-radius: 0.5rem;
+    box-shadow: var(--shadow-lg);
+    z-index: 1100;
+    transition: transform 0.3s ease, opacity 0.3s ease;
+}
+
+.notification-toast.success {
+    border-left-color: var(--success);
+}
+
+.notification-toast.danger {
+    border-left-color: var(--danger);
+}
+
+.notification-toast.warning {
+    border-left-color: var(--warning);
+}
+
+.notification-toast.hide {
+    opacity: 0;
+    transform: translateY(20px);
+}

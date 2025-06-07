@@ -87,13 +87,18 @@
             <div class="top-actions">
                 <button class="notification-btn" title="Notifications">
                     <i class="fas fa-bell"></i>
-                    <span class="badge">3</span>
+                    <span class="badge">0</span>
                 </button>
                 <button class="add-item-btn">
                     <i class="fas fa-plus"></i>
                     Add Item
                 </button>
             </div>
+            <div id="notificationsPanel" style="display: none;">
+                <ul id="notificationsList"></ul>
+            </div>
+
+
         </header>
 
         <div class="dashboard-content">
@@ -225,6 +230,9 @@
         </div>
     </div>
 
+    
+    <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"
+        crossorigin="anonymous"></script>
     <script src="dashboard.js"></script>
 </body>
 </html>

@@ -1,6 +1,7 @@
 const express = require('express');
 const Product = require('../models/Product');
 const authMiddleware = require('../middleware/authMiddleware');
+const { createNotification } = require('../utils/notificationHelper');
 
 const router = express.Router();
 
@@ -58,18 +59,6 @@ router.get('/expiring', authMiddleware, async (req, res) => {
   }
 });
 
-
-function isSameDay(d1, d2) {
-  return d1.getDate() === d2.getDate() &&
-         d1.getMonth() === d2.getMonth() &&
-         d1.getFullYear() === d2.getFullYear();
-}
-
-// Simple date validation helper
-function isValidDate(d) {
-  return !isNaN(Date.parse(d));
-}
-
 // POST /api/products/add - Create product
 router.post('/add', authMiddleware, async (req, res) => {
   const { name, category, quantity, expiryDate } = req.body;
@@ -91,6 +80,13 @@ router.post('/add', authMiddleware, async (req, res) => {
       userId: req.user._id,
     });
     await product.save();
+
+    // Emit event after adding product
+    const io = req.app.get('io');
+    io.emit('productAdded', product);  // Broadcast to all connected clients
+
+    await createNotification(`Product "${product.name}" added by ${req.user.name || 'a user'}`, req.user._id, io);
+
     res.status(201).json({ message: 'Product added successfully', product });
   } catch (error) {
     console.error('Add Product Error:', error);
@@ -108,6 +104,17 @@ router.get('/', authMiddleware, async (req, res) => {
     res.status(500).json({ error: 'Failed to fetch products' });
   }
 });
+
+function isSameDay(d1, d2) {
+  return d1.getDate() === d2.getDate() &&
+         d1.getMonth() === d2.getMonth() &&
+         d1.getFullYear() === d2.getFullYear();
+}
+
+// Simple date validation helper
+function isValidDate(d) {
+  return !isNaN(Date.parse(d));
+}
 
 function getPriority(expiryDate) {
   const now = new Date();
@@ -158,7 +165,6 @@ router.get('/expiring-soon', authMiddleware, async (req, res) => {
     res.status(500).json({ error: 'Failed to fetch expiring products' });
   }
 });
-    
 
 // GET /api/products/search - filter by category and sort
 router.get('/search', authMiddleware, async (req, res) => {
@@ -231,7 +237,6 @@ router.get('/search', authMiddleware, async (req, res) => {
   }
 });
 
-
 // GET /api/products/:id - Get single product
 router.get('/:id', authMiddleware, async (req, res) => {
   try {
@@ -243,7 +248,6 @@ router.get('/:id', authMiddleware, async (req, res) => {
     res.status(500).json({ error: 'Failed to fetch product' });
   }
 });
-
 
 
 // PUT /api/products/:id - Update product (partial update supported)
@@ -276,6 +280,12 @@ router.put('/:id', authMiddleware, async (req, res) => {
       return res.status(404).json({ error: 'Product not found or unauthorized' });
     }
 
+    // Emit update event
+    const io = req.app.get('io');
+    io.emit('productUpdated', updatedProduct);
+
+    await createNotification(`Product "${product.name}" added by ${req.user.name || 'a user'}`, req.user._id, io);
+
     res.json({ message: 'Product updated', product: updatedProduct });
   } catch (error) {
     console.error('Update Product Error:', error);
@@ -288,11 +298,21 @@ router.delete('/:id', authMiddleware, async (req, res) => {
   try {
     const deleted = await Product.findOneAndDelete({ _id: req.params.id, userId: req.user._id });
     if (!deleted) return res.status(404).json({ error: 'Product not found or unauthorized' });
+    
+    // Emit delete event with just the id
+    const io = req.app.get('io');
+    io.emit('productDeleted', { id: req.params.id });
+    
+    await createNotification(`Product "${deleted.name}" deleted by ${req.user.name || 'a user'}`, req.user._id, io);
+
     res.json({ message: 'Product deleted' });
   } catch (error) {
     console.error('Delete Product Error:', error);
     res.status(500).json({ error: 'Failed to delete product' });
   }
 });
+
+
+
 
 module.exports = router;
