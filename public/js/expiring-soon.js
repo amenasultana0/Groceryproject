@@ -209,33 +209,31 @@ function filterAndSortItems() {
   renderItems(filteredItems);
 }  
 
-// function resetTime(date) {
-//   return new Date(date.getFullYear(), date.getMonth(), date.getDate());
-// }
 
 // function updateStats(items) {
-//   const today = resetTime(new Date());
+//   const now = new Date();
+//   const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+//   const oneDay = new Date(today.getTime() + (24 * 60 * 60 * 1000));
 //   const oneWeek = new Date(today.getTime() + (7 * 24 * 60 * 60 * 1000));
 //   const oneMonth = new Date(today.getTime() + (30 * 24 * 60 * 60 * 1000));
 
 //   const expiringWithin24Hours = items.filter(item => {
-//     const expiry = resetTime(new Date(item.expiryDate));
-//     return expiry.getTime() === today.getTime();
+//     const expiry = new Date(item.expiryDate);
+//     return expiry >= now && expiry <= oneDay;
 //   }).length;
 
 //   const expiringThisWeek = items.filter(item => {
-//     const expiry = resetTime(new Date(item.expiryDate));
-//     return expiry > today && expiry <= oneWeek;
+//     const expiry = new Date(item.expiryDate);
+//     return expiry > oneDay && expiry <= oneWeek;
 //   }).length;
 
 //   const expiringThisMonth = items.filter(item => {
-//     const expiry = resetTime(new Date(item.expiryDate));
+//     const expiry = new Date(item.expiryDate);
 //     return expiry > oneWeek && expiry <= oneMonth;
 //   }).length;
 
 //   const total = expiringWithin24Hours + expiringThisWeek + expiringThisMonth;
 
-//   // ✅ Make sure IDs have '#' prefix
 //   document.querySelector('#critical-count').textContent = expiringWithin24Hours;
 //   document.querySelector('#medium-count').textContent = expiringThisWeek;
 //   document.querySelector('#low-count').textContent = expiringThisMonth;
@@ -243,30 +241,27 @@ function filterAndSortItems() {
 //   document.querySelector('#critical-progress').style.width = `${(expiringWithin24Hours / (total || 1)) * 100}%`;
 //   document.querySelector('#medium-progress').style.width = `${(expiringThisWeek / (total || 1)) * 100}%`;
 //   document.querySelector('#low-progress').style.width = `${(expiringThisMonth / (total || 1)) * 100}%`;
-
-//   // 🔍 Log for debugging
-//   console.log({ today, oneWeek, oneMonth, expiringWithin24Hours, expiringThisWeek, expiringThisMonth });
 // }
 
 function updateStats(items) {
   const now = new Date();
-  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-  const oneWeek = new Date(today.getTime() + (7 * 24 * 60 * 60 * 1000));
-  const oneMonth = new Date(today.getTime() + (30 * 24 * 60 * 60 * 1000));
+  const oneDayLater = new Date(now.getTime() + 1 * 24 * 60 * 60 * 1000);
+  const oneWeekLater = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
+  const oneMonthLater = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
 
   const expiringWithin24Hours = items.filter(item => {
     const expiry = new Date(item.expiryDate);
-    return expiry.getTime() - now.getTime() <= 24 * 60 * 60 * 1000 && expiry.getTime() >= now.getTime();
+    return expiry >= now && expiry <= oneDayLater;
   }).length;
 
   const expiringThisWeek = items.filter(item => {
     const expiry = new Date(item.expiryDate);
-    return expiry > now && expiry <= oneWeek;
+    return expiry > oneDayLater && expiry <= oneWeekLater;
   }).length;
 
   const expiringThisMonth = items.filter(item => {
     const expiry = new Date(item.expiryDate);
-    return expiry > oneWeek && expiry <= oneMonth;
+    return expiry > oneWeekLater && expiry <= oneMonthLater;
   }).length;
 
   const total = expiringWithin24Hours + expiringThisWeek + expiringThisMonth;
@@ -279,6 +274,7 @@ function updateStats(items) {
   document.querySelector('#medium-progress').style.width = `${(expiringThisWeek / (total || 1)) * 100}%`;
   document.querySelector('#low-progress').style.width = `${(expiringThisMonth / (total || 1)) * 100}%`;
 }
+
 
 
 async function deleteItem(id) {
@@ -610,4 +606,3 @@ document.querySelectorAll('.edit-btn').forEach(btn => {
     }
   });
 });
-
