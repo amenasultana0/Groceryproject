@@ -2,19 +2,6 @@
 const GEMINI_API_KEY = "AIzaSyBWy83XZYG4RSBR96Z9nuAfymFM1RRBu0c" // ⚠️ Replace this with your real API key
 const GEMINI_API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent';
 
-
-// Sample inventory ingredients for demo - replace with your actual inventory data source
-const inventoryIngredients = [
-  "Tomato",
-  "Onion",
-  "Garlic",
-  "Chicken",
-  "Salt",
-  "Pepper",
-  "Olive oil",
-  "Basil",
-];
-
 // Global variables
 let ingredients = [];
 
@@ -98,6 +85,39 @@ if (typeof GEMINI_API_KEY !== 'undefined') {
     }
 });
 
+function getToken() {
+  const userData = localStorage.getItem('user') || sessionStorage.getItem('user');
+  if (!userData) return undefined;
+
+  try {
+    const user = JSON.parse(userData);
+    return user.token || null;
+  } catch (err) {
+    console.error('Failed to parse user data:', err);
+    return undefined;
+  }
+}
+
+// Fetch inventory ingredients from backend
+async function fetchInventoryIngredients() {
+    const token = getToken();
+  try {
+    const response = await fetch(`${BACKEND_URL}/api/products/ingredients`, {
+      headers: {
+        'Authorization': `Bearer ${getToken()}`,
+        'Content-Type': 'application/json'
+      }
+    });
+    if (!response.ok) throw new Error('Failed to fetch inventory ingredients');
+
+    const data = await response.json();
+    return data; 
+  } catch (error) {
+    console.error('Inventory fetch error:', error);
+    return [];
+  }
+}
+
 // Show API key warning
 function showApiKeyWarning() {
     const container = document.getElementById('recipesContainer');
@@ -127,6 +147,7 @@ function showApiKeyWarning() {
 
 // Add ingredient function
 async function addIngredient() {
+    const token = getToken();
     const input = document.getElementById('ingredientInput');
     if (!input) return;
     
@@ -147,11 +168,19 @@ async function addIngredient() {
     }
     try {
     // Call backend to add ingredient
-        const response = await fetch('${BACKEND_URL}/api/products', {
+        const response = await fetch(`${BACKEND_URL}/api/products/add`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ name: ingredient }),
-        });
+            headers: { 'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({
+            name: ingredient,
+            category: 'Uncategorized',  // or a default category you want
+            quantity: 1,                // default quantity or get from input if you have
+            expiryDate: new Date().toISOString()  // or get from input if user provides expiry
+        }),
+
+    });
         if (!response.ok) throw new Error('Failed to add ingredient');
     
         // On success, update frontend list
@@ -166,23 +195,60 @@ async function addIngredient() {
     
 
 // Remove ingredient function
-async function removeIngredient(ingredient) {
-  try {
-    const response = await fetch(`${BACKEND_URL}/api/products/${productId}`, {
-      method: 'DELETE',
-      headers: {
-        'Authorization': `Bearer ${yourTokenHere}`,
-        'Content-Type': 'application/json',
-      }
-    });
-    if (!response.ok) throw new Error('Failed to remove ingredient');
+// async function removeIngredientFromList(ingredient) {
+//   try {
+//     const response = await fetch(`${BACKEND_URL}/api/products/${productId}`, {
+//       method: 'DELETE',
+//       headers: {
+//         'Authorization': `Bearer {getToken()}`,
+//         'Content-Type': 'application/json',
+//       }
+//     });
+//     if (!response.ok) throw new Error('Failed to remove ingredient');
     
-    // On success, update frontend list
-    ingredients = ingredients.filter(item => item.toLowerCase() !== ingredient.toLowerCase());
-    updateIngredientTags();
-  } catch (err) {
-    alert('Error removing ingredient: ' + err.message);
-  }
+//     // Remove from ingredient list if applicable
+//     if (ingredientName) {
+//       ingredients = ingredients.filter(item => item.toLowerCase() !== ingredientName.toLowerCase());
+//       updateIngredientTags();
+//     }
+
+//     console.log('Deleted successfully');
+//     populateInventoryModal(); // Refresh the modal list if needed
+//   } catch (err) {
+//     alert('Error removing ingredient: ' + err.message);
+//   }
+// }
+// Remove ingredient from local list & update UI (no backend call)
+function removeIngredientFromList(ingredient) {
+  ingredients = ingredients.filter(item => item.toLowerCase() !== ingredient.toLowerCase());
+  updateIngredientTags();
+}
+
+// Update ingredient tags display
+function updateIngredientTags() {
+  const container = document.getElementById('ingredientTags');
+  if (!container) return;
+
+  container.innerHTML = '';
+
+  ingredients.forEach(ingredient => {
+    const tag = document.createElement('div');
+    tag.className = 'ingredient-tag';
+
+    const span = document.createElement('span');
+    span.textContent = ingredient;
+
+    const button = document.createElement('button');
+    button.className = 'remove-btn';
+    button.innerHTML = '<i class="fas fa-times"></i>';
+
+    // Only remove from local list and update UI
+    button.addEventListener('click', () => removeIngredientFromList(ingredient));
+
+    tag.appendChild(span);
+    tag.appendChild(button);
+    container.appendChild(tag);
+  });
 }
 
 // Update ingredient tags display
@@ -202,7 +268,7 @@ function updateIngredientTags() {
         const button = document.createElement('button');
         button.className = 'remove-btn';
         button.innerHTML = '<i class="fas fa-times"></i>';
-        button.addEventListener('click', () => removeIngredient(ingredient));
+        button.addEventListener('click', () => removeIngredientFromList(ingredient));
 
         tag.appendChild(span);
         tag.appendChild(button);
@@ -228,11 +294,12 @@ async function saveIngredientToBackend(ingredient) {
 
 // Load saved ingredients from memory
 async function loadIngredients() {
+    const token = getToken();
   try {
     const response = await fetch(`${BACKEND_URL}/api/products`, {
       method: 'GET',
       headers: {
-        'Authorization': `Bearer ${getToken()}`
+        'Authorization': `Bearer ${token}`
       },
     });
     if (!response.ok) throw new Error('Failed to load ingredients');
@@ -260,6 +327,8 @@ async function showIngredientModal() {
         modal.style.display = 'block';
     }
 }
+
+
 
 async function populateInventoryModal() {
   const container = document.getElementById('inventoryItems');
@@ -347,37 +416,7 @@ function confirmIngredientSelection() {
   console.log('Confirmed selected ingredients:', document.getElementById('ingredientInput').value);
 }
 
-function getToken() {
-  const userData = localStorage.getItem('user') || sessionStorage.getItem('user');
-  if (!userData) return undefined;
 
-  try {
-    const user = JSON.parse(userData);
-    return user.token || null;
-  } catch (err) {
-    console.error('Failed to parse user data:', err);
-    return undefined;
-  }
-}
-
-// Fetch inventory ingredients from backend
-async function fetchInventoryIngredients() {
-  try {
-    const response = await fetch(`${BACKEND_URL}/api/products/ingredients`, {
-      headers: {
-        'Authorization': `Bearer ${getToken()}`,
-        'Content-Type': 'application/json'
-      }
-    });
-    if (!response.ok) throw new Error('Failed to fetch inventory ingredients');
-
-    const data = await response.json();
-    return data; 
-  } catch (error) {
-    console.error('Inventory fetch error:', error);
-    return [];
-  }
-}
 
 
 async function showInventoryModal() {
