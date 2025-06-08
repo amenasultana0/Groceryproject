@@ -1,35 +1,101 @@
 // Configuration - REPLACE WITH YOUR ACTUAL API KEY
-const GEMINI_API_KEY = 'YOUR_ACTUAL_API_KEY_HERE'; // ⚠️ Replace this with your real API key
+const GEMINI_API_KEY = "AIzaSyBWy83XZYG4RSBR96Z9nuAfymFM1RRBu0c" // ⚠️ Replace this with your real API key
 const GEMINI_API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent';
+
+
+// Sample inventory ingredients for demo - replace with your actual inventory data source
+const inventoryIngredients = [
+  "Tomato",
+  "Onion",
+  "Garlic",
+  "Chicken",
+  "Salt",
+  "Pepper",
+  "Olive oil",
+  "Basil",
+];
 
 // Global variables
 let ingredients = [];
 
 // Initialize the page
 document.addEventListener('DOMContentLoaded', function() {
-    // Add event listener for Enter key in ingredient input
+    fetchInventoryIngredients().then(() => {
+    showIngredientModal(window.inventoryIngredients || []);
+  });
+
     const ingredientInput = document.getElementById('ingredientInput');
-    if (ingredientInput) {
-        ingredientInput.addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') {
-                addIngredient();
+    const addIngredientsBtn = document.getElementById('addIngredientsBtn');  // your button
+    const inventoryContainer = document.getElementById('inventoryContainer'); // container to show inventory list
+
+    loadIngredients();
+
+    if (addIngredientsBtn) {
+        addIngredientsBtn.addEventListener('click', async () => {
+            try {
+                const response = await fetch('${BACKEND_URL}/api/products', {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${getToken()}`
+                    },
+            });
+            if (!response.ok) throw new Error('Failed to fetch inventory ingredients');
+
+            const products = await response.json();
+
+            if (products.length === 0) {
+                inventoryContainer.innerHTML = '<p>No ingredients in inventory.</p>';
+                return;
             }
-        });
-    }
-    
-    // Load saved ingredients from memory
+
+            // Display products as a list (or your preferred UI)
+            const listHTML = products.map(p => `
+                <div class="inventory-item">
+                    <strong>${p.name}</strong> - ${p.category || 'No category'} - Qty: ${p.quantity}
+                </div>
+            `).join('');
+
+            inventoryContainer.innerHTML = listHTML;
+        } catch (error) {
+            if (inventoryContainer) {
+                inventoryContainer.innerHTML = `<p>Error loading inventory: ${error.message}</p>`;
+            }
+        }
+    });
+}
+if (ingredientInput) {
+    ingredientInput.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') {
+            if (typeof addIngredient === 'function') {
+                addIngredient();
+            } else {
+                console.warn('addIngredient() function is not defined.');
+            }
+        }
+    });
+}
+
+if (typeof loadSavedIngredients === 'function') {
     loadSavedIngredients();
-    
-    // Check API key setup
+}
+
+if (typeof GEMINI_API_KEY !== 'undefined') {
     if (GEMINI_API_KEY === 'YOUR_ACTUAL_API_KEY_HERE') {
         console.warn('⚠️ WARNING: Please set your actual Gemini API key in script.js');
-        showApiKeyWarning();
-    } else {
+        if (typeof showApiKeyWarning === 'function') showApiKeyWarning();
+    }
+    else {
         console.log('✅ API Key configured');
     }
+} else {
+        console.warn('⚠️ GEMINI_API_KEY is not defined.');
+}
+
+    if (typeof initializeSearch === 'function') {
     
     // Add search functionality
     initializeSearch();
+    }
 });
 
 // Show API key warning
@@ -60,7 +126,7 @@ function showApiKeyWarning() {
 }
 
 // Add ingredient function
-function addIngredient() {
+async function addIngredient() {
     const input = document.getElementById('ingredientInput');
     if (!input) return;
     
@@ -79,18 +145,44 @@ function addIngredient() {
         input.value = '';
         return;
     }
+    try {
+    // Call backend to add ingredient
+        const response = await fetch('${BACKEND_URL}/api/products', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ name: ingredient }),
+        });
+        if (!response.ok) throw new Error('Failed to add ingredient');
     
-    ingredients.push(ingredient);
-    input.value = '';
-    updateIngredientTags();
-    saveIngredients();
+        // On success, update frontend list
+        ingredients.push(ingredient);
+        updateIngredientTags();
+        input.value = '';
+    
+    } catch (err) {
+        alert('Error adding ingredient: ' + err.message);
+    }
 }
+    
 
 // Remove ingredient function
-function removeIngredient(ingredient) {
-    ingredients = ingredients.filter(item => item !== ingredient);
+async function removeIngredient(ingredient) {
+  try {
+    const response = await fetch(`${BACKEND_URL}/api/products/${productId}`, {
+      method: 'DELETE',
+      headers: {
+        'Authorization': `Bearer ${yourTokenHere}`,
+        'Content-Type': 'application/json',
+      }
+    });
+    if (!response.ok) throw new Error('Failed to remove ingredient');
+    
+    // On success, update frontend list
+    ingredients = ingredients.filter(item => item.toLowerCase() !== ingredient.toLowerCase());
     updateIngredientTags();
-    saveIngredients();
+  } catch (err) {
+    alert('Error removing ingredient: ' + err.message);
+  }
 }
 
 // Update ingredient tags display
@@ -103,35 +195,143 @@ function updateIngredientTags() {
     ingredients.forEach(ingredient => {
         const tag = document.createElement('div');
         tag.className = 'ingredient-tag';
-        tag.innerHTML = `
-            <span>${ingredient}</span>
-            <button class="remove-btn" onclick="removeIngredient('${ingredient.replace(/'/g, "\\'")}')">
-                <i class="fas fa-times"></i>
-            </button>
-        `;
+
+        const span = document.createElement('span');
+        span.textContent = ingredient;
+
+        const button = document.createElement('button');
+        button.className = 'remove-btn';
+        button.innerHTML = '<i class="fas fa-times"></i>';
+        button.addEventListener('click', () => removeIngredient(ingredient));
+
+        tag.appendChild(span);
+        tag.appendChild(button);
         container.appendChild(tag);
     });
 }
 
 // Save ingredients to memory
-function saveIngredients() {
-    window.savedIngredients = ingredients;
-}
-
-// Load saved ingredients from memory
-function loadSavedIngredients() {
-    if (window.savedIngredients) {
-        ingredients = window.savedIngredients;
-        updateIngredientTags();
+async function saveIngredientToBackend(ingredient) {
+    try {
+        const response = await fetch(`${BACKEND_URL}/api/ingredients`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ name: ingredient })
+        });
+        if (!response.ok) throw new Error('Failed to save ingredient');
+    } catch (error) {
+        console.error('Error saving ingredient:', error.message);
     }
 }
 
+// Load saved ingredients from memory
+async function loadIngredients() {
+  try {
+    const response = await fetch(`${BACKEND_URL}/api/products`, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${getToken()}`
+      },
+    });
+    if (!response.ok) throw new Error('Failed to load ingredients');
+    
+    const products = await response.json();
+    
+    // Extract just names (or adjust if your backend returns more data)
+    ingredients = products.map(p => p.name);
+    
+    if (typeof updateIngredientTags === 'function') {
+      updateIngredientTags();  // Update tags on the UI
+    } else {
+      console.warn('updateIngredientTags() is not defined.');
+    }
+  } catch (err) {
+    console.error('Error loading ingredients:', err);
+  }
+}
+
 // Modal functions
-function showIngredientModal() {
+async function showIngredientModal() {
+    await populateInventoryModal();
     const modal = document.getElementById('ingredientModal');
     if (modal) {
         modal.style.display = 'block';
     }
+}
+
+async function populateInventoryModal() {
+  const container = document.getElementById('inventoryItems');
+  if (!container) return;
+
+  try {
+    const res = await fetch(`${BACKEND_URL}/api/products`, {
+      headers: {
+        'Authorization': `Bearer ${getToken()}`
+      }
+    });
+    if (!res.ok) throw new Error('Failed to fetch inventory');
+
+    const items = await res.json();
+
+    if (items.length === 0) {
+      container.innerHTML = '<p>No inventory ingredients found.</p>';
+      return;
+    }
+
+    container.innerHTML = items.map(item => `
+      <div class="inventory-item" onclick="selectInventoryItem('${item.name.replace(/'/g, "\\'")}')">
+        <i class="fas fa-seedling"></i>
+        <span>${item.name}</span>
+      </div>
+    `).join('');
+
+  } catch (error) {
+    container.innerHTML = `<p>Error loading inventory: ${error.message}</p>`;
+  }
+}
+
+function selectInventoryItem(itemName) {
+  const ingredientInput = document.getElementById('ingredientInput');
+  if (!ingredientInput) return;
+
+  // If input is empty, just set clicked item
+  if (!ingredientInput.value.trim()) {
+    ingredientInput.value = itemName;
+    highlightInventoryItem(itemName);
+    return;
+  }
+
+  // Split current input by commas to get list of ingredients
+  const currentIngredients = ingredientInput.value.split(',').map(i => i.trim()).filter(Boolean);
+
+  // If already added, remove it (toggle off)
+  if (currentIngredients.includes(itemName)) {
+    const index = currentIngredients.indexOf(itemName);
+    currentIngredients.splice(index, 1);
+    ingredientInput.value = currentIngredients.join(', ');
+    highlightInventoryItem(itemName, false);
+  } else {
+    // Add new item
+    currentIngredients.push(itemName);
+    ingredientInput.value = currentIngredients.join(', ');
+    highlightInventoryItem(itemName, true);
+  }
+}
+
+// Optional helper to highlight selected inventory items in UI
+function highlightInventoryItem(itemName, select = true) {
+  const inventoryItems = document.querySelectorAll('.inventory-item');
+  inventoryItems.forEach(item => {
+    if (item.textContent.trim() === itemName) {
+      if (select) {
+        item.classList.add('selected');
+      } else {
+        item.classList.remove('selected');
+      }
+    }
+  });
 }
 
 function closeIngredientModal() {
@@ -141,18 +341,98 @@ function closeIngredientModal() {
     }
 }
 
-function selectInventoryItem(ingredient) {
-    const item = event.target.closest('.inventory-item');
+function confirmIngredientSelection() {
+  closeIngredientModal();
+  // Optional: You could trigger recipe generation or save selected ingredients here
+  console.log('Confirmed selected ingredients:', document.getElementById('ingredientInput').value);
+}
+
+function getToken() {
+  const userData = localStorage.getItem('user') || sessionStorage.getItem('user');
+  if (!userData) return undefined;
+
+  try {
+    const user = JSON.parse(userData);
+    return user.token || null;
+  } catch (err) {
+    console.error('Failed to parse user data:', err);
+    return undefined;
+  }
+}
+
+// Fetch inventory ingredients from backend
+async function fetchInventoryIngredients() {
+  try {
+    const response = await fetch(`${BACKEND_URL}/api/products/ingredients`, {
+      headers: {
+        'Authorization': `Bearer ${getToken()}`,
+        'Content-Type': 'application/json'
+      }
+    });
+    if (!response.ok) throw new Error('Failed to fetch inventory ingredients');
+
+    const data = await response.json();
+    return data; 
+  } catch (error) {
+    console.error('Inventory fetch error:', error);
+    return [];
+  }
+}
+
+
+async function showInventoryModal() {
+  try {
+    const inventoryIngredients = await fetchInventoryIngredients();  // fetchInventoryIngredients should return data
     
-    if (ingredients.includes(ingredient)) {
-        removeIngredient(ingredient);
+    const modal = document.getElementById('ingredientModal');
+    if (!modal) return;
+
+    const inventoryList = inventoryIngredients.map(p => {
+      const ingredient = p.name || p; // handle object or string
+      const isSelected = ingredients.includes(ingredient);
+      return `
+        <div class="inventory-item ${isSelected ? 'selected' : ''}" onclick="toggleInventoryIngredient(event, '${ingredient.replace(/'/g, "\\'")}')">
+          ${ingredient}
+          <span class="checkmark">${isSelected ? '✔️' : ''}</span>
+        </div>`;
+    }).join('');
+
+    const modalContent = modal.querySelector('.modal-content');
+    if (modalContent) {
+      modalContent.innerHTML = `
+        <h3>Select ingredients from your inventory</h3>
+        <div class="inventory-list">${inventoryList}</div>
+        <button onclick="closeIngredientModal()">Done</button>
+      `;
+    }
+
+    modal.style.display = 'block';
+
+  } catch (error) {
+    console.error('Error showing inventory modal:', error.message);
+  }
+}
+
+
+
+function toggleInventoryIngredient(event, ingredient) {
+    event.stopPropagation();
+    
+    const item = event.target.closest('.inventory-item');
+
+    const index = ingredients.findIndex(i => i.toLowerCase() === ingredient.toLowerCase());
+    if (index !== -1) {
+        // Ingredient already selected, remove it
+        ingredients.splice(index, 1);
         if (item) item.classList.remove('selected');
     } else {
+        // Add ingredient
         ingredients.push(ingredient);
         if (item) item.classList.add('selected');
-        updateIngredientTags();
-        saveIngredients();
     }
+
+    updateIngredientTags();
+    saveIngredients();
 }
 
 // Main recipe generation function

@@ -237,6 +237,19 @@ router.get('/search', authMiddleware, async (req, res) => {
   }
 });
 
+// GET /api/products/ingredients - get unique ingredient names
+router.get('/ingredients', authMiddleware, async (req, res) => {
+  try {
+    const ingredients = await Product.find({ userId: req.user._id }).select('name -_id');
+    const names = [...new Set(ingredients.map(p => p.name))]; // remove duplicates
+    res.json(names);
+  } catch (error) {
+    console.error('Get Ingredient Names Error:', error);
+    res.status(500).json({ error: 'Failed to fetch ingredients' });
+  }
+});
+
+
 // GET /api/products/:id - Get single product
 router.get('/:id', authMiddleware, async (req, res) => {
   try {

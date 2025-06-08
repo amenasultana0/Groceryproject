@@ -1,10 +1,52 @@
 // Settings Page JavaScript
 
+const translations = {
+  en: {
+    settingsTitle: "Settings",
+    saveBtn: "Save Settings",
+    regionLabel: "Region:",
+    languageLabel: "Language:",
+    notificationLabel: "Notifications:",
+    themeLabel: "Theme:"
+  },
+  es: {
+    settingsTitle: "Configuraciones",
+    saveBtn: "Guardar Configuración",
+    regionLabel: "Región:",
+    languageLabel: "Idioma:",
+    notificationLabel: "Notificaciones:",
+    themeLabel: "Tema:"
+  },
+  fr: {
+    settingsTitle: "Paramètres",
+    saveBtn: "Enregistrer",
+    regionLabel: "Région:",
+    languageLabel: "Langue:",
+    notificationLabel: "Notifications:",
+    themeLabel: "Thème:"
+  }
+  // Add more languages as needed
+};
+
+function applyLanguage(langCode) {
+  const t = translations[langCode] || translations['en'];
+  const $ = (id) => document.getElementById(id);
+
+  $('settings-title').textContent = t.settingsTitle;
+  $('save-settings').textContent = t.saveBtn;
+  document.querySelector('label[for="region"]').textContent = t.regionLabel;
+  document.querySelector('label[for="language"]').textContent = t.languageLabel;
+  document.querySelector('label[for="notification"]').textContent = t.notificationLabel;
+  document.querySelector('label[for="theme"]').textContent = t.themeLabel;
+}
+
+
 class SettingsManager {
     constructor() {
         this.settings = this.loadSettings();
         this.initializeEventListeners();
         this.populateSettings();
+        applyLanguage(this.settings.language);
     }
 
     // Load settings from localStorage (or use defaults)
@@ -57,7 +99,14 @@ class SettingsManager {
         }
 
         // Form inputs
-        this.addInputListener('language');
+        this.addInputListener('language', 'language');
+        document.getElementById('language').addEventListener('change', (e) => {
+            const newLang = e.target.value;
+            this.settings.language = newLang;      // update settings object
+            applyLanguage(newLang);                // apply new language
+            this.saveSettings();
+        });
+
         this.addInputListener('region');
         this.addInputListener('expiry-reminder', 'expiryReminder');
         this.addInputListener('low-stock', 'lowStockThreshold');
@@ -420,6 +469,7 @@ class SettingsManager {
                 console.warn('Could not clear settings from localStorage:', error);
             }
             this.populateSettings();
+            applyLanguage(this.settings.language);
             this.showNotification('Settings reset to defaults!', 'success');
         }
     }

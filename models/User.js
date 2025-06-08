@@ -18,6 +18,15 @@ const userSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
+  settings: {
+    notifications: {
+      email: { type: Boolean, default: true },
+      push: { type: Boolean, default: false },
+    },
+    theme: { type: String, enum: ['light', 'dark'], default: 'light' },
+    language: { type: String, default: 'en' },
+    // add any other settings your settings.html supports
+  }
 });
 
 // Hash password before saving
