@@ -12,6 +12,8 @@ const settingsRoutes = require('./routes/settingsRoutes');
 
 const authRoutes = require('./routes/authRoutes');
 const productRoutes = require('./routes/productRoutes');
+const reportRoutes = require('./routes/reportRoutes');
+
 
 dotenv.config();
 
@@ -41,6 +43,8 @@ app.use('/api/auth', authRoutes);
 app.use('/api/products', productRoutes);
 app.use('/api/categories', categoryRoutes);
 app.use('/api', settingsRoutes);
+app.use('/api/reports', reportRoutes);
+
 
 // API route to fetch notifications
 app.get('/api/notifications', async (req, res) => {

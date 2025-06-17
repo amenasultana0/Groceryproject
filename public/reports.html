@@ -74,7 +74,7 @@
                 </div>
                 <div class="metric-content">
                     <h3>Expiring Soon</h3>
-                    <p id="expiringSoon">0</p>
+                    <p id="expiringSoonCount">0</p>
                     <span>Items expiring in 7 days</span>
                 </div>
             </div>
@@ -85,7 +85,7 @@
                 </div>
                 <div class="metric-content">
                     <h3>Expired Items</h3>
-                    <p id="expiredItems">0</p>
+                    <p id="expiredItemsCount">0</p>
                     <span>Items to remove</span>
                 </div>
             </div>
@@ -96,7 +96,7 @@
                 </div>
                 <div class="metric-content">
                     <h3>Fresh Items</h3>
-                    <p id="freshItems">0</p>
+                    <p id="freshItemsCount">0</p>
                     <span>Items in good condition</span>
                 </div>
             </div>
@@ -107,7 +107,7 @@
                 </div>
                 <div class="metric-content">
                     <h3>Total Value</h3>
-                    <p id="totalValue">$0</p>
+                    <p id="totalValue">₹0</p>
                     <span>Current inventory value</span>
                 </div>
             </div>
@@ -195,7 +195,7 @@
                     </div>
                     <div class="freshness-metrics">
                         <div class="overall-freshness">
-                            <span id="overallFreshness">0</span>%
+                            <span id="freshnessIndex">0</span>%
                             <span class="label">Overall Freshness</span>
                         </div>
                         <div class="quality-distribution">
@@ -328,7 +328,7 @@
                             <th>Actions</th>
                         </tr>
                     </thead>
-                    <tbody></tbody>
+                    <tbody id="reportTableBody"></tbody>
                 </table>
             </div>
             <div class="table-footer">

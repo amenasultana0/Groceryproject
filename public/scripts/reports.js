@@ -981,3 +981,28 @@ function calculateRiskLevel(timeline) {
     if (riskScore >= 1) return 'Medium';
     return 'Low';
 } 
+async function loadReports() {
+  const res = await fetch('/api/reports/report');
+  const data = await res.json();
+
+  document.getElementById('expiredItemsCount').innerText = data.counts.expired;
+  document.getElementById('expiringSoonCount').innerText = data.counts.expiringSoon;
+  document.getElementById('freshItemsCount').innerText = data.counts.fresh;
+  document.getElementById('totalValue').innerText = `₹${data.totalValue}`;
+  document.getElementById('freshnessIndex').innerText = `${data.freshnessIndex}%`;
+
+  const table = document.getElementById('reportTableBody');
+  table.innerHTML = "";
+  data.items.forEach(item => {
+    const row = `<tr>
+      <td>${item.name}</td><td>${item.category}</td><td>${item.price}</td>
+      <td>${item.quantity}</td><td>${item.price * item.quantity}</td>
+      <td>${new Date(item.expiryDate).toLocaleDateString()}</td><td>${item.daysLeft}</td>
+      <td>${item.daysLeft < 0 ? 'Expired' : item.daysLeft <= 7 ? 'Expiring' : 'Fresh'}</td>
+    </tr>`;
+    table.innerHTML += row;
+  });
+}
+
+// 🔁 Automatically run when page loads
+window.onload = loadReports;
