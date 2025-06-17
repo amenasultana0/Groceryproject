@@ -98,34 +98,17 @@ async function loadItems() {
     const items = await response.json();
     currentItems = items;
     updateStats(items);
-    renderItems(recentItemsList, items);
+
+    const sortedItems = items
+      .filter(item => item.createdAt) // Only include items with a createdAt
+      .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+      renderItems(recentItemsList, sortedItems.slice(0, 3)); // pick latest 3
+
   } catch (err) {
     showNotification('Failed to load items from server', 'error');
   }
 }
 
-// function renderItems(container, items) {
-//   if (!container) return;
-//   container.innerHTML = items.length === 0 ? `
-//     <div class="empty-state">
-//       <i class="fas fa-box-open"></i>
-//       <p>No items to display</p>
-//     </div>` : items.map(item => `
-//     <div class="item-card ${isExpired(item.expiryDate) ? 'expired' : ''}" data-id="${item._id}">
-//       <div class="item-header">
-//         <h3>${item.name}</h3>
-//         <span class="category-badge">${item.category}</span>
-//       </div>
-//       <div class="item-details">
-//         <div class="detail"><i class="fas fa-calendar"></i><span>Expires: ${formatDate(item.expiryDate)}</span></div>
-//         <div class="detail"><i class="fas fa-box"></i><span>Quantity: ${item.quantity}</span></div>
-//       </div>
-//       <div class="item-actions">
-//         <button class="icon-btn" onclick="editItem('${item._id}')"><i class="fas fa-edit"></i></button>
-//         <button class="icon-btn delete" onclick="deleteItem('${item._id}')"><i class="fas fa-trash"></i></button>
-//       </div>
-//     </div>`).join('');
-// }
 function renderItems(container, items) {
   if (!container) return;
   container.innerHTML = items.length === 0 ? `
