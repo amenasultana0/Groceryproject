@@ -7,51 +7,313 @@
     <link rel="stylesheet" href="./style.css">
     <link rel="stylesheet" href="./expiring-soon.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* Override any styles that might create the blue bar */
+        .navbar {
+            border-bottom: none;
+            box-shadow: none;
+        }
+        .nav-content {
+            border-bottom: none;
+        }
+        /* Hide any potential hidden text */
+        .hidden-text,
+        [hidden],
+        .visually-hidden {
+            display: none !important;
+        }
+    </style>
 </head>
 <body>
     <nav class="navbar">
-        <!-- Navbar content here -->
+        <div class="nav-content">
+            <div class="logo">
+                <i class="fas fa-leaf"></i>
+                <span>GroceryTrack</span>
+            </div>
+            <div class="nav-links">
+                <a href="./dashboard.html" class="login-btn">
+                    <i class="fas fa-arrow-left"></i>
+                    Back to Dashboard
+                </a>
+            </div>
+        </div>
     </nav>
 
-    <main class="expiring-main">
-        <header class="expiring-header">
-            <h1><i class="fas fa-clock"></i> Expiring Soon</h1>
-        </header>
+    <div class="expiring-dashboard">
+        <div class="header-section">
+            <div class="header-left">
+                <h1>Expiring Items</h1>
+            </div>
+        </div>
+        
+        <div class="stats-grid">
+            <div class="stat-card urgent">
+                <div class="stat-header">
+                    <i class="fas fa-exclamation-circle stat-icon"></i>
+                    <h3>Critical Items</h3>
+                </div>
+                <div class="stat-number" id="critical-count">0</div>
+                <p>Expiring within 24 hours</p>
+                <div class="stat-progress">
+                    <div class="progress-bar" id="critical-progress" style="width: 0%"></div>
+                </div>
+            </div>
+            <div class="stat-card warning">
+                <div class="stat-header">
+                    <i class="fas fa-clock stat-icon"></i>
+                    <h3>Watch List</h3>
+                </div>
+                <div class="stat-number" id="medium-count">0</div>
+                <p>Expiring this week</p>
+                <div class="stat-progress">
+                    <div class="progress-bar" id="medium-progress" style="width: 0%"></div>
+                </div>
+            </div>
+            <div class="stat-card info">
+                <div class="stat-header">
+                    <i class="fas fa-calendar-alt stat-icon"></i>
+                    <h3>Upcoming</h3>
+                </div>
+                <div class="stat-number" id="low-count">0</div>
+                <p>Expiring this month</p>
+                <div class="stat-progress">
+                    <div class="progress-bar" id="low-progress" style="width: 0%"></div>
+                </div>
+            </div>
+        </div>
 
-        <section class="expiring-filters">
-            <label for="categoryFilter">Category:</label>
-            <select id="categoryFilter" class="category-filter">
-                <option value="">All Categories</option>
-                <option value="fruits">Fruits</option>
-                <option value="vegetables">Vegetables</option>
-                <option value="dairy">Dairy</option>
-                <option value="meat">Meat</option>
-                <option value="bakery">Bakery</option>
-                <option value="beverages">Beverages</option>
-                <option value="snacks">Snacks</option>
-                <option value="frozen">Frozen</option>
-                <option value="grains">Grains</option>
-                <option value="condiments">Condiments</option>
-            </select>
-        </section>
+        <div class="control-panel">
+            <div class="filters">
+                <button class="filter-btn active">
+                    <i class="fas fa-layer-group"></i>
+                    All Items
+                    <span class="count" id="total-count">0</span>
+                </button>
+                <button class="filter-btn">
+                    <i class="fas fa-exclamation-circle"></i>
+                    High Priority
+                    <span class="count" id="high-priority-count">0</span>
+                </button>
+                <button class="filter-btn">
+                    <i class="fas fa-exclamation"></i>
+                    Medium Priority
+                    <span class="count" id="med-priority-count">0</span>
+                </button>
+                <button class="filter-btn">
+                    <i class="fas fa-info-circle"></i>
+                    Low Priority
+                    <span class="count" id="low-priority-count">0</span>
+                </button>
+            </div>
 
-        <section class="expiring-list-section">
-            <table class="expiring-table">
-                <thead>
-                    <tr>
-                        <th>Item</th>
-                        <th>Category</th>
-                        <th>Quantity</th>
-                        <th>Expiry Date</th>
-                        <th>Days Left</th>
-                        <th>Status</th>
-                    </tr>
-                </thead>
-                <tbody id="expiringItemsBody">
-                    <!-- JS will populate expiring items here -->
-                </tbody>
-            </table>
-        </section>
-    </main>
+            <div class="view-options">
+                <button class="view-btn active" data-view="list">
+                    <i class="fas fa-list"></i>
+                </button>
+                <button class="view-btn" data-view="grid">
+                    <i class="fas fa-th-large"></i>
+                </button>
+            </div>
+        </div>
+
+        <div class="search-section">
+            <div class="search-bar">
+                <i class="fas fa-search"></i>
+                <input type="text" placeholder="Search items by name, category, or location...">
+            </div>
+            <div class="search-filters">
+                <select id="categoryFilter" class="category-filter">
+                    <option value="">All Categories</option>
+                    <option value="fruits">Fruits</option>
+                    <option value="vegetables">Vegetables</option>
+                    <option value="dairy">Dairy</option>
+                    <option value="meat">Meat</option>
+                    <option value="bakery">Bakery</option>
+                    <option value="beverages">Beverages</option>
+                    <option value="snacks">Snacks</option>
+                    <option value="frozen">Frozen</option>
+                    <option value="grains">Grains</option>
+                    <option value="condiments">Condiments</option>
+                </select>
+                <select class="sort-by">
+                    <option value="expiry">Sort by Expiry Date</option>
+                    <option value="name">Sort by Name</option>
+                    <option value="category">Sort by Category</option>
+                    <option value="priority">Sort by Priority</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="expiring-list">
+            <!-- High Priority Items -->
+            <div class="expiring-item">
+                <div class="priority-indicator priority-high"></div>
+                <div class="item-info">
+                    <div class="item-details">
+                        <span class="item-name">Fresh Milk</span>
+                        <span class="item-category">Dairy</span>
+                    </div>
+                    <div class="item-meta">
+                        <span class="quantity"><i class="fas fa-box"></i> 2 cartons</span>
+                        <span class="location"><i class="fas fa-map-marker-alt"></i> Main Fridge</span>
+                    </div>
+                </div>
+                <div class="expiry-info">
+                    <span class="expiry-date">Expires Today</span>
+                    <div class="expiry-progress urgent">
+                        <div class="progress-bar"></div>
+                    </div>
+                </div>
+                <div class="action-buttons">
+                    <button class="action-btn mark-used-btn" title="Mark as Used">
+                        <i class="fas fa-check"></i>
+                    </button>
+                    <button class="action-btn edit-btn" title="Edit Item">
+                        <i class="fas fa-edit"></i>
+                    </button>
+                    <button class="action-btn delete-btn" title="Delete Item">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
+            </div>
+
+            <div class="expiring-item">
+                <div class="priority-indicator priority-high"></div>
+                <div class="item-info">
+                    <div class="item-details">
+                        <span class="item-name">Chicken Breast</span>
+                        <span class="item-category">Meat</span>
+                    </div>
+                    <div class="item-meta">
+                        <span class="quantity"><i class="fas fa-box"></i> 500g</span>
+                        <span class="location"><i class="fas fa-map-marker-alt"></i> Freezer</span>
+                    </div>
+                </div>
+                <div class="expiry-info">
+                    <span class="expiry-date">Expires in 1 day</span>
+                    <div class="expiry-progress urgent">
+                        <div class="progress-bar"></div>
+                    </div>
+                </div>
+                <div class="action-buttons">
+                    <button class="action-btn mark-used-btn" title="Mark as Used">
+                        <i class="fas fa-check"></i>
+                    </button>
+                    <button class="action-btn edit-btn" title="Edit Item">
+                        <i class="fas fa-edit"></i>
+                    </button>
+                    <button class="action-btn delete-btn" title="Delete Item">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Medium Priority Items -->
+            <div class="expiring-item">
+                <div class="priority-indicator priority-medium"></div>
+                <div class="item-info">
+                    <div class="item-details">
+                        <span class="item-name">Fresh Tomatoes</span>
+                        <span class="item-category">Produce</span>
+                    </div>
+                    <div class="item-meta">
+                        <span class="quantity"><i class="fas fa-box"></i> 6 pieces</span>
+                        <span class="location"><i class="fas fa-map-marker-alt"></i> Crisper</span>
+                    </div>
+                </div>
+                <div class="expiry-info">
+                    <span class="expiry-date">Expires in 3 days</span>
+                    <div class="expiry-progress warning">
+                        <div class="progress-bar"></div>
+                    </div>
+                </div>
+                <div class="action-buttons">
+                    <button class="action-btn mark-used-btn" title="Mark as Used">
+                        <i class="fas fa-check"></i>
+                    </button>
+                    <button class="action-btn edit-btn" title="Edit Item">
+                        <i class="fas fa-edit"></i>
+                    </button>
+                    <button class="action-btn delete-btn" title="Delete Item">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
+            </div>
+
+            <div class="expiring-item">
+                <div class="priority-indicator priority-medium"></div>
+                <div class="item-info">
+                    <div class="item-details">
+                        <span class="item-name">Whole Wheat Bread</span>
+                        <span class="item-category">Bakery</span>
+                    </div>
+                    <div class="item-meta">
+                        <span class="quantity"><i class="fas fa-box"></i> 1 loaf</span>
+                        <span class="location"><i class="fas fa-map-marker-alt"></i> Bread Box</span>
+                    </div>
+                </div>
+                <div class="expiry-info">
+                    <span class="expiry-date">Expires in 4 days</span>
+                    <div class="expiry-progress warning">
+                        <div class="progress-bar"></div>
+                    </div>
+                </div>
+                <div class="action-buttons">
+                    <button class="action-btn mark-used-btn" title="Mark as Used">
+                        <i class="fas fa-check"></i>
+                    </button>
+                    <button class="action-btn edit-btn" title="Edit Item">
+                        <i class="fas fa-edit"></i>
+                    </button>
+                    <button class="action-btn delete-btn" title="Delete Item">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Low Priority Items -->
+            <div class="expiring-item">
+                <div class="priority-indicator priority-low"></div>
+                <div class="item-info">
+                    <div class="item-details">
+                        <span class="item-name">Greek Yogurt</span>
+                        <span class="item-category">Dairy</span>
+                    </div>
+                    <div class="item-meta">
+                        <span class="quantity"><i class="fas fa-box"></i> 3 cups</span>
+                        <span class="location"><i class="fas fa-map-marker-alt"></i> Main Fridge</span>
+                    </div>
+                </div>
+                <div class="expiry-info">
+                    <span class="expiry-date">Expires in 1 week</span>
+                    <div class="expiry-progress normal">
+                        <div class="progress-bar"></div>
+                    </div>
+                </div>
+                <div class="action-buttons">
+                    <button class="action-btn mark-used-btn" title="Mark as Used">
+                        <i class="fas fa-check"></i>
+                    </button>
+                    <button class="action-btn edit-btn" title="Edit Item" data-id="{{item._id}}">
+                        <i class="fas fa-edit"></i>
+                    </button>
+                    <button class="action-btn delete-btn" title="Delete Item" data-id="{{item._id}}">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Empty State (hidden by default) -->
+        <div class="empty-state" style="display: none;">
+            <i class="fas fa-check-circle"></i>
+            <h2>All Clear!</h2>
+            <p>No items are expiring soon. You're doing great at managing your inventory!</p>
+        </div>
+    </div>
+    
+
+    <script type="module" src="./js/expiring-soon.js"></script>
 </body>
 </html>
