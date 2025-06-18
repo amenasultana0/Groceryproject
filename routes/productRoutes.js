@@ -85,7 +85,7 @@ router.post('/add', authMiddleware, async (req, res) => {
     const io = req.app.get('io');
     io.emit('productAdded', product);  // Broadcast to all connected clients
 
-    await createNotification(`Product "${product.name}" added by ${req.user.name || 'a user'}`, req.user._id, io);
+    await createNotification(`Product "${product.name}" added`, req.user._id, io);
 
     res.status(201).json({ message: 'Product added successfully', product });
   } catch (error) {
@@ -297,7 +297,7 @@ router.put('/:id', authMiddleware, async (req, res) => {
     const io = req.app.get('io');
     io.emit('productUpdated', updatedProduct);
 
-    await createNotification(`Product "${product.name}" added by ${req.user.name || 'a user'}`, req.user._id, io);
+    await createNotification(`Product "${product.name}" added`, req.user._id, io);
 
     res.json({ message: 'Product updated', product: updatedProduct });
   } catch (error) {
@@ -316,7 +316,7 @@ router.delete('/:id', authMiddleware, async (req, res) => {
     const io = req.app.get('io');
     io.emit('productDeleted', { id: req.params.id });
     
-    await createNotification(`Product "${deleted.name}" deleted by ${req.user.name || 'a user'}`, req.user._id, io);
+    await createNotification(`Product "${deleted.name}" deleted`, req.user._id, io);
 
     res.json({ message: 'Product deleted' });
   } catch (error) {

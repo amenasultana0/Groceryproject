@@ -75,7 +75,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   setTimeout(async () => {
     loadItems();
     fetchUnreadNotificationCount();
-    populateCategoryDropdown('category');
+    //populateCategoryDropdown('category');
     // Fetch notifications from backend
     try {
       const res = await fetch('http://localhost:3000/api/notifications', {
@@ -172,7 +172,9 @@ async function loadItems() {
     updateStats(items);
 
     // Deduplicate expiring items by _id
-    const expiringItems = items.filter(item => isExpiringSoon(item.expiryDate));
+    const expiringItems = items.filter(item => isExpiringSoon(item.expiryDate))
+    .sort((a, b) => new Date(a.expiryDate) - new Date(b.expiryDate))
+    .slice(0, 3);
 
     renderItems(expiringItemsList, expiringItems);
 
@@ -514,5 +516,3 @@ async function markNotificationsAsRead() {
     console.error('Error marking notifications as read:', err);
   }
 }
-
-

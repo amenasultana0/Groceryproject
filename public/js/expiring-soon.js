@@ -36,7 +36,7 @@ sortBy?.addEventListener('change', loadItems);
 // Initialize
 document.addEventListener('DOMContentLoaded', async () => {
   await loadItems();
-  populateCategoryDropdown('categoryFilter')
+  //populateCategoryDropdown('categoryFilter')
 });
 
 function getToken() {
