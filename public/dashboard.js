@@ -158,29 +158,23 @@ async function loadItems() {
       headers: { Authorization: `Bearer ${token}` }
     });
     if (!response.ok) throw new Error('Failed to fetch items');
-    const items = await response.json();
+    let items = await response.json();
 
-    const alreadyNotifiedIds = new Set(notifications.map(n => n.itemId)); // avoid duplicates
-
-//     items.forEach(item => {
-//       if (isExpiringSoon(item.expiryDate) && !alreadyNotifiedIds.has(item._id)) {
-//         const message = `${item.name} is expiring soon (on ${formatDate(item.expiryDate)})!`;
-
-//         const notif = {
-//           itemId: item._id,
-//           message,
-//           read: false,
-//         };
-
-//         notifications.push(notif);
-//         updateUnreadCount(notifications.length);
-//         showNotification(message, 'info');
-//         renderNotificationsPanel();  
-//   }
-// });
+    // Deduplicate ALL items by a unique key (e.g., name + expiryDate)
+    const uniqueItemsMap = {};
+    items.forEach(item => {
+      const key = `${item.name}_${item.expiryDate}`;
+      uniqueItemsMap[key] = item;
+    });
+    items = Object.values(uniqueItemsMap);
 
     currentItems = items;
     updateStats(items);
+
+    // Deduplicate expiring items by _id
+    const expiringItems = items.filter(item => isExpiringSoon(item.expiryDate));
+
+    renderItems(expiringItemsList, expiringItems);
 
     const sortedItems = items
       .filter(item => item.createdAt) // Only include items with a createdAt
