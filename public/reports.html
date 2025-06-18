@@ -4,21 +4,14 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Premium Grocery Analytics | Reports</title>
-    
-    <!-- Stylesheets -->
     <link rel="stylesheet" href="styles/reports.css">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-    
-    <!-- Charts -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
-    
-    <!-- Date Picker -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
     <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
 </head>
 <body>
-    <!-- Header -->
     <header class="premium-header">
         <div class="header-content">
             <h1><i class="fas fa-chart-line"></i> Premium Analytics</h1>
@@ -33,7 +26,6 @@
         </div>
     </header>
 
-    <!-- Main Content -->
     <main class="premium-content">
         <!-- Filters Section -->
         <section class="filters-section">
@@ -78,7 +70,6 @@
                     <span>Items expiring in 7 days</span>
                 </div>
             </div>
-
             <div class="metric-card" data-tooltip="Items that have expired">
                 <div class="metric-icon danger">
                     <i class="fas fa-times-circle"></i>
@@ -89,7 +80,6 @@
                     <span>Items to remove</span>
                 </div>
             </div>
-
             <div class="metric-card" data-tooltip="Items in good condition">
                 <div class="metric-icon success">
                     <i class="fas fa-check-circle"></i>
@@ -100,7 +90,6 @@
                     <span>Items in good condition</span>
                 </div>
             </div>
-
             <div class="metric-card" data-tooltip="Total inventory value">
                 <div class="metric-icon primary">
                     <i class="fas fa-dollar-sign"></i>
@@ -115,7 +104,6 @@
 
         <!-- Charts Grid -->
         <section class="charts-grid">
-            <!-- Expiry Timeline -->
             <div class="chart-card full-width">
                 <div class="chart-header">
                     <h3>Expiry Timeline</h3>
@@ -128,24 +116,18 @@
                     <canvas id="expiryChart"></canvas>
                 </div>
             </div>
-
-            <!-- Category Distribution -->
             <div class="chart-card">
                 <h3>Category Distribution</h3>
                 <div class="chart-container">
                     <div id="categoryChart"></div>
                 </div>
             </div>
-
-            <!-- Status by Category -->
             <div class="chart-card">
                 <h3>Status by Category</h3>
                 <div class="chart-container">
                     <div id="statusChart"></div>
                 </div>
             </div>
-
-            <!-- Weekly Trend -->
             <div class="chart-card">
                 <h3>Weekly Trend</h3>
                 <div class="chart-container">
@@ -158,7 +140,6 @@
         <section class="premium-insights">
             <h2>Premium Insights</h2>
             <div class="insights-grid">
-                <!-- Expiry Timeline -->
                 <div class="insight-card">
                     <div class="insight-header">
                         <i class="fas fa-clock"></i>
@@ -179,15 +160,13 @@
                         </div>
                         <div class="timeline-item safe">
                             <span class="count" id="safeCount">0</span>
-                            <span class="label">Safe (>7 days)</span>
+                            <span class="label">Safe (&gt;7 days)</span>
                         </div>
                     </div>
                     <div class="risk-level">
                         Risk Level: <span id="riskLevel">Low</span>
                     </div>
                 </div>
-
-                <!-- Freshness Index -->
                 <div class="insight-card">
                     <div class="insight-header">
                         <i class="fas fa-leaf"></i>
@@ -226,8 +205,6 @@
                         </div>
                     </div>
                 </div>
-
-                <!-- Storage Optimization -->
                 <div class="insight-card">
                     <div class="insight-header">
                         <i class="fas fa-box"></i>
@@ -260,8 +237,6 @@
                         </div>
                     </div>
                 </div>
-
-                <!-- Value Analysis -->
                 <div class="insight-card">
                     <div class="insight-header">
                         <i class="fas fa-chart-line"></i>
@@ -282,22 +257,6 @@
                             <!-- Populated by JavaScript -->
                         </div>
                     </div>
-                </div>
-            </div>
-
-            <!-- Category Analysis -->
-            <div class="category-analysis">
-                <h3>Category Analysis</h3>
-                <div class="category-grid" id="categoryAnalysis">
-                    <!-- Populated by JavaScript -->
-                </div>
-            </div>
-
-            <!-- Storage Zones -->
-            <div class="storage-zones">
-                <h3>Storage Zone Analysis</h3>
-                <div class="zones-grid" id="storageZones">
-                    <!-- Populated by JavaScript -->
                 </div>
             </div>
         </section>
@@ -347,13 +306,9 @@
             </div>
         </section>
     </main>
-
-    <!-- Footer -->
     <footer class="premium-footer">
         <p>Premium Analytics Dashboard | Grocery Expiry Tracking System</p>
     </footer>
-
-    <!-- Scripts -->
     <script src="scripts/reports.js"></script>
 </body>
-</html> 
+</html>
