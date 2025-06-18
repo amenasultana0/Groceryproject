@@ -12,6 +12,7 @@ const session = require('express-session');
 const passport = require('passport');
 require('./config/passport');
 const Notification = require('./models/Notification');
+const Product = require('./models/Product');
 const authMiddleware = require('./middleware/authMiddleware');
 
 app.use(session({
@@ -38,6 +39,7 @@ const io = socketIo(server, {
     methods: ['GET', 'POST'],
   }
 });
+
 
 app.set('io', io);
 
@@ -80,10 +82,6 @@ app.get('/api/notifications/unread-count', authMiddleware, async (req, res) => {
 // Serve frontend static files
 app.use(express.static(path.join(__dirname, 'public')));
 
-// SPA fallback for frontend routes
-// app.get(/^\/(?!api).*/, (req, res) => {
-//   res.sendFile(path.join(__dirname, 'public', 'index.html'));
-// });
 
 app.get(/^\/(?!api|auth).*/, (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
@@ -119,6 +117,19 @@ app.put('/api/notifications/mark-read', authMiddleware, async (req, res) => {
 });
 
 
+app.delete('/api/notifications/:id', async (req, res) => {
+  try {
+    const result = await Notification.findByIdAndDelete(req.params.id);
+    if (!result) {
+      return res.status(404).json({ error: 'Notification not found' });
+    }
+    res.json({ success: true });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Failed to delete notification' });
+  }
+});
+
 // Helper function to create & broadcast new notifications
 async function createNotification(message, userId = null) {
   const notification = new Notification({ message, userId });
@@ -128,10 +139,56 @@ async function createNotification(message, userId = null) {
 
 app.set('createNotification', createNotification);
 
+const cron = require('node-cron');
+cron.schedule('0 * * * *', async () => { // every hour
+  const now = new Date();
+  const soon = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
+  const next24h = new Date(now.getTime() + 24 * 60 * 60 * 1000);
+
+  // Expired
+ // ...existing code...
+// Expired
+const expired = await Product.find({ expiryDate: { $lt: now } });
+for (const item of expired) {
+  const message = `${item.name} has expired!`;
+  // Only create if not already notified
+  const exists = await Notification.findOne({ message, userId: item.userId });
+  if (!exists) {
+    const notification = new Notification({ message, userId: item.userId });
+    await notification.save();
+    io.emit('newNotification', notification);
+  }
+}
+
+// Expiring within 24 hours
+const exp24 = await Product.find({ expiryDate: { $gte: now, $lte: next24h } });
+for (const item of exp24) {
+  const message = `${item.name} is expiring within 24 hours!`;
+  const exists = await Notification.findOne({ message, userId: item.userId });
+  if (!exists) {
+    const notification = new Notification({ message, userId: item.userId });
+    await notification.save();
+    io.emit('newNotification', notification);
+  }
+}
+
+// Expiring soon (within 7 days)
+const expSoon = await Product.find({ expiryDate: { $gt: next24h, $lte: soon } });
+for (const item of expSoon) {
+  const message = `${item.name} is expiring soon (on ${item.expiryDate.toDateString()})!`;
+  const exists = await Notification.findOne({ message, userId: item.userId });
+  if (!exists) {
+    const notification = new Notification({ message, userId: item.userId });
+    await notification.save();
+    io.emit('newNotification', notification);
+  }
+}
+});
+
 // Example: Simulate a new notification every 30 seconds
-setInterval(() => {
-  createNotification('You have a new notification!');
-}, 30000);
+// setInterval(() => {
+//   createNotification('You have a new notification!');
+// }, 30000);
 
 // Global error handler
 app.use((err, req, res, next) => {

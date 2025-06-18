@@ -43,7 +43,6 @@ const recentItemsList = document.getElementById('recentItems');
 const logoutBtn = document.querySelector('.user-actions .icon-btn[title="Logout"]');
 const notificationBtn = document.querySelector('.notification-btn');
 const notificationsPanel = document.getElementById('notificationsPanel');
-const notificationsList = document.getElementById('notificationsList');
 const notificationsIcon = document.querySelector('.notification-btn');
 const notificationBadge = notificationsIcon.querySelector('.badge');
 
@@ -71,23 +70,48 @@ notificationBtn?.addEventListener('click', toggleNotificationsPanel);
 
 
 // Initial Load
-window.addEventListener('DOMContentLoaded', () => {
+window.addEventListener('DOMContentLoaded', async () => {
   setUserInfo();
-
-  // Delay loadItems slightly to ensure token is set
-  setTimeout(() => {
+  setTimeout(async () => {
     loadItems();
     fetchUnreadNotificationCount();
     populateCategoryDropdown('category');
+    // Fetch notifications from backend
+    try {
+      const res = await fetch('http://localhost:3000/api/notifications', {
+        headers: { Authorization: `Bearer ${getToken()}` }
+      });
+      notifications = await res.json();
+      renderNotificationsPanel();
+    } catch {
+      notifications = [];
+      renderNotificationsPanel();
+    }
   }, 100); 
 });
 
 // Notification socket
-socket.on('notification', (data) => {
-  notifications.push(data);
+socket.on('newNotification', (data) => {
+  notifications.unshift(data);
   updateUnreadCount(notifications.length);
-  if (notificationsPanel.style.display === 'block') {
-    renderNotifications();
+  renderNotificationsPanel();
+  showNotification(data.message, 'info');
+});
+
+notificationsPanel.addEventListener('mouseenter', () => {
+  notificationPanelHovered = true;
+  clearTimeout(notificationPanelTimeout);
+});
+notificationsPanel.addEventListener('mouseleave', () => {
+  notificationPanelHovered = false;
+  if (notificationPanelShouldAutoClose) {
+    clearTimeout(notificationPanelTimeout);
+    notificationPanelTimeout = setTimeout(() => {
+      if (!notificationPanelHovered) {
+        notificationsPanel.classList.remove('active');
+        notificationPanelShouldAutoClose = false;
+      }
+    }, 5000);
   }
 });
 
@@ -120,7 +144,6 @@ async function handleAddItem(e) {
 
     if (!response.ok) throw new Error('Failed to add item');
 
-    showNotification('Item added successfully!', 'success');
     closeModal();
     loadItems();
   } catch (err) {
@@ -136,6 +159,26 @@ async function loadItems() {
     });
     if (!response.ok) throw new Error('Failed to fetch items');
     const items = await response.json();
+
+    const alreadyNotifiedIds = new Set(notifications.map(n => n.itemId)); // avoid duplicates
+
+//     items.forEach(item => {
+//       if (isExpiringSoon(item.expiryDate) && !alreadyNotifiedIds.has(item._id)) {
+//         const message = `${item.name} is expiring soon (on ${formatDate(item.expiryDate)})!`;
+
+//         const notif = {
+//           itemId: item._id,
+//           message,
+//           read: false,
+//         };
+
+//         notifications.push(notif);
+//         updateUnreadCount(notifications.length);
+//         showNotification(message, 'info');
+//         renderNotificationsPanel();  
+//   }
+// });
+
     currentItems = items;
     updateStats(items);
 
@@ -214,7 +257,6 @@ async function deleteItem(id) {
       headers: { Authorization: `Bearer ${token}` }
     });
     if (!response.ok) throw new Error();
-    showNotification('Item deleted successfully!', 'success');
     loadItems();
   } catch {
     showNotification('Error deleting item.', 'error');
@@ -347,28 +389,102 @@ function setUserInfo() {
 
 
 function showNotification(message, type = 'info') {
+  let container = document.getElementById('notificationToastContainer');
+  if (!container) {
+    container = document.createElement('div');
+    container.id = 'notificationToastContainer';
+    document.body.appendChild(container);
+  }
+
   const toast = document.createElement('div');
   toast.className = `notification-toast ${type}`;
   toast.textContent = message;
-  document.body.appendChild(toast);
-  setTimeout(() => toast.classList.add('hide'), 3000);
-  setTimeout(() => toast.remove(), 3500);
+
+  container.appendChild(toast);
+
+  // Animate out and remove after 4 seconds
+  setTimeout(() => toast.classList.add('hide'), 4000);
+  setTimeout(() => toast.remove(), 4300);
 }
 
+let notificationPanelTimeout = null;
+let notificationPanelHovered = false;
+let notificationPanelShouldAutoClose = false;
 function toggleNotificationsPanel() {
-  notificationsPanel.style.display = notificationsPanel.style.display === 'block' ? 'none' : 'block';
-  if (notificationsPanel.style.display === 'block') {
-    renderNotifications();
-    markNotificationsAsRead();
+  const panel = document.getElementById('notificationsPanel');
+  if (!panel) return;
+  panel.classList.toggle('active');
+  if (panel.classList.contains('active')) {
+    renderNotificationsPanel();
+    markAllNotificationsAsRead();
+    updateUnreadCount(0); // Set badge to zero
+    clearTimeout(notificationPanelTimeout);
+  } else {
+    clearTimeout(notificationPanelTimeout);
   }
 }
 
-function renderNotifications() {
-  notificationsList.innerHTML = '';
-  notifications.forEach((notif, index) => {
-    const li = document.createElement('li');
-    li.textContent = notif.message || `Notification ${index + 1}`;
-    notificationsList.appendChild(li);
+async function markAllNotificationsAsRead() {
+  try {
+    await fetch('http://localhost:3000/api/notifications/mark-read', { method: 'PUT' , headers: {
+        'Authorization': `Bearer ${getToken()}`
+      }
+    });
+    notifications.forEach(n => n.read = true);
+  } catch (e) {
+    // handle error if needed
+  }
+}
+
+function renderNotificationsPanel() {
+  const panel = document.getElementById('notificationsPanel');
+  if (!panel) return;
+
+  const backendNotifications = notifications.filter(n => n._id);
+
+  if (!backendNotifications.length) {
+    panel.innerHTML = `<div class="notification-item">No notifications yet.</div>`;
+    return;
+  }
+
+  panel.innerHTML = backendNotifications
+    .map(n => `
+    <div class="notification-item${n.read ? '' : ' unread'}" data-id="${n._id}">
+      <span class="icon"><i class="fas fa-bell"></i></span>
+      <div class="content">
+        <div>${n.message}</div>
+        <div class="time">${new Date(n.createdAt).toLocaleString()}</div>
+      </div>
+      <button class="delete-notification-btn" title="Delete"><i class="fas fa-trash"></i></button>
+    </div>
+  `).join('');
+
+panel.querySelectorAll('.delete-notification-btn').forEach(btn => {
+    btn.addEventListener('click', async (e) => {
+      e.stopPropagation();
+      const itemDiv = btn.closest('.notification-item');
+      const id = itemDiv.getAttribute('data-id');
+      if (!id) {
+        showNotification('Notification ID not found', 'error');
+        return;
+      }
+      try {
+        await fetch(`http://localhost:3000/api/notifications/${id}`, { method: 'DELETE' });
+        // Remove from local array and re-render
+        const idx = notifications.findIndex(n => n._id === id);
+        if (idx > -1) notifications.splice(idx, 1);
+        renderNotificationsPanel();
+        clearTimeout(notificationPanelTimeout);
+        notificationPanelTimeout = setTimeout(() => {
+        // Only close if not hovered
+          if (!notificationPanelHovered) {
+            panel.classList.remove('active');
+          }
+        }, 5000);
+      } catch (err) {
+        showNotification('Failed to delete notification', 'error');
+      }
+    });
   });
 }
 
