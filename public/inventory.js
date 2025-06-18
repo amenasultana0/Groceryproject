@@ -28,7 +28,7 @@ document.addEventListener("DOMContentLoaded", () => {
     
     // Load existing items from backend
   loadItems();
-  populateCategoryDropdown('categoryFilter'); // For <select id="categoryFilter">
+  //populateCategoryDropdown('categoryFilter'); // For <select id="categoryFilter">
     
 
   // Handle form submission
