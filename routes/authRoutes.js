@@ -2,6 +2,7 @@ const express = require('express');
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 const rateLimit = require('express-rate-limit');
+const passport = require('passport');
 
 const router = express.Router();
 
@@ -76,6 +77,10 @@ router.post('/login', loginLimiter, async (req, res) => {
     const user = await User.findOne({ email });
     if (!user) return res.status(400).json({ error: 'Invalid credentials' });
 
+    if (!user.password) {
+      return res.status(400).json({ error: 'This account was created using Google login. Please log in with Google.' });
+    }
+
     const isMatch = await user.comparePassword(password);
     if (!isMatch) return res.status(400).json({ error: 'Invalid credentials' });
 
@@ -95,5 +100,55 @@ router.post('/login', loginLimiter, async (req, res) => {
     res.status(500).json({ error: 'Server error' });
   }
 });
+
+router.get('/google', passport.authenticate('google', { scope: ['profile', 'email'] }));
+
+router.get('/google/callback',
+  passport.authenticate('google', { failureRedirect: 'http://127.0.0.1:5500/public/index.html', session: false }),
+  (req, res) => {
+    const user = req.user;
+
+    if (!user || !user._id) {
+      console.error('User not found or ID is missing');
+      return res.redirect('/login'); // or show error
+    }
+
+    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: '7d' });
+
+
+    // Redirect to dashboard with token and user info in URL (or set cookie, or serve it in a view)
+    const userInfo = {
+      id: user._id,
+      name: user.name,
+      email: user.email
+    };
+
+    const encodedUser = encodeURIComponent(JSON.stringify(userInfo));
+    res.redirect(`http://127.0.0.1:5500/public/dashboard.html?token=${token}&user=${encodedUser}`);
+  }
+);
+
+router.get('/github', passport.authenticate('github', { scope: ['user:email'] }));
+
+router.get('/github/callback',
+  passport.authenticate('github', { failureRedirect: 'http://127.0.0.1:5500/public/login.html', session: false }),
+  (req, res) => {
+    const user = req.user;
+    if (!user || !user._id) {
+      return res.redirect('http://127.0.0.1:5500/public/login.html');
+    }
+
+    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: '7d' });
+
+    const userInfo = {
+      id: user._id,
+      name: user.name,
+      email: user.email
+    };
+
+    const encodedUser = encodeURIComponent(JSON.stringify(userInfo));
+    res.redirect(`http://127.0.0.1:5500/public/dashboard.html?token=${token}&user=${encodedUser}`);
+  }
+);
 
 module.exports = router;

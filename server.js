@@ -3,10 +3,25 @@ const http = require('http');
 const socketIo = require('socket.io');
 const mongoose = require('mongoose');
 const dotenv = require('dotenv');
+dotenv.config();
+
+const app = express();
 const path = require('path');
 const cors = require('cors');
+const session = require('express-session');
+const passport = require('passport');
+require('./config/passport');
 const Notification = require('./models/Notification');
 const authMiddleware = require('./middleware/authMiddleware');
+
+app.use(session({
+  secret: 'your-secret-key',
+  resave: false,
+  saveUninitialized: false
+}));
+app.use(passport.initialize());
+app.use(passport.session());
+
 const categoryRoutes = require('./routes/categoryRoutes');
 const settingsRoutes = require('./routes/settingsRoutes');
 
@@ -15,9 +30,7 @@ const productRoutes = require('./routes/productRoutes');
 const reportRoutes = require('./routes/reportRoutes');
 
 
-dotenv.config();
 
-const app = express();
 const server = http.createServer(app);
 const io = socketIo(server, {
   cors: {
@@ -68,9 +81,14 @@ app.get('/api/notifications/unread-count', authMiddleware, async (req, res) => {
 app.use(express.static(path.join(__dirname, 'public')));
 
 // SPA fallback for frontend routes
-app.get(/^\/(?!api).*/, (req, res) => {
+// app.get(/^\/(?!api).*/, (req, res) => {
+//   res.sendFile(path.join(__dirname, 'public', 'index.html'));
+// });
+
+app.get(/^\/(?!api|auth).*/, (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
+
 
 // Socket.IO setup
 io.on('connection', (socket) => {

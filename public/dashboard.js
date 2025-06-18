@@ -1,5 +1,33 @@
 import { populateCategoryDropdown } from './utils/categoryHelper.js'; 
 
+// This runs only once on redirect from Google login
+(function handleGoogleRedirect() {
+  const urlParams = new URLSearchParams(window.location.search);
+  const token = urlParams.get('token');
+  const userParam = urlParams.get('user');
+
+  if (token && userParam) {
+    try {
+      const userData = JSON.parse(decodeURIComponent(userParam));
+      const user = {
+        id: userData.id,  // optional: add `id` from backend if available
+        name: userData.name,
+        email: userData.email,
+        token
+      };
+
+      // You can decide to store in localStorage or sessionStorage
+      localStorage.setItem("user", JSON.stringify(user));
+
+      // Remove query params from URL after storing
+      const cleanUrl = window.location.origin + window.location.pathname;
+      window.history.replaceState({}, document.title, cleanUrl);
+    } catch (err) {
+      console.error("Failed to parse user data from Google login:", err);
+    }
+  }
+})();
+
 // DOM Elements
 const addItemBtn = document.querySelector('.add-item-btn');
 const modal = document.getElementById('addItemModal');
@@ -18,6 +46,12 @@ const notificationsPanel = document.getElementById('notificationsPanel');
 const notificationsList = document.getElementById('notificationsList');
 const notificationsIcon = document.querySelector('.notification-btn');
 const notificationBadge = notificationsIcon.querySelector('.badge');
+
+const urlParams = new URLSearchParams(window.location.search);
+const tokenFromUrl = urlParams.get('token');
+const email = urlParams.get('email');
+const name = urlParams.get('name');
+
 const socket = io('http://localhost:3000');
 
 let currentItems = [];
@@ -34,12 +68,18 @@ searchInput?.addEventListener('input', handleSearch);
 logoutBtn?.addEventListener('click', handleLogout);
 notificationBtn?.addEventListener('click', toggleNotificationsPanel);
 
+
+
 // Initial Load
 window.addEventListener('DOMContentLoaded', () => {
-  loadItems();
   setUserInfo();
-  fetchUnreadNotificationCount();
-  populateCategoryDropdown('category'); // For <select id="category">
+
+  // Delay loadItems slightly to ensure token is set
+  setTimeout(() => {
+    loadItems();
+    fetchUnreadNotificationCount();
+    populateCategoryDropdown('category');
+  }, 100); 
 });
 
 // Notification socket
@@ -265,18 +305,46 @@ function getToken() {
   }
 }
 
+// function setUserInfo() {
+//   const userStr = localStorage.getItem('user') || sessionStorage.getItem('user');
+  
+//   if (!userStr) return;
+//   const user = JSON.parse(userStr);
+//   console.log('Parsed user object:', user);
+//   const name = user?.user?.name || (user?.user?.email ? user.user.email.split('@')[0] : 'User');
+
+//   const userNameEl = document.getElementById('userName');
+//   if (userNameEl) userNameEl.textContent = name;
+
+//   const userAvatarEl = document.getElementById('userAvatar');
+//   if (userAvatarEl) userAvatarEl.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=0D6EFD&color=fff`;
+// }
+
 function setUserInfo() {
   const userStr = localStorage.getItem('user') || sessionStorage.getItem('user');
   if (!userStr) return;
-  const user = JSON.parse(userStr);
-  const name = user.name || user.email.split('@')[0];
+
+  let user;
+  try {
+    user = JSON.parse(userStr);
+  } catch (err) {
+    console.error('Invalid user data:', userStr);
+    return;
+  }
+
+  const name = user?.name || (user?.email ? user.email.split('@')[0] : 'User');
 
   const userNameEl = document.getElementById('userName');
   if (userNameEl) userNameEl.textContent = name;
 
   const userAvatarEl = document.getElementById('userAvatar');
-  if (userAvatarEl) userAvatarEl.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=0D6EFD&color=fff`;
+  if (userAvatarEl) {
+    userAvatarEl.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=0D6EFD&color=fff`;
+  }
 }
+
+
+
 
 function showNotification(message, type = 'info') {
   const toast = document.createElement('div');

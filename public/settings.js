@@ -32,12 +32,21 @@ function applyLanguage(langCode) {
   const t = translations[langCode] || translations['en'];
   const $ = (id) => document.getElementById(id);
 
-  $('settings-title').textContent = t.settingsTitle;
-  $('save-settings').textContent = t.saveBtn;
-  document.querySelector('label[for="region"]').textContent = t.regionLabel;
-  document.querySelector('label[for="language"]').textContent = t.languageLabel;
-  document.querySelector('label[for="notification"]').textContent = t.notificationLabel;
-  document.querySelector('label[for="theme"]').textContent = t.themeLabel;
+  if ($('settings-title')) $('settings-title').textContent = t.settingsTitle;
+  if ($('save-settings')) $('save-settings').textContent = t.saveBtn;
+  
+  const regionLabel = document.querySelector('label[for="region"]');
+  if (regionLabel) regionLabel.textContent = t.regionLabel;
+
+  const languageLabel = document.querySelector('label[for="language"]');
+  if (languageLabel) languageLabel.textContent = t.languageLabel;
+
+  const notificationLabel = document.getElementById('label-notification');
+  if (notificationLabel) notificationLabel.textContent = t.notificationLabel;
+
+  // Optional: If you later add a theme label
+  const themeLabel = document.querySelector('label[for="theme"]');
+  if (themeLabel) themeLabel.textContent = t.themeLabel;
 }
 
 
@@ -519,6 +528,7 @@ class SettingsUtils {
 
 // Initialize the settings manager when DOM is loaded
 document.addEventListener('DOMContentLoaded', () => {
+    loadDefaultSettings();
     window.settingsManager = new SettingsManager();
     
     // Add additional button handlers that might not be in the main class
@@ -561,6 +571,30 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 });
+
+function loadDefaultSettings() {
+  const expiry = localStorage.getItem('expiryReminder') ?? '3';
+  const lowStock = localStorage.getItem('lowStockThreshold') ?? '5';
+  const autoDelete = localStorage.getItem('autoDelete') === 'true'; // returns boolean
+
+  document.getElementById('expiry-reminder').value = expiry;
+  document.getElementById('low-stock').value = lowStock;
+  document.getElementById('auto-delete').checked = autoDelete;
+}
+
+
+function saveDefaultSettings() {
+  const expiry = document.getElementById('expiry-reminder').value;
+  const lowStock = document.getElementById('low-stock').value;
+  const autoDelete = document.getElementById('auto-delete').checked;
+
+  localStorage.setItem('expiryReminder', expiry);
+  localStorage.setItem('lowStockThreshold', lowStock);
+  localStorage.setItem('autoDelete', autoDelete);
+
+  alert("Default settings saved!");
+}
+
 
 // Export for use in other modules if needed
 if (typeof module !== 'undefined' && module.exports) {
