@@ -1,1480 +1,1480 @@
-// DOM Elements
-const addItemBtn = document.querySelector('.add-item-btn');
-const modal = document.getElementById('addItemModal');
-const scannerModal = document.getElementById('scannerModal');
-const closeModalBtn = document.querySelector('.close-modal');
-const closeScannerBtn = document.querySelector('.close-scanner');
-const cancelModalBtn = document.querySelector('.cancel-modal');
-const addItemForm = document.getElementById('addItemForm');
-const mobileMenuBtn = document.querySelector('.mobile-menu');
-const mobileCloseBtn = document.querySelector('.mobile-close');
-const sidebar = document.querySelector('.sidebar');
-const searchInput = document.querySelector('.search-bar input');
-const expiringItemsList = document.getElementById('expiringItems');
-const recentItemsList = document.getElementById('recentItems');
-const logoutBtn = document.querySelector('.user-actions .icon-btn[title="Logout"]');
-const scannerBtn = document.querySelector('.scanner-btn');
-const captureBtn = document.getElementById('captureBtn');
-const manualEntryBtn = document.getElementById('manualEntry');
-const notificationBtn = document.getElementById('notificationBtn');
-const notificationDropdown = document.getElementById('notificationDropdown');
+// // DOM Elements
+// const addItemBtn = document.querySelector('.add-item-btn');
+// const modal = document.getElementById('addItemModal');
+// const scannerModal = document.getElementById('scannerModal');
+// const closeModalBtn = document.querySelector('.close-modal');
+// const closeScannerBtn = document.querySelector('.close-scanner');
+// const cancelModalBtn = document.querySelector('.cancel-modal');
+// const addItemForm = document.getElementById('addItemForm');
+// const mobileMenuBtn = document.querySelector('.mobile-menu');
+// const mobileCloseBtn = document.querySelector('.mobile-close');
+// const sidebar = document.querySelector('.sidebar');
+// const searchInput = document.querySelector('.search-bar input');
+// const expiringItemsList = document.getElementById('expiringItems');
+// const recentItemsList = document.getElementById('recentItems');
+// const logoutBtn = document.querySelector('.user-actions .icon-btn[title="Logout"]');
+// const scannerBtn = document.querySelector('.scanner-btn');
+// const captureBtn = document.getElementById('captureBtn');
+// const manualEntryBtn = document.getElementById('manualEntry');
+// const notificationBtn = document.getElementById('notificationBtn');
+// const notificationDropdown = document.getElementById('notificationDropdown');
 
-// Event Listeners
-addItemBtn?.addEventListener('click', openModal);
-closeModalBtn?.addEventListener('click', closeModal);
-closeScannerBtn?.addEventListener('click', closeScannerModal);
-cancelModalBtn?.addEventListener('click', closeModal);
-addItemForm?.addEventListener('submit', handleAddItem);
-mobileMenuBtn?.addEventListener('click', toggleSidebar);
-mobileCloseBtn?.addEventListener('click', toggleSidebar);
-searchInput?.addEventListener('input', handleSearch);
-logoutBtn?.addEventListener('click', handleLogout);
-scannerBtn?.addEventListener('click', openScannerModal);
-captureBtn?.addEventListener('click', handleCapture);
-manualEntryBtn?.addEventListener('click', openModalFromScanner);
+// // Event Listeners
+// addItemBtn?.addEventListener('click', openModal);
+// closeModalBtn?.addEventListener('click', closeModal);
+// closeScannerBtn?.addEventListener('click', closeScannerModal);
+// cancelModalBtn?.addEventListener('click', closeModal);
+// addItemForm?.addEventListener('submit', handleAddItem);
+// mobileMenuBtn?.addEventListener('click', toggleSidebar);
+// mobileCloseBtn?.addEventListener('click', toggleSidebar);
+// searchInput?.addEventListener('input', handleSearch);
+// logoutBtn?.addEventListener('click', handleLogout);
+// scannerBtn?.addEventListener('click', openScannerModal);
+// captureBtn?.addEventListener('click', handleCapture);
+// manualEntryBtn?.addEventListener('click', openModalFromScanner);
 
-// Initialize
-document.addEventListener('DOMContentLoaded', () => {
-    loadItems();
-    updateStats();
-    loadUserData();
-    initializeNotifications();
-    initializeSampleData();
-});
+// // Initialize
+// document.addEventListener('DOMContentLoaded', () => {
+//     loadItems();
+//     updateStats();
+//     loadUserData();
+//     initializeNotifications();
+//     initializeSampleData();
+// });
 
-// Storage Functions (using memory instead of localStorage for compatibility)
-let itemsStorage = [];
+// // Storage Functions (using memory instead of localStorage for compatibility)
+// let itemsStorage = [];
 
-function getItems() {
-    return itemsStorage;
-}
+// function getItems() {
+//     return itemsStorage;
+// }
 
-function saveItems(items) {
-    itemsStorage = items;
-}
+// function saveItems(items) {
+//     itemsStorage = items;
+// }
 
-// Modal Functions
-function openModal() {
-    modal.classList.add('active');
-    // Set today as the minimum date for expiry
-    const today = new Date().toISOString().split('T')[0];
-    document.getElementById('purchaseDate').value = today;
-    document.getElementById('purchaseDate').max = today;
-    document.getElementById('expiryDate').min = today;
-}
+// // Modal Functions
+// function openModal() {
+//     modal.classList.add('active');
+//     // Set today as the minimum date for expiry
+//     const today = new Date().toISOString().split('T')[0];
+//     document.getElementById('purchaseDate').value = today;
+//     document.getElementById('purchaseDate').max = today;
+//     document.getElementById('expiryDate').min = today;
+// }
 
-function closeModal() {
-    modal.classList.remove('active');
-    addItemForm.reset();
-}
+// function closeModal() {
+//     modal.classList.remove('active');
+//     addItemForm.reset();
+// }
 
-function openScannerModal() {
-    scannerModal.classList.add('active');
-}
+// function openScannerModal() {
+//     scannerModal.classList.add('active');
+// }
 
-function closeScannerModal() {
-    scannerModal.classList.remove('active');
-}
+// function closeScannerModal() {
+//     scannerModal.classList.remove('active');
+// }
 
-function openModalFromScanner() {
-    closeScannerModal();
-    openModal();
-}
+// function openModalFromScanner() {
+//     closeScannerModal();
+//     openModal();
+// }
 
-// Scanner Functions
-function handleCapture() {
-    // Simulate barcode scanning
-    const mockBarcodes = [
-        { code: '123456789012', name: 'Milk', category: 'dairy' },
-        { code: '987654321098', name: 'Bread', category: 'pantry' },
-        { code: '456789123456', name: 'Apples', category: 'fruits' },
-        { code: '789123456789', name: 'Chicken Breast', category: 'meat' },
-        { code: '321654987321', name: 'Yogurt', category: 'dairy' },
-        { code: '654987321654', name: 'Bananas', category: 'fruits' },
-        { code: '147258369147', name: 'Tomatoes', category: 'vegetables' },
-        { code: '258369147258', name: 'Cheese', category: 'dairy' }
-    ];
+// // Scanner Functions
+// function handleCapture() {
+//     // Simulate barcode scanning
+//     const mockBarcodes = [
+//         { code: '123456789012', name: 'Milk', category: 'dairy' },
+//         { code: '987654321098', name: 'Bread', category: 'pantry' },
+//         { code: '456789123456', name: 'Apples', category: 'fruits' },
+//         { code: '789123456789', name: 'Chicken Breast', category: 'meat' },
+//         { code: '321654987321', name: 'Yogurt', category: 'dairy' },
+//         { code: '654987321654', name: 'Bananas', category: 'fruits' },
+//         { code: '147258369147', name: 'Tomatoes', category: 'vegetables' },
+//         { code: '258369147258', name: 'Cheese', category: 'dairy' }
+//     ];
 
-    // Simulate scanning delay
-    captureBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Scanning...';
-    captureBtn.disabled = true;
+//     // Simulate scanning delay
+//     captureBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Scanning...';
+//     captureBtn.disabled = true;
 
-    setTimeout(() => {
-        // Randomly select a barcode
-        const scannedItem = mockBarcodes[Math.floor(Math.random() * mockBarcodes.length)];
+//     setTimeout(() => {
+//         // Randomly select a barcode
+//         const scannedItem = mockBarcodes[Math.floor(Math.random() * mockBarcodes.length)];
         
-        // Close scanner modal
-        closeScannerModal();
+//         // Close scanner modal
+//         closeScannerModal();
         
-        // Open add item modal with pre-filled data
-        openModal();
+//         // Open add item modal with pre-filled data
+//         openModal();
         
-        // Pre-fill form with scanned data
-        document.getElementById('itemName').value = scannedItem.name;
-        document.getElementById('category').value = scannedItem.category;
-        document.getElementById('quantity').value = '1';
+//         // Pre-fill form with scanned data
+//         document.getElementById('itemName').value = scannedItem.name;
+//         document.getElementById('category').value = scannedItem.category;
+//         document.getElementById('quantity').value = '1';
         
-        // Set default expiry date (7 days from now for demo)
-        const expiryDate = new Date();
-        expiryDate.setDate(expiryDate.getDate() + 7);
-        document.getElementById('expiryDate').value = expiryDate.toISOString().split('T')[0];
+//         // Set default expiry date (7 days from now for demo)
+//         const expiryDate = new Date();
+//         expiryDate.setDate(expiryDate.getDate() + 7);
+//         document.getElementById('expiryDate').value = expiryDate.toISOString().split('T')[0];
         
-        showNotification(`Scanned: ${scannedItem.name}`, 'success');
+//         showNotification(`Scanned: ${scannedItem.name}`, 'success');
         
-        // Reset capture button
-        captureBtn.innerHTML = 'Capture';
-        captureBtn.disabled = false;
-    }, 2000);
-}
+//         // Reset capture button
+//         captureBtn.innerHTML = 'Capture';
+//         captureBtn.disabled = false;
+//     }, 2000);
+// }
 
-// Item Management Functions
-function handleAddItem(e) {
-    e.preventDefault();
+// // Item Management Functions
+// function handleAddItem(e) {
+//     e.preventDefault();
 
-    const newItem = {
-        id: Date.now(),
-        name: document.getElementById('itemName').value,
-        category: document.getElementById('category').value,
-        quantity: parseInt(document.getElementById('quantity').value),
-        purchaseDate: document.getElementById('purchaseDate').value,
-        expiryDate: document.getElementById('expiryDate').value,
-        notes: document.getElementById('notes').value,
-        createdAt: new Date().toISOString()
-    };
+//     const newItem = {
+//         id: Date.now(),
+//         name: document.getElementById('itemName').value,
+//         category: document.getElementById('category').value,
+//         quantity: parseInt(document.getElementById('quantity').value),
+//         purchaseDate: document.getElementById('purchaseDate').value,
+//         expiryDate: document.getElementById('expiryDate').value,
+//         notes: document.getElementById('notes').value,
+//         createdAt: new Date().toISOString()
+//     };
 
-    // Get existing items and add new item
-    const items = getItems();
-    items.push(newItem);
-    saveItems(items);
+//     // Get existing items and add new item
+//     const items = getItems();
+//     items.push(newItem);
+//     saveItems(items);
 
-    // Update UI
-    loadItems();
-    updateStats();
-    closeModal();
+//     // Update UI
+//     loadItems();
+//     updateStats();
+//     closeModal();
 
-    // Show notification
-    showNotification('Item added successfully!', 'success');
-}
+//     // Show notification
+//     showNotification('Item added successfully!', 'success');
+// }
 
-function loadItems() {
-    const items = getItems();
+// function loadItems() {
+//     const items = getItems();
     
-    // Sort items by expiry date for expiring soon
-    const expiringItems = items
-        .filter(item => isExpiringSoon(item.expiryDate))
-        .sort((a, b) => new Date(a.expiryDate) - new Date(b.expiryDate));
+//     // Sort items by expiry date for expiring soon
+//     const expiringItems = items
+//         .filter(item => isExpiringSoon(item.expiryDate))
+//         .sort((a, b) => new Date(a.expiryDate) - new Date(b.expiryDate));
 
-    // Sort items by creation date for recent items
-    const recentItems = [...items]
-        .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
-        .slice(0, 5);
+//     // Sort items by creation date for recent items
+//     const recentItems = [...items]
+//         .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+//         .slice(0, 5);
 
-    // Render items
-    renderItems(expiringItemsList, expiringItems, 'expiring');
-    renderItems(recentItemsList, recentItems, 'recent');
-}
+//     // Render items
+//     renderItems(expiringItemsList, expiringItems, 'expiring');
+//     renderItems(recentItemsList, recentItems, 'recent');
+// }
 
-function renderItems(container, items, type) {
-    if (!container) return;
+// function renderItems(container, items, type) {
+//     if (!container) return;
 
-    if (items.length === 0) {
-        container.innerHTML = `
-            <div class="empty-state">
-                <i class="fas fa-box-open"></i>
-                <p>No items to display</p>
-            </div>
-        `;
-        return;
-    }
+//     if (items.length === 0) {
+//         container.innerHTML = `
+//             <div class="empty-state">
+//                 <i class="fas fa-box-open"></i>
+//                 <p>No items to display</p>
+//             </div>
+//         `;
+//         return;
+//     }
 
-    container.innerHTML = items.map(item => `
-        <div class="item-card ${isExpired(item.expiryDate) ? 'expired' : ''}" data-id="${item.id}">
-            <div class="item-header">
-                <h3>${item.name}</h3>
-                <span class="category-badge">${item.category}</span>
-            </div>
-            <div class="item-details">
-                <div class="detail">
-                    <i class="fas fa-calendar"></i>
-                    <span>Expires: ${formatDate(item.expiryDate)}</span>
-                </div>
-                <div class="detail">
-                    <i class="fas fa-box"></i>
-                    <span>Quantity: ${item.quantity}</span>
-                </div>
-                ${item.notes ? `
-                <div class="detail">
-                    <i class="fas fa-sticky-note"></i>
-                    <span>${item.notes}</span>
-                </div>
-                ` : ''}
-            </div>
-            <div class="item-actions">
-                <button class="icon-btn" onclick="editItem(${item.id})" title="Edit">
-                    <i class="fas fa-edit"></i>
-                </button>
-                <button class="icon-btn delete" onclick="deleteItem(${item.id})" title="Delete">
-                    <i class="fas fa-trash"></i>
-                </button>
-            </div>
-        </div>
-    `).join('');
-}
+//     container.innerHTML = items.map(item => `
+//         <div class="item-card ${isExpired(item.expiryDate) ? 'expired' : ''}" data-id="${item.id}">
+//             <div class="item-header">
+//                 <h3>${item.name}</h3>
+//                 <span class="category-badge">${item.category}</span>
+//             </div>
+//             <div class="item-details">
+//                 <div class="detail">
+//                     <i class="fas fa-calendar"></i>
+//                     <span>Expires: ${formatDate(item.expiryDate)}</span>
+//                 </div>
+//                 <div class="detail">
+//                     <i class="fas fa-box"></i>
+//                     <span>Quantity: ${item.quantity}</span>
+//                 </div>
+//                 ${item.notes ? `
+//                 <div class="detail">
+//                     <i class="fas fa-sticky-note"></i>
+//                     <span>${item.notes}</span>
+//                 </div>
+//                 ` : ''}
+//             </div>
+//             <div class="item-actions">
+//                 <button class="icon-btn" onclick="editItem(${item.id})" title="Edit">
+//                     <i class="fas fa-edit"></i>
+//                 </button>
+//                 <button class="icon-btn delete" onclick="deleteItem(${item.id})" title="Delete">
+//                     <i class="fas fa-trash"></i>
+//                 </button>
+//             </div>
+//         </div>
+//     `).join('');
+// }
 
-function updateStats() {
-    const items = getItems();
+// function updateStats() {
+//     const items = getItems();
     
-    // Calculate stats (removed low stock calculation)
-    const expiringSoon = items.filter(item => isExpiringSoon(item.expiryDate)).length;
-    const expired = items.filter(item => isExpired(item.expiryDate)).length;
-    const totalItems = items.length;
+//     // Calculate stats (removed low stock calculation)
+//     const expiringSoon = items.filter(item => isExpiringSoon(item.expiryDate)).length;
+//     const expired = items.filter(item => isExpired(item.expiryDate)).length;
+//     const totalItems = items.length;
 
-    // Update stats in DOM (only 3 stat cards now)
-    const statCards = document.querySelectorAll('.stat-number');
-    if (statCards.length >= 3) {
-        statCards[0].textContent = expiringSoon;
-        statCards[1].textContent = totalItems;
-        statCards[2].textContent = expired;
-    }
+//     // Update stats in DOM (only 3 stat cards now)
+//     const statCards = document.querySelectorAll('.stat-number');
+//     if (statCards.length >= 3) {
+//         statCards[0].textContent = expiringSoon;
+//         statCards[1].textContent = totalItems;
+//         statCards[2].textContent = expired;
+//     }
 
-    // Update notification badge
-    const notificationBadge = document.querySelector('.badge');
-    if (notificationBadge) {
-        const totalNotifications = expiringSoon + expired;
-        notificationBadge.textContent = totalNotifications;
-        notificationBadge.style.display = totalNotifications > 0 ? 'block' : 'none';
-    }
-}
+//     // Update notification badge
+//     const notificationBadge = document.querySelector('.badge');
+//     if (notificationBadge) {
+//         const totalNotifications = expiringSoon + expired;
+//         notificationBadge.textContent = totalNotifications;
+//         notificationBadge.style.display = totalNotifications > 0 ? 'block' : 'none';
+//     }
+// }
 
-function handleSearch(e) {
-    const searchTerm = e.target.value.toLowerCase();
-    const items = getItems();
+// function handleSearch(e) {
+//     const searchTerm = e.target.value.toLowerCase();
+//     const items = getItems();
 
-    if (searchTerm.trim() === '') {
-        loadItems();
-        return;
-    }
+//     if (searchTerm.trim() === '') {
+//         loadItems();
+//         return;
+//     }
 
-    const filteredItems = items.filter(item => 
-        item.name.toLowerCase().includes(searchTerm) ||
-        item.category.toLowerCase().includes(searchTerm) ||
-        (item.notes && item.notes.toLowerCase().includes(searchTerm))
-    );
+//     const filteredItems = items.filter(item => 
+//         item.name.toLowerCase().includes(searchTerm) ||
+//         item.category.toLowerCase().includes(searchTerm) ||
+//         (item.notes && item.notes.toLowerCase().includes(searchTerm))
+//     );
 
-    renderItems(recentItemsList, filteredItems, 'search');
+//     renderItems(recentItemsList, filteredItems, 'search');
     
-    // Update expiring items section header
-    const expiringHeader = document.querySelector('.expiring-items .section-header h2');
-    if (expiringHeader) {
-        expiringHeader.textContent = searchTerm ? 'Search Results' : 'Expiring Soon';
-    }
+//     // Update expiring items section header
+//     const expiringHeader = document.querySelector('.expiring-items .section-header h2');
+//     if (expiringHeader) {
+//         expiringHeader.textContent = searchTerm ? 'Search Results' : 'Expiring Soon';
+//     }
     
-    if (searchTerm) {
-        renderItems(expiringItemsList, filteredItems.filter(item => isExpiringSoon(item.expiryDate)), 'search');
-    }
-}
+//     if (searchTerm) {
+//         renderItems(expiringItemsList, filteredItems.filter(item => isExpiringSoon(item.expiryDate)), 'search');
+//     }
+// }
 
-function deleteItem(id) {
-    if (!confirm('Are you sure you want to delete this item?')) return;
+// function deleteItem(id) {
+//     if (!confirm('Are you sure you want to delete this item?')) return;
 
-    const items = getItems();
-    const updatedItems = items.filter(item => item.id !== id);
-    saveItems(updatedItems);
+//     const items = getItems();
+//     const updatedItems = items.filter(item => item.id !== id);
+//     saveItems(updatedItems);
 
-    loadItems();
-    updateStats();
-    showNotification('Item deleted successfully!', 'success');
-}
+//     loadItems();
+//     updateStats();
+//     showNotification('Item deleted successfully!', 'success');
+// }
 
-function editItem(id) {
-    const items = getItems();
-    const item = items.find(item => item.id === id);
-    if (!item) return;
+// function editItem(id) {
+//     const items = getItems();
+//     const item = items.find(item => item.id === id);
+//     if (!item) return;
 
-    // Populate form
-    document.getElementById('itemName').value = item.name;
-    document.getElementById('category').value = item.category;
-    document.getElementById('quantity').value = item.quantity;
-    document.getElementById('purchaseDate').value = item.purchaseDate;
-    document.getElementById('expiryDate').value = item.expiryDate;
-    document.getElementById('notes').value = item.notes || '';
+//     // Populate form
+//     document.getElementById('itemName').value = item.name;
+//     document.getElementById('category').value = item.category;
+//     document.getElementById('quantity').value = item.quantity;
+//     document.getElementById('purchaseDate').value = item.purchaseDate;
+//     document.getElementById('expiryDate').value = item.expiryDate;
+//     document.getElementById('notes').value = item.notes || '';
 
-    // Store original handler
-    const originalHandler = addItemForm.onsubmit;
+//     // Store original handler
+//     const originalHandler = addItemForm.onsubmit;
     
-    // Update form submission handler
-    addItemForm.onsubmit = (e) => {
-        e.preventDefault();
+//     // Update form submission handler
+//     addItemForm.onsubmit = (e) => {
+//         e.preventDefault();
         
-        const updatedItem = {
-            ...item,
-            name: document.getElementById('itemName').value,
-            category: document.getElementById('category').value,
-            quantity: parseInt(document.getElementById('quantity').value),
-            purchaseDate: document.getElementById('purchaseDate').value,
-            expiryDate: document.getElementById('expiryDate').value,
-            notes: document.getElementById('notes').value
-        };
+//         const updatedItem = {
+//             ...item,
+//             name: document.getElementById('itemName').value,
+//             category: document.getElementById('category').value,
+//             quantity: parseInt(document.getElementById('quantity').value),
+//             purchaseDate: document.getElementById('purchaseDate').value,
+//             expiryDate: document.getElementById('expiryDate').value,
+//             notes: document.getElementById('notes').value
+//         };
 
-        const items = getItems();
-        const updatedItems = items.map(i => i.id === id ? updatedItem : i);
-        saveItems(updatedItems);
+//         const items = getItems();
+//         const updatedItems = items.map(i => i.id === id ? updatedItem : i);
+//         saveItems(updatedItems);
 
-        loadItems();
-        updateStats();
-        closeModal();
-        showNotification('Item updated successfully!', 'success');
+//         loadItems();
+//         updateStats();
+//         closeModal();
+//         showNotification('Item updated successfully!', 'success');
 
-        // Reset form submission handler
-        addItemForm.onsubmit = originalHandler;
-    };
+//         // Reset form submission handler
+//         addItemForm.onsubmit = originalHandler;
+//     };
 
-    openModal();
-}
+//     openModal();
+// }
 
-// UI Functions
-function toggleSidebar() {
-    sidebar.classList.toggle('active');
-}
+// // UI Functions
+// function toggleSidebar() {
+//     sidebar.classList.toggle('active');
+// }
 
-function handleLogout() {
-    if (confirm('Are you sure you want to logout?')) {
-        // Clear all stored data
-        itemsStorage = [];
+// function handleLogout() {
+//     if (confirm('Are you sure you want to logout?')) {
+//         // Clear all stored data
+//         itemsStorage = [];
         
-        showNotification('Logged out successfully!', 'success');
+//         showNotification('Logged out successfully!', 'success');
         
-        // Redirect after a short delay
-        setTimeout(() => {
-            window.location.href = 'login.html';
-        }, 1000);
-    }
-}
+//         // Redirect after a short delay
+//         setTimeout(() => {
+//             window.location.href = 'login.html';
+//         }, 1000);
+//     }
+// }
 
-function loadUserData() {
-    // Simulate user data - in a real app, this would come from authentication
-    const userData = {
-        name: 'John Doe',
-        email: 'john.doe@example.com',
-        plan: 'Pro Plan'
-    };
+// function loadUserData() {
+//     // Simulate user data - in a real app, this would come from authentication
+//     const userData = {
+//         name: 'John Doe',
+//         email: 'john.doe@example.com',
+//         plan: 'Pro Plan'
+//     };
 
-    const userName = userData.name || userData.email.split('@')[0];
+//     const userName = userData.name || userData.email.split('@')[0];
 
-    const userNameEl = document.getElementById('userName');
-    if (userNameEl) userNameEl.textContent = userName;
+//     const userNameEl = document.getElementById('userName');
+//     if (userNameEl) userNameEl.textContent = userName;
 
-    const userAvatarEl = document.getElementById('userAvatar');
-    if (userAvatarEl) {
-        const avatarUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(userName)}&background=0D6EFD&color=fff`;
-        userAvatarEl.src = avatarUrl;
-    }
-}
+//     const userAvatarEl = document.getElementById('userAvatar');
+//     if (userAvatarEl) {
+//         const avatarUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(userName)}&background=0D6EFD&color=fff`;
+//         userAvatarEl.src = avatarUrl;
+//     }
+// }
 
-// Notification Functions
-function initializeNotifications() {
-    if (!notificationBtn || !notificationDropdown) return;
+// // Notification Functions
+// function initializeNotifications() {
+//     if (!notificationBtn || !notificationDropdown) return;
 
-    const markAllReadBtn = document.querySelector('.mark-all-read');
-    const notificationItems = document.querySelectorAll('.notification-item');
-    let unreadCount = document.querySelectorAll('.notification-item.unread').length;
-    const badge = document.querySelector('.badge');
+//     const markAllReadBtn = document.querySelector('.mark-all-read');
+//     const notificationItems = document.querySelectorAll('.notification-item');
+//     let unreadCount = document.querySelectorAll('.notification-item.unread').length;
+//     const badge = document.querySelector('.badge');
 
-    // Update badge count
-    function updateBadgeCount() {
-        if (badge) {
-            badge.textContent = unreadCount;
-            badge.style.display = unreadCount === 0 ? 'none' : 'block';
-        }
-    }
+//     // Update badge count
+//     function updateBadgeCount() {
+//         if (badge) {
+//             badge.textContent = unreadCount;
+//             badge.style.display = unreadCount === 0 ? 'none' : 'block';
+//         }
+//     }
 
-    // Toggle notification dropdown
-    notificationBtn.addEventListener('click', function(e) {
-        e.stopPropagation();
-        notificationDropdown.classList.toggle('active');
-    });
+//     // Toggle notification dropdown
+//     notificationBtn.addEventListener('click', function(e) {
+//         e.stopPropagation();
+//         notificationDropdown.classList.toggle('active');
+//     });
 
-    // Close dropdown when clicking outside
-    document.addEventListener('click', function(e) {
-        if (!notificationDropdown.contains(e.target) && e.target !== notificationBtn) {
-            notificationDropdown.classList.remove('active');
-        }
-    });
+//     // Close dropdown when clicking outside
+//     document.addEventListener('click', function(e) {
+//         if (!notificationDropdown.contains(e.target) && e.target !== notificationBtn) {
+//             notificationDropdown.classList.remove('active');
+//         }
+//     });
 
-    // Mark all notifications as read
-    if (markAllReadBtn) {
-        markAllReadBtn.addEventListener('click', function() {
-            notificationItems.forEach(item => {
-                item.classList.remove('unread');
-            });
-            unreadCount = 0;
-            updateBadgeCount();
-        });
-    }
+//     // Mark all notifications as read
+//     if (markAllReadBtn) {
+//         markAllReadBtn.addEventListener('click', function() {
+//             notificationItems.forEach(item => {
+//                 item.classList.remove('unread');
+//             });
+//             unreadCount = 0;
+//             updateBadgeCount();
+//         });
+//     }
 
-    // Mark individual notification as read
-    notificationItems.forEach(item => {
-        item.addEventListener('click', function() {
-            if (this.classList.contains('unread')) {
-                this.classList.remove('unread');
-                unreadCount--;
-                updateBadgeCount();
-            }
-        });
-    });
+//     // Mark individual notification as read
+//     notificationItems.forEach(item => {
+//         item.addEventListener('click', function() {
+//             if (this.classList.contains('unread')) {
+//                 this.classList.remove('unread');
+//                 unreadCount--;
+//                 updateBadgeCount();
+//             }
+//         });
+//     });
 
-    // Initialize badge count
-    updateBadgeCount();
-}
+//     // Initialize badge count
+//     updateBadgeCount();
+// }
 
-// Utility Functions
-function isExpiringSoon(date) {
-    const expiryDate = new Date(date);
-    const today = new Date();
-    const diffTime = expiryDate - today;
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    return diffDays > 0 && diffDays <= 7;
-}
+// // Utility Functions
+// function isExpiringSoon(date) {
+//     const expiryDate = new Date(date);
+//     const today = new Date();
+//     const diffTime = expiryDate - today;
+//     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+//     return diffDays > 0 && diffDays <= 7;
+// }
 
-function isExpired(date) {
-    const expiryDate = new Date(date);
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    expiryDate.setHours(0, 0, 0, 0);
-    return expiryDate < today;
-}
+// function isExpired(date) {
+//     const expiryDate = new Date(date);
+//     const today = new Date();
+//     today.setHours(0, 0, 0, 0);
+//     expiryDate.setHours(0, 0, 0, 0);
+//     return expiryDate < today;
+// }
 
-function formatDate(date) {
-    return new Date(date).toLocaleDateString('en-US', {
-        year: 'numeric',
-        month: 'short',
-        day: 'numeric'
-    });
-}
+// function formatDate(date) {
+//     return new Date(date).toLocaleDateString('en-US', {
+//         year: 'numeric',
+//         month: 'short',
+//         day: 'numeric'
+//     });
+// }
 
-function showNotification(message, type = 'info') {
-    // Remove existing notifications
-    const existingNotifications = document.querySelectorAll('.notification');
-    existingNotifications.forEach(notification => notification.remove());
+// function showNotification(message, type = 'info') {
+//     // Remove existing notifications
+//     const existingNotifications = document.querySelectorAll('.notification');
+//     existingNotifications.forEach(notification => notification.remove());
 
-    const notification = document.createElement('div');
-    notification.className = `notification ${type}`;
-    notification.style.cssText = `
-        position: fixed;
-        top: 20px;
-        right: 20px;
-        background: ${type === 'success' ? '#10B981' : type === 'error' ? '#EF4444' : '#3B82F6'};
-        color: white;
-        padding: 12px 20px;
-        border-radius: 8px;
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        z-index: 1001;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-        animation: slideIn 0.3s ease-out;
-    `;
+//     const notification = document.createElement('div');
+//     notification.className = `notification ${type}`;
+//     notification.style.cssText = `
+//         position: fixed;
+//         top: 20px;
+//         right: 20px;
+//         background: ${type === 'success' ? '#10B981' : type === 'error' ? '#EF4444' : '#3B82F6'};
+//         color: white;
+//         padding: 12px 20px;
+//         border-radius: 8px;
+//         display: flex;
+//         align-items: center;
+//         gap: 10px;
+//         z-index: 1001;
+//         box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+//         animation: slideIn 0.3s ease-out;
+//     `;
 
-    notification.innerHTML = `
-        <i class="fas fa-${type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-circle' : 'info-circle'}"></i>
-        <span>${message}</span>
-    `;
+//     notification.innerHTML = `
+//         <i class="fas fa-${type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-circle' : 'info-circle'}"></i>
+//         <span>${message}</span>
+//     `;
 
-    // Add animation styles if not already present
-    if (!document.querySelector('#notification-styles')) {
-        const style = document.createElement('style');
-        style.id = 'notification-styles';
-        style.textContent = `
-            @keyframes slideIn {
-                from {
-                    transform: translateX(100%);
-                    opacity: 0;
-                }
-                to {
-                    transform: translateX(0);
-                    opacity: 1;
-                }
-            }
-            @keyframes slideOut {
-                from {
-                    transform: translateX(0);
-                    opacity: 1;
-                }
-                to {
-                    transform: translateX(100%);
-                    opacity: 0;
-                }
-            }
-        `;
-        document.head.appendChild(style);
-    }
+//     // Add animation styles if not already present
+//     if (!document.querySelector('#notification-styles')) {
+//         const style = document.createElement('style');
+//         style.id = 'notification-styles';
+//         style.textContent = `
+//             @keyframes slideIn {
+//                 from {
+//                     transform: translateX(100%);
+//                     opacity: 0;
+//                 }
+//                 to {
+//                     transform: translateX(0);
+//                     opacity: 1;
+//                 }
+//             }
+//             @keyframes slideOut {
+//                 from {
+//                     transform: translateX(0);
+//                     opacity: 1;
+//                 }
+//                 to {
+//                     transform: translateX(100%);
+//                     opacity: 0;
+//                 }
+//             }
+//         `;
+//         document.head.appendChild(style);
+//     }
 
-    document.body.appendChild(notification);
+//     document.body.appendChild(notification);
 
-    // Remove notification after 3 seconds
-    setTimeout(() => {
-        notification.style.animation = 'slideOut 0.3s ease-in';
-        setTimeout(() => {
-            notification.remove();
-        }, 300);
-    }, 3000);
-}
+//     // Remove notification after 3 seconds
+//     setTimeout(() => {
+//         notification.style.animation = 'slideOut 0.3s ease-in';
+//         setTimeout(() => {
+//             notification.remove();
+//         }, 300);
+//     }, 3000);
+// }
 
-function initializeSampleData() {
-    // Add sample data if no items exist
-    if (getItems().length === 0) {
-        const sampleItems = [
-            {
-                id: 1,
-                name: 'Milk',
-                category: 'dairy',
-                quantity: 2,
-                purchaseDate: '2025-06-03',
-                expiryDate: '2025-06-08',
-                notes: 'Organic whole milk',
-                createdAt: '2025-06-03T10:00:00.000Z'
-            },
-            {
-                id: 2,
-                name: 'Bread',
-                category: 'pantry',
-                quantity: 1,
-                purchaseDate: '2025-06-04',
-                expiryDate: '2025-06-10',
-                notes: 'Whole wheat bread',
-                createdAt: '2025-06-04T09:00:00.000Z'
-            },
-            {
-                id: 3,
-                name: 'Apples',
-                category: 'fruits',
-                quantity: 5,
-                purchaseDate: '2025-06-02',
-                expiryDate: '2025-06-12',
-                notes: 'Red delicious apples',
-                createdAt: '2025-06-02T14:00:00.000Z'
-            },
-            {
-                id: 4,
-                name: 'Yogurt',
-                category: 'dairy',
-                quantity: 3,
-                purchaseDate: '2025-06-01',
-                expiryDate: '2025-06-06',
-                notes: 'Greek yogurt',
-                createdAt: '2025-06-01T11:00:00.000Z'
-            }
-        ];
+// function initializeSampleData() {
+//     // Add sample data if no items exist
+//     if (getItems().length === 0) {
+//         const sampleItems = [
+//             {
+//                 id: 1,
+//                 name: 'Milk',
+//                 category: 'dairy',
+//                 quantity: 2,
+//                 purchaseDate: '2025-06-03',
+//                 expiryDate: '2025-06-08',
+//                 notes: 'Organic whole milk',
+//                 createdAt: '2025-06-03T10:00:00.000Z'
+//             },
+//             {
+//                 id: 2,
+//                 name: 'Bread',
+//                 category: 'pantry',
+//                 quantity: 1,
+//                 purchaseDate: '2025-06-04',
+//                 expiryDate: '2025-06-10',
+//                 notes: 'Whole wheat bread',
+//                 createdAt: '2025-06-04T09:00:00.000Z'
+//             },
+//             {
+//                 id: 3,
+//                 name: 'Apples',
+//                 category: 'fruits',
+//                 quantity: 5,
+//                 purchaseDate: '2025-06-02',
+//                 expiryDate: '2025-06-12',
+//                 notes: 'Red delicious apples',
+//                 createdAt: '2025-06-02T14:00:00.000Z'
+//             },
+//             {
+//                 id: 4,
+//                 name: 'Yogurt',
+//                 category: 'dairy',
+//                 quantity: 3,
+//                 purchaseDate: '2025-06-01',
+//                 expiryDate: '2025-06-06',
+//                 notes: 'Greek yogurt',
+//                 createdAt: '2025-06-01T11:00:00.000Z'
+//             }
+//         ];
         
-        saveItems(sampleItems);
-    }
-}
+//         saveItems(sampleItems);
+//     }
+// }
 
-// Event Handlers for Modal and Keyboard Shortcuts
-document.addEventListener('click', (e) => {
-    if (e.target === modal) {
-        closeModal();
-    }
-    if (e.target === scannerModal) {
-        closeScannerModal();
-    }
-});
+// // Event Handlers for Modal and Keyboard Shortcuts
+// document.addEventListener('click', (e) => {
+//     if (e.target === modal) {
+//         closeModal();
+//     }
+//     if (e.target === scannerModal) {
+//         closeScannerModal();
+//     }
+// });
 
-document.addEventListener('keydown', (e) => {
-    // Escape key to close modals
-    if (e.key === 'Escape') {
-        closeModal();
-        closeScannerModal();
-    }
+// document.addEventListener('keydown', (e) => {
+//     // Escape key to close modals
+//     if (e.key === 'Escape') {
+//         closeModal();
+//         closeScannerModal();
+//     }
     
-    // Ctrl/Cmd + N to add new item
-    if ((e.ctrlKey || e.metaKey) && e.key === 'n') {
-        e.preventDefault();
-        openModal();
-    }
+//     // Ctrl/Cmd + N to add new item
+//     if ((e.ctrlKey || e.metaKey) && e.key === 'n') {
+//         e.preventDefault();
+//         openModal();
+//     }
     
-    // Ctrl/Cmd + S to open scanner
-    if ((e.ctrlKey || e.metaKey) && e.key === 's') {
-        e.preventDefault();
-        openScannerModal();
-    }
-});
-import { populateCategoryDropdown } from './utils/categoryHelper.js'; 
+//     // Ctrl/Cmd + S to open scanner
+//     if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+//         e.preventDefault();
+//         openScannerModal();
+//     }
+// });
+// import { populateCategoryDropdown } from './utils/categoryHelper.js'; 
 
-// Configuration
-const API_BASE_URL = 'http://localhost:3000';
-const DEMO_MODE = false; // Set to true for offline demo mode
+// // Configuration
+// const API_BASE_URL = 'http://localhost:3000';
+// const DEMO_MODE = false; // Set to true for offline demo mode
 
-// Global Variables
-let currentItems = [];
-let notifications = [];
-let itemsStorage = []; // For demo mode
-let notificationPanelTimeout = null;
-let notificationPanelHovered = false;
-let notificationPanelShouldAutoClose = false;
+// // Global Variables
+// let currentItems = [];
+// let notifications = [];
+// let itemsStorage = []; // For demo mode
+// let notificationPanelTimeout = null;
+// let notificationPanelHovered = false;
+// let notificationPanelShouldAutoClose = false;
 
-// Socket connection (only in backend mode)
-const socket = DEMO_MODE ? null : io(API_BASE_URL);
+// // Socket connection (only in backend mode)
+// const socket = DEMO_MODE ? null : io(API_BASE_URL);
 
-// DOM Elements
-const addItemBtn = document.querySelector('.add-item-btn');
-const modal = document.getElementById('addItemModal');
-const scannerModal = document.getElementById('scannerModal');
-const closeModalBtn = document.querySelector('.close-modal');
-const closeScannerBtn = document.querySelector('.close-scanner');
-const cancelModalBtn = document.querySelector('.cancel-modal');
-const addItemForm = document.getElementById('addItemForm');
-const mobileMenuBtn = document.querySelector('.mobile-menu');
-const mobileCloseBtn = document.querySelector('.mobile-close');
-const sidebar = document.querySelector('.sidebar');
-const searchInput = document.querySelector('.search-bar input');
-const expiringItemsList = document.getElementById('expiringItems');
-const recentItemsList = document.getElementById('recentItems');
-const logoutBtn = document.querySelector('.user-actions .icon-btn[title="Logout"]');
-const scannerBtn = document.querySelector('.scanner-btn');
-const captureBtn = document.getElementById('captureBtn');
-const manualEntryBtn = document.getElementById('manualEntry');
-const notificationBtn = document.querySelector('.notification-btn') || document.getElementById('notificationBtn');
-const notificationsPanel = document.getElementById('notificationsPanel');
-const notificationsIcon = document.querySelector('.notification-btn');
-const notificationBadge = notificationsIcon?.querySelector('.badge') || document.querySelector('.badge');
+// // DOM Elements
+// const addItemBtn = document.querySelector('.add-item-btn');
+// const modal = document.getElementById('addItemModal');
+// const scannerModal = document.getElementById('scannerModal');
+// const closeModalBtn = document.querySelector('.close-modal');
+// const closeScannerBtn = document.querySelector('.close-scanner');
+// const cancelModalBtn = document.querySelector('.cancel-modal');
+// const addItemForm = document.getElementById('addItemForm');
+// const mobileMenuBtn = document.querySelector('.mobile-menu');
+// const mobileCloseBtn = document.querySelector('.mobile-close');
+// const sidebar = document.querySelector('.sidebar');
+// const searchInput = document.querySelector('.search-bar input');
+// const expiringItemsList = document.getElementById('expiringItems');
+// const recentItemsList = document.getElementById('recentItems');
+// const logoutBtn = document.querySelector('.user-actions .icon-btn[title="Logout"]');
+// const scannerBtn = document.querySelector('.scanner-btn');
+// const captureBtn = document.getElementById('captureBtn');
+// const manualEntryBtn = document.getElementById('manualEntry');
+// const notificationBtn = document.querySelector('.notification-btn') || document.getElementById('notificationBtn');
+// const notificationsPanel = document.getElementById('notificationsPanel');
+// const notificationsIcon = document.querySelector('.notification-btn');
+// const notificationBadge = notificationsIcon?.querySelector('.badge') || document.querySelector('.badge');
 
-// Handle Google Redirect Authentication
-(function handleGoogleRedirect() {
-  if (DEMO_MODE) return;
+// // Handle Google Redirect Authentication
+// (function handleGoogleRedirect() {
+//   if (DEMO_MODE) return;
   
-  const urlParams = new URLSearchParams(window.location.search);
-  const token = urlParams.get('token');
-  const userParam = urlParams.get('user');
+//   const urlParams = new URLSearchParams(window.location.search);
+//   const token = urlParams.get('token');
+//   const userParam = urlParams.get('user');
 
-  if (token && userParam) {
-    try {
-      const userData = JSON.parse(decodeURIComponent(userParam));
-      const user = {
-        id: userData.id,
-        name: userData.name,
-        email: userData.email,
-        token
-      };
+//   if (token && userParam) {
+//     try {
+//       const userData = JSON.parse(decodeURIComponent(userParam));
+//       const user = {
+//         id: userData.id,
+//         name: userData.name,
+//         email: userData.email,
+//         token
+//       };
 
-      localStorage.setItem("user", JSON.stringify(user));
+//       localStorage.setItem("user", JSON.stringify(user));
 
-      // Remove query params from URL after storing
-      const cleanUrl = window.location.origin + window.location.pathname;
-      window.history.replaceState({}, document.title, cleanUrl);
-    } catch (err) {
-      console.error("Failed to parse user data from Google login:", err);
-    }
-  }
-})();
+//       // Remove query params from URL after storing
+//       const cleanUrl = window.location.origin + window.location.pathname;
+//       window.history.replaceState({}, document.title, cleanUrl);
+//     } catch (err) {
+//       console.error("Failed to parse user data from Google login:", err);
+//     }
+//   }
+// })();
 
-// Event Listeners
-addItemBtn?.addEventListener('click', openModal);
-closeModalBtn?.addEventListener('click', closeModal);
-closeScannerBtn?.addEventListener('click', closeScannerModal);
-cancelModalBtn?.addEventListener('click', closeModal);
-addItemForm?.addEventListener('submit', handleAddItem);
-mobileMenuBtn?.addEventListener('click', toggleSidebar);
-mobileCloseBtn?.addEventListener('click', toggleSidebar);
-searchInput?.addEventListener('input', handleSearch);
-logoutBtn?.addEventListener('click', handleLogout);
-scannerBtn?.addEventListener('click', openScannerModal);
-captureBtn?.addEventListener('click', handleCapture);
-manualEntryBtn?.addEventListener('click', openModalFromScanner);
-notificationBtn?.addEventListener('click', toggleNotificationsPanel);
+// // Event Listeners
+// addItemBtn?.addEventListener('click', openModal);
+// closeModalBtn?.addEventListener('click', closeModal);
+// closeScannerBtn?.addEventListener('click', closeScannerModal);
+// cancelModalBtn?.addEventListener('click', closeModal);
+// addItemForm?.addEventListener('submit', handleAddItem);
+// mobileMenuBtn?.addEventListener('click', toggleSidebar);
+// mobileCloseBtn?.addEventListener('click', toggleSidebar);
+// searchInput?.addEventListener('input', handleSearch);
+// logoutBtn?.addEventListener('click', handleLogout);
+// scannerBtn?.addEventListener('click', openScannerModal);
+// captureBtn?.addEventListener('click', handleCapture);
+// manualEntryBtn?.addEventListener('click', openModalFromScanner);
+// notificationBtn?.addEventListener('click', toggleNotificationsPanel);
 
-// Socket Events (Backend mode only)
-if (!DEMO_MODE && socket) {
-  socket.on('newNotification', (data) => {
-    notifications.unshift(data);
-    updateUnreadCount(notifications.length);
-    renderNotificationsPanel();
-    showNotification(data.message, 'info');
-  });
-}
+// // Socket Events (Backend mode only)
+// if (!DEMO_MODE && socket) {
+//   socket.on('newNotification', (data) => {
+//     notifications.unshift(data);
+//     updateUnreadCount(notifications.length);
+//     renderNotificationsPanel();
+//     showNotification(data.message, 'info');
+//   });
+// }
 
-// Notification Panel Hover Events
-if (notificationsPanel) {
-  notificationsPanel.addEventListener('mouseenter', () => {
-    notificationPanelHovered = true;
-    clearTimeout(notificationPanelTimeout);
-  });
+// // Notification Panel Hover Events
+// if (notificationsPanel) {
+//   notificationsPanel.addEventListener('mouseenter', () => {
+//     notificationPanelHovered = true;
+//     clearTimeout(notificationPanelTimeout);
+//   });
   
-  notificationsPanel.addEventListener('mouseleave', () => {
-    notificationPanelHovered = false;
-    if (notificationPanelShouldAutoClose) {
-      clearTimeout(notificationPanelTimeout);
-      notificationPanelTimeout = setTimeout(() => {
-        if (!notificationPanelHovered) {
-          notificationsPanel.classList.remove('active');
-          notificationPanelShouldAutoClose = false;
-        }
-      }, 5000);
-    }
-  });
-}
+//   notificationsPanel.addEventListener('mouseleave', () => {
+//     notificationPanelHovered = false;
+//     if (notificationPanelShouldAutoClose) {
+//       clearTimeout(notificationPanelTimeout);
+//       notificationPanelTimeout = setTimeout(() => {
+//         if (!notificationPanelHovered) {
+//           notificationsPanel.classList.remove('active');
+//           notificationPanelShouldAutoClose = false;
+//         }
+//       }, 5000);
+//     }
+//   });
+// }
 
-// Initial Load
-window.addEventListener('DOMContentLoaded', async () => {
-  setUserInfo();
+// // Initial Load
+// window.addEventListener('DOMContentLoaded', async () => {
+//   setUserInfo();
   
-  setTimeout(async () => {
-    await loadItems();
+//   setTimeout(async () => {
+//     await loadItems();
     
-    if (!DEMO_MODE) {
-      await fetchUnreadNotificationCount();
-      // populateCategoryDropdown('category');
+//     if (!DEMO_MODE) {
+//       await fetchUnreadNotificationCount();
+//       // populateCategoryDropdown('category');
       
-      // Fetch notifications from backend
-      try {
-        const res = await fetch(`${API_BASE_URL}/api/notifications`, {
-          headers: { Authorization: `Bearer ${getToken()}` }
-        });
-        notifications = await res.json();
-        renderNotificationsPanel();
-      } catch {
-        notifications = [];
-        renderNotificationsPanel();
-      }
-    } else {
-      initializeSampleData();
-      initializeNotifications();
-    }
-  }, 100);
-});
+//       // Fetch notifications from backend
+//       try {
+//         const res = await fetch(`${API_BASE_URL}/api/notifications`, {
+//           headers: { Authorization: `Bearer ${getToken()}` }
+//         });
+//         notifications = await res.json();
+//         renderNotificationsPanel();
+//       } catch {
+//         notifications = [];
+//         renderNotificationsPanel();
+//       }
+//     } else {
+//       initializeSampleData();
+//       initializeNotifications();
+//     }
+//   }, 100);
+// });
 
-// Modal Functions
-function openModal() {
-  modal.classList.add('active');
-  const today = new Date().toISOString().split('T')[0];
-  document.getElementById('purchaseDate').value = today;
-  document.getElementById('purchaseDate').max = today;
-  document.getElementById('expiryDate').min = today;
-}
+// // Modal Functions
+// function openModal() {
+//   modal.classList.add('active');
+//   const today = new Date().toISOString().split('T')[0];
+//   document.getElementById('purchaseDate').value = today;
+//   document.getElementById('purchaseDate').max = today;
+//   document.getElementById('expiryDate').min = today;
+// }
 
-function closeModal() {
-  modal.classList.remove('active');
-  addItemForm.reset();
-  addItemForm.onsubmit = handleAddItem;
-}
+// function closeModal() {
+//   modal.classList.remove('active');
+//   addItemForm.reset();
+//   addItemForm.onsubmit = handleAddItem;
+// }
 
-function openScannerModal() {
-  if (scannerModal) {
-    scannerModal.classList.add('active');
-  }
-}
+// function openScannerModal() {
+//   if (scannerModal) {
+//     scannerModal.classList.add('active');
+//   }
+// }
 
-function closeScannerModal() {
-  if (scannerModal) {
-    scannerModal.classList.remove('active');
-  }
-}
+// function closeScannerModal() {
+//   if (scannerModal) {
+//     scannerModal.classList.remove('active');
+//   }
+// }
 
-function openModalFromScanner() {
-  closeScannerModal();
-  openModal();
-}
+// function openModalFromScanner() {
+//   closeScannerModal();
+//   openModal();
+// }
 
-// Scanner Functions
-function handleCapture() {
-  if (!captureBtn) return;
+// // Scanner Functions
+// function handleCapture() {
+//   if (!captureBtn) return;
   
-  // Mock barcode data
-  const mockBarcodes = [
-    { code: '123456789012', name: 'Milk', category: 'dairy' },
-    { code: '987654321098', name: 'Bread', category: 'pantry' },
-    { code: '456789123456', name: 'Apples', category: 'fruits' },
-    { code: '789123456789', name: 'Chicken Breast', category: 'meat' },
-    { code: '321654987321', name: 'Yogurt', category: 'dairy' },
-    { code: '654987321654', name: 'Bananas', category: 'fruits' },
-    { code: '147258369147', name: 'Tomatoes', category: 'vegetables' },
-    { code: '258369147258', name: 'Cheese', category: 'dairy' }
-  ];
+//   // Mock barcode data
+//   const mockBarcodes = [
+//     { code: '123456789012', name: 'Milk', category: 'dairy' },
+//     { code: '987654321098', name: 'Bread', category: 'pantry' },
+//     { code: '456789123456', name: 'Apples', category: 'fruits' },
+//     { code: '789123456789', name: 'Chicken Breast', category: 'meat' },
+//     { code: '321654987321', name: 'Yogurt', category: 'dairy' },
+//     { code: '654987321654', name: 'Bananas', category: 'fruits' },
+//     { code: '147258369147', name: 'Tomatoes', category: 'vegetables' },
+//     { code: '258369147258', name: 'Cheese', category: 'dairy' }
+//   ];
 
-  // Simulate scanning delay
-  captureBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Scanning...';
-  captureBtn.disabled = true;
+//   // Simulate scanning delay
+//   captureBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Scanning...';
+//   captureBtn.disabled = true;
 
-  setTimeout(() => {
-    const scannedItem = mockBarcodes[Math.floor(Math.random() * mockBarcodes.length)];
+//   setTimeout(() => {
+//     const scannedItem = mockBarcodes[Math.floor(Math.random() * mockBarcodes.length)];
     
-    closeScannerModal();
-    openModal();
+//     closeScannerModal();
+//     openModal();
     
-    // Pre-fill form with scanned data
-    document.getElementById('itemName').value = scannedItem.name;
-    document.getElementById('category').value = scannedItem.category;
-    document.getElementById('quantity').value = '1';
+//     // Pre-fill form with scanned data
+//     document.getElementById('itemName').value = scannedItem.name;
+//     document.getElementById('category').value = scannedItem.category;
+//     document.getElementById('quantity').value = '1';
     
-    // Set default expiry date (7 days from now)
-    const expiryDate = new Date();
-    expiryDate.setDate(expiryDate.getDate() + 7);
-    document.getElementById('expiryDate').value = expiryDate.toISOString().split('T')[0];
+//     // Set default expiry date (7 days from now)
+//     const expiryDate = new Date();
+//     expiryDate.setDate(expiryDate.getDate() + 7);
+//     document.getElementById('expiryDate').value = expiryDate.toISOString().split('T')[0];
     
-    showNotification(`Scanned: ${scannedItem.name}`, 'success');
+//     showNotification(`Scanned: ${scannedItem.name}`, 'success');
     
-    // Reset capture button
-    captureBtn.innerHTML = 'Capture';
-    captureBtn.disabled = false;
-  }, 2000);
-}
+//     // Reset capture button
+//     captureBtn.innerHTML = 'Capture';
+//     captureBtn.disabled = false;
+//   }, 2000);
+// }
 
-// Item Management Functions
-async function handleAddItem(e) {
-  e.preventDefault();
-  const newItem = getItemFormData();
+// // Item Management Functions
+// async function handleAddItem(e) {
+//   e.preventDefault();
+//   const newItem = getItemFormData();
 
-  try {
-    if (DEMO_MODE) {
-      // Demo mode - use memory storage
-      newItem.id = Date.now();
-      const items = getItems();
-      items.push(newItem);
-      saveItems(items);
+//   try {
+//     if (DEMO_MODE) {
+//       // Demo mode - use memory storage
+//       newItem.id = Date.now();
+//       const items = getItems();
+//       items.push(newItem);
+//       saveItems(items);
       
-      showNotification('Item added successfully!', 'success');
-    } else {
-      // Backend mode
-      const token = getToken();
-      const response = await fetch(`${API_BASE_URL}/api/products/add`, {
-        method: 'POST',
-        headers: { 
-          'Content-Type': 'application/json', 
-          Authorization: `Bearer ${token}` 
-        },
-        body: JSON.stringify(newItem)
-      });
+//       showNotification('Item added successfully!', 'success');
+//     } else {
+//       // Backend mode
+//       const token = getToken();
+//       const response = await fetch(`${API_BASE_URL}/api/products/add`, {
+//         method: 'POST',
+//         headers: { 
+//           'Content-Type': 'application/json', 
+//           Authorization: `Bearer ${token}` 
+//         },
+//         body: JSON.stringify(newItem)
+//       });
 
-      if (!response.ok) throw new Error('Failed to add item');
+//       if (!response.ok) throw new Error('Failed to add item');
       
-      showNotification('Item added successfully!', 'success');
-    }
+//       showNotification('Item added successfully!', 'success');
+//     }
 
-    closeModal();
-    await loadItems();
-  } catch (err) {
-    console.error('Error adding item:', err);
-    showNotification('Error adding item. Please try again.', 'error');
-  }
-}
+//     closeModal();
+//     await loadItems();
+//   } catch (err) {
+//     console.error('Error adding item:', err);
+//     showNotification('Error adding item. Please try again.', 'error');
+//   }
+// }
 
-async function loadItems() {
-  try {
-    let items = [];
+// async function loadItems() {
+//   try {
+//     let items = [];
     
-    if (DEMO_MODE) {
-      // Demo mode - use memory storage
-      items = getItems();
-    } else {
-      // Backend mode
-      const token = getToken();
-      const response = await fetch(`${API_BASE_URL}/api/products`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+//     if (DEMO_MODE) {
+//       // Demo mode - use memory storage
+//       items = getItems();
+//     } else {
+//       // Backend mode
+//       const token = getToken();
+//       const response = await fetch(`${API_BASE_URL}/api/products`, {
+//         headers: { Authorization: `Bearer ${token}` }
+//       });
       
-      if (!response.ok) throw new Error('Failed to fetch items');
-      items = await response.json();
+//       if (!response.ok) throw new Error('Failed to fetch items');
+//       items = await response.json();
 
-      // Deduplicate ALL items by a unique key
-      const uniqueItemsMap = {};
-      items.forEach(item => {
-        const key = `${item.name}_${item.expiryDate}`;
-        uniqueItemsMap[key] = item;
-      });
-      items = Object.values(uniqueItemsMap);
-    }
+//       // Deduplicate ALL items by a unique key
+//       const uniqueItemsMap = {};
+//       items.forEach(item => {
+//         const key = `${item.name}_${item.expiryDate}`;
+//         uniqueItemsMap[key] = item;
+//       });
+//       items = Object.values(uniqueItemsMap);
+//     }
 
-    currentItems = items;
-    updateStats(items);
+//     currentItems = items;
+//     updateStats(items);
 
-    // Get expiring items
-    const expiringItems = items
-      .filter(item => isExpiringSoon(item.expiryDate))
-      .sort((a, b) => new Date(a.expiryDate) - new Date(b.expiryDate))
-      .slice(0, 3);
+//     // Get expiring items
+//     const expiringItems = items
+//       .filter(item => isExpiringSoon(item.expiryDate))
+//       .sort((a, b) => new Date(a.expiryDate) - new Date(b.expiryDate))
+//       .slice(0, 3);
 
-    renderItems(expiringItemsList, expiringItems);
+//     renderItems(expiringItemsList, expiringItems);
 
-    // Get recent items
-    const sortedItems = items
-      .filter(item => item.createdAt)
-      .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+//     // Get recent items
+//     const sortedItems = items
+//       .filter(item => item.createdAt)
+//       .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
     
-    renderItems(recentItemsList, sortedItems.slice(0, 3));
+//     renderItems(recentItemsList, sortedItems.slice(0, 3));
 
-  } catch (err) {
-    console.error('Failed to load items:', err);
-    showNotification('Failed to load items from server', 'error');
-  }
-}
+//   } catch (err) {
+//     console.error('Failed to load items:', err);
+//     showNotification('Failed to load items from server', 'error');
+//   }
+// }
 
-function renderItems(container, items) {
-  if (!container) return;
+// function renderItems(container, items) {
+//   if (!container) return;
   
-  if (items.length === 0) {
-    container.innerHTML = `
-      <div class="empty-state">
-        <i class="fas fa-box-open"></i>
-        <p>No items to display</p>
-      </div>
-    `;
-    return;
-  }
+//   if (items.length === 0) {
+//     container.innerHTML = `
+//       <div class="empty-state">
+//         <i class="fas fa-box-open"></i>
+//         <p>No items to display</p>
+//       </div>
+//     `;
+//     return;
+//   }
 
-  container.innerHTML = items.map(item => `
-    <div class="item-card ${isExpired(item.expiryDate) ? 'expired' : ''}" data-id="${item._id || item.id}">
-      <div class="item-header">
-        <h3>${item.name}</h3>
-        <span class="category-badge">${item.category}</span>
-      </div>
-      <div class="item-details">
-        <div class="detail">
-          <i class="fas fa-calendar"></i>
-          <span>Expires: ${formatDate(item.expiryDate)}</span>
-        </div>
-        <div class="detail">
-          <i class="fas fa-box"></i>
-          <span>Quantity: ${item.quantity}</span>
-        </div>
-        ${item.notes ? `
-        <div class="detail">
-          <i class="fas fa-sticky-note"></i>
-          <span>${item.notes}</span>
-        </div>
-        ` : ''}
-      </div>
-      <div class="item-actions">
-        <button class="icon-btn edit-btn" title="Edit">
-          <i class="fas fa-edit"></i>
-        </button>
-        <button class="icon-btn delete-btn" title="Delete">
-          <i class="fas fa-trash"></i>
-        </button>
-      </div>
-    </div>
-  `).join('');
+//   container.innerHTML = items.map(item => `
+//     <div class="item-card ${isExpired(item.expiryDate) ? 'expired' : ''}" data-id="${item._id || item.id}">
+//       <div class="item-header">
+//         <h3>${item.name}</h3>
+//         <span class="category-badge">${item.category}</span>
+//       </div>
+//       <div class="item-details">
+//         <div class="detail">
+//           <i class="fas fa-calendar"></i>
+//           <span>Expires: ${formatDate(item.expiryDate)}</span>
+//         </div>
+//         <div class="detail">
+//           <i class="fas fa-box"></i>
+//           <span>Quantity: ${item.quantity}</span>
+//         </div>
+//         ${item.notes ? `
+//         <div class="detail">
+//           <i class="fas fa-sticky-note"></i>
+//           <span>${item.notes}</span>
+//         </div>
+//         ` : ''}
+//       </div>
+//       <div class="item-actions">
+//         <button class="icon-btn edit-btn" title="Edit">
+//           <i class="fas fa-edit"></i>
+//         </button>
+//         <button class="icon-btn delete-btn" title="Delete">
+//           <i class="fas fa-trash"></i>
+//         </button>
+//       </div>
+//     </div>
+//   `).join('');
 
-  // Attach event listeners
-  container.querySelectorAll('.delete-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-      const itemId = btn.closest('.item-card').dataset.id;
-      deleteItem(itemId);
-    });
-  });
+//   // Attach event listeners
+//   container.querySelectorAll('.delete-btn').forEach(btn => {
+//     btn.addEventListener('click', () => {
+//       const itemId = btn.closest('.item-card').dataset.id;
+//       deleteItem(itemId);
+//     });
+//   });
 
-  container.querySelectorAll('.edit-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-      const itemId = btn.closest('.item-card').dataset.id;
-      editItem(itemId);
-    });
-  });
-}
+//   container.querySelectorAll('.edit-btn').forEach(btn => {
+//     btn.addEventListener('click', () => {
+//       const itemId = btn.closest('.item-card').dataset.id;
+//       editItem(itemId);
+//     });
+//   });
+// }
 
-function updateStats(items) {
-  const expiringSoon = items.filter(item => isExpiringSoon(item.expiryDate)).length;
-  const expired = items.filter(item => isExpired(item.expiryDate)).length;
-  const lowStock = items.filter(item => item.quantity <= 2).length;
-  const totalItems = items.length;
+// function updateStats(items) {
+//   const expiringSoon = items.filter(item => isExpiringSoon(item.expiryDate)).length;
+//   const expired = items.filter(item => isExpired(item.expiryDate)).length;
+//   const lowStock = items.filter(item => item.quantity <= 2).length;
+//   const totalItems = items.length;
 
-  // Update stats in DOM
-  const statNumbers = document.querySelectorAll('.stat-number');
-  if (statNumbers.length >= 4) {
-    statNumbers[0].textContent = expiringSoon;
-    statNumbers[1].textContent = totalItems;
-    statNumbers[2].textContent = expired;
-    statNumbers[3].textContent = lowStock;
-  } else if (statNumbers.length >= 3) {
-    // For layouts with only 3 stats
-    statNumbers[0].textContent = expiringSoon;
-    statNumbers[1].textContent = totalItems;
-    statNumbers[2].textContent = expired;
-  }
+//   // Update stats in DOM
+//   const statNumbers = document.querySelectorAll('.stat-number');
+//   if (statNumbers.length >= 4) {
+//     statNumbers[0].textContent = expiringSoon;
+//     statNumbers[1].textContent = totalItems;
+//     statNumbers[2].textContent = expired;
+//     statNumbers[3].textContent = lowStock;
+//   } else if (statNumbers.length >= 3) {
+//     // For layouts with only 3 stats
+//     statNumbers[0].textContent = expiringSoon;
+//     statNumbers[1].textContent = totalItems;
+//     statNumbers[2].textContent = expired;
+//   }
 
-  // Update notification badge for demo mode
-  if (DEMO_MODE && notificationBadge) {
-    const totalNotifications = expiringSoon + expired;
-    notificationBadge.textContent = totalNotifications;
-    notificationBadge.style.display = totalNotifications > 0 ? 'block' : 'none';
-  }
-}
+//   // Update notification badge for demo mode
+//   if (DEMO_MODE && notificationBadge) {
+//     const totalNotifications = expiringSoon + expired;
+//     notificationBadge.textContent = totalNotifications;
+//     notificationBadge.style.display = totalNotifications > 0 ? 'block' : 'none';
+//   }
+// }
 
-function handleSearch(e) {
-  const term = e.target.value.toLowerCase();
+// function handleSearch(e) {
+//   const term = e.target.value.toLowerCase();
   
-  if (term.trim() === '') {
-    loadItems();
-    return;
-  }
+//   if (term.trim() === '') {
+//     loadItems();
+//     return;
+//   }
 
-  const filtered = currentItems.filter(item => 
-    item.name.toLowerCase().includes(term) || 
-    item.category.toLowerCase().includes(term) ||
-    (item.notes && item.notes.toLowerCase().includes(term))
-  );
+//   const filtered = currentItems.filter(item => 
+//     item.name.toLowerCase().includes(term) || 
+//     item.category.toLowerCase().includes(term) ||
+//     (item.notes && item.notes.toLowerCase().includes(term))
+//   );
   
-  renderItems(recentItemsList, filtered);
+//   renderItems(recentItemsList, filtered);
   
-  // Update section header
-  const expiringHeader = document.querySelector('.expiring-items .section-header h2');
-  if (expiringHeader) {
-    expiringHeader.textContent = term ? 'Search Results' : 'Expiring Soon';
-  }
+//   // Update section header
+//   const expiringHeader = document.querySelector('.expiring-items .section-header h2');
+//   if (expiringHeader) {
+//     expiringHeader.textContent = term ? 'Search Results' : 'Expiring Soon';
+//   }
   
-  if (term) {
-    renderItems(expiringItemsList, filtered.filter(item => isExpiringSoon(item.expiryDate)));
-  }
-}
+//   if (term) {
+//     renderItems(expiringItemsList, filtered.filter(item => isExpiringSoon(item.expiryDate)));
+//   }
+// }
 
-async function deleteItem(id) {
-  if (!confirm('Are you sure you want to delete this item?')) return;
+// async function deleteItem(id) {
+//   if (!confirm('Are you sure you want to delete this item?')) return;
 
-  try {
-    if (DEMO_MODE) {
-      // Demo mode
-      const items = getItems();
-      const updatedItems = items.filter(item => item.id != id);
-      saveItems(updatedItems);
-    } else {
-      // Backend mode
-      const token = getToken();
-      const response = await fetch(`${API_BASE_URL}/api/products/${id}`, {
-        method: 'DELETE',
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      if (!response.ok) throw new Error('Failed to delete item');
-    }
+//   try {
+//     if (DEMO_MODE) {
+//       // Demo mode
+//       const items = getItems();
+//       const updatedItems = items.filter(item => item.id != id);
+//       saveItems(updatedItems);
+//     } else {
+//       // Backend mode
+//       const token = getToken();
+//       const response = await fetch(`${API_BASE_URL}/api/products/${id}`, {
+//         method: 'DELETE',
+//         headers: { Authorization: `Bearer ${token}` }
+//       });
+//       if (!response.ok) throw new Error('Failed to delete item');
+//     }
 
-    await loadItems();
-    showNotification('Item deleted successfully!', 'success');
-  } catch (err) {
-    console.error('Error deleting item:', err);
-    showNotification('Error deleting item.', 'error');
-  }
-}
+//     await loadItems();
+//     showNotification('Item deleted successfully!', 'success');
+//   } catch (err) {
+//     console.error('Error deleting item:', err);
+//     showNotification('Error deleting item.', 'error');
+//   }
+// }
 
-function editItem(id) {
-  const item = currentItems.find(i => (i._id || i.id) == id);
-  if (!item) return;
+// function editItem(id) {
+//   const item = currentItems.find(i => (i._id || i.id) == id);
+//   if (!item) return;
 
-  // Populate form
-  document.getElementById('itemName').value = item.name;
-  document.getElementById('category').value = item.category;
-  document.getElementById('quantity').value = item.quantity;
-  document.getElementById('purchaseDate').value = item.purchaseDate;
-  document.getElementById('expiryDate').value = item.expiryDate;
-  document.getElementById('notes').value = item.notes || '';
+//   // Populate form
+//   document.getElementById('itemName').value = item.name;
+//   document.getElementById('category').value = item.category;
+//   document.getElementById('quantity').value = item.quantity;
+//   document.getElementById('purchaseDate').value = item.purchaseDate;
+//   document.getElementById('expiryDate').value = item.expiryDate;
+//   document.getElementById('notes').value = item.notes || '';
 
-  openModal();
+//   openModal();
 
-  // Store original handler and update form submission
-  const originalHandler = addItemForm.onsubmit;
+//   // Store original handler and update form submission
+//   const originalHandler = addItemForm.onsubmit;
   
-  addItemForm.onsubmit = async (e) => {
-    e.preventDefault();
-    const updatedItem = getItemFormData();
+//   addItemForm.onsubmit = async (e) => {
+//     e.preventDefault();
+//     const updatedItem = getItemFormData();
 
-    try {
-      if (DEMO_MODE) {
-        // Demo mode
-        const items = getItems();
-        const updatedItems = items.map(i => i.id == id ? { ...i, ...updatedItem } : i);
-        saveItems(updatedItems);
-      } else {
-        // Backend mode
-        updatedItem._id = item._id;
-        const token = getToken();
-        const response = await fetch(`${API_BASE_URL}/api/products/${updatedItem._id}`, {
-          method: 'PUT',
-          headers: { 
-            'Content-Type': 'application/json', 
-            Authorization: `Bearer ${token}` 
-          },
-          body: JSON.stringify(updatedItem)
-        });
-        if (!response.ok) throw new Error('Failed to update item');
-      }
+//     try {
+//       if (DEMO_MODE) {
+//         // Demo mode
+//         const items = getItems();
+//         const updatedItems = items.map(i => i.id == id ? { ...i, ...updatedItem } : i);
+//         saveItems(updatedItems);
+//       } else {
+//         // Backend mode
+//         updatedItem._id = item._id;
+//         const token = getToken();
+//         const response = await fetch(`${API_BASE_URL}/api/products/${updatedItem._id}`, {
+//           method: 'PUT',
+//           headers: { 
+//             'Content-Type': 'application/json', 
+//             Authorization: `Bearer ${token}` 
+//           },
+//           body: JSON.stringify(updatedItem)
+//         });
+//         if (!response.ok) throw new Error('Failed to update item');
+//       }
 
-      showNotification('Item updated successfully!', 'success');
-      closeModal();
-      await loadItems();
+//       showNotification('Item updated successfully!', 'success');
+//       closeModal();
+//       await loadItems();
       
-      // Reset form handler
-      addItemForm.onsubmit = originalHandler;
-    } catch (err) {
-      console.error('Error updating item:', err);
-      showNotification('Error updating item.', 'error');
-    }
-  };
-}
+//       // Reset form handler
+//       addItemForm.onsubmit = originalHandler;
+//     } catch (err) {
+//       console.error('Error updating item:', err);
+//       showNotification('Error updating item.', 'error');
+//     }
+//   };
+// }
 
-function getItemFormData() {
-  return {
-    name: document.getElementById('itemName').value,
-    category: document.getElementById('category').value,
-    quantity: parseInt(document.getElementById('quantity').value),
-    purchaseDate: document.getElementById('purchaseDate').value,
-    expiryDate: document.getElementById('expiryDate').value,
-    notes: document.getElementById('notes').value,
-    createdAt: new Date().toISOString()
-  };
-}
+// function getItemFormData() {
+//   return {
+//     name: document.getElementById('itemName').value,
+//     category: document.getElementById('category').value,
+//     quantity: parseInt(document.getElementById('quantity').value),
+//     purchaseDate: document.getElementById('purchaseDate').value,
+//     expiryDate: document.getElementById('expiryDate').value,
+//     notes: document.getElementById('notes').value,
+//     createdAt: new Date().toISOString()
+//   };
+// }
 
-// UI Functions
-function toggleSidebar() {
-  if (sidebar) {
-    sidebar.classList.toggle('active');
-  }
-}
+// // UI Functions
+// function toggleSidebar() {
+//   if (sidebar) {
+//     sidebar.classList.toggle('active');
+//   }
+// }
 
-function handleLogout() {
-  if (!confirm('Are you sure you want to logout?')) return;
+// function handleLogout() {
+//   if (!confirm('Are you sure you want to logout?')) return;
   
-  localStorage.removeItem('user');
-  sessionStorage.removeItem('user');
+//   localStorage.removeItem('user');
+//   sessionStorage.removeItem('user');
   
-  if (DEMO_MODE) {
-    itemsStorage = [];
-  }
+//   if (DEMO_MODE) {
+//     itemsStorage = [];
+//   }
   
-  showNotification('Logged out successfully!', 'success');
+//   showNotification('Logged out successfully!', 'success');
   
-  setTimeout(() => {
-    window.location.href = 'login.html';
-  }, 1000);
-}
+//   setTimeout(() => {
+//     window.location.href = 'login.html';
+//   }, 1000);
+// }
 
-function setUserInfo() {
-  let userData, name;
+// function setUserInfo() {
+//   let userData, name;
   
-  if (DEMO_MODE) {
-    // Demo mode - use mock user data
-    userData = {
-      name: 'John Doe',
-      email: 'john.doe@example.com'
-    };
-    name = userData.name;
-  } else {
-    // Backend mode - get from storage
-    const userStr = localStorage.getItem('user') || sessionStorage.getItem('user');
-    if (!userStr) return;
+//   if (DEMO_MODE) {
+//     // Demo mode - use mock user data
+//     userData = {
+//       name: 'John Doe',
+//       email: 'john.doe@example.com'
+//     };
+//     name = userData.name;
+//   } else {
+//     // Backend mode - get from storage
+//     const userStr = localStorage.getItem('user') || sessionStorage.getItem('user');
+//     if (!userStr) return;
 
-    try {
-      userData = JSON.parse(userStr);
-      name = userData?.name || (userData?.email ? userData.email.split('@')[0] : 'User');
-    } catch (err) {
-      console.error('Invalid user data:', userStr);
-      return;
-    }
-  }
+//     try {
+//       userData = JSON.parse(userStr);
+//       name = userData?.name || (userData?.email ? userData.email.split('@')[0] : 'User');
+//     } catch (err) {
+//       console.error('Invalid user data:', userStr);
+//       return;
+//     }
+//   }
 
-  const userNameEl = document.getElementById('userName');
-  if (userNameEl) userNameEl.textContent = name;
+//   const userNameEl = document.getElementById('userName');
+//   if (userNameEl) userNameEl.textContent = name;
 
-  const userAvatarEl = document.getElementById('userAvatar');
-  if (userAvatarEl) {
-    userAvatarEl.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=0D6EFD&color=fff`;
-  }
-}
+//   const userAvatarEl = document.getElementById('userAvatar');
+//   if (userAvatarEl) {
+//     userAvatarEl.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=0D6EFD&color=fff`;
+//   }
+// }
 
-// Storage Functions (for demo mode)
-function getItems() {
-  return itemsStorage;
-}
+// // Storage Functions (for demo mode)
+// function getItems() {
+//   return itemsStorage;
+// }
 
-function saveItems(items) {
-  itemsStorage = items;
-}
+// function saveItems(items) {
+//   itemsStorage = items;
+// }
 
-// Authentication Functions
-function getToken() {
-  if (DEMO_MODE) return null;
+// // Authentication Functions
+// function getToken() {
+//   if (DEMO_MODE) return null;
   
-  const userStr = localStorage.getItem("user") || sessionStorage.getItem("user");
-  if (!userStr) return null;
+//   const userStr = localStorage.getItem("user") || sessionStorage.getItem("user");
+//   if (!userStr) return null;
   
-  try {
-    const user = JSON.parse(userStr);
-    return user.token || null;
-  } catch {
-    return null;
-  }
-}
+//   try {
+//     const user = JSON.parse(userStr);
+//     return user.token || null;
+//   } catch {
+//     return null;
+//   }
+// }
 
-// Notification Functions
-function showNotification(message, type = 'info') {
-  // Remove existing notifications
-  const existingNotifications = document.querySelectorAll('.notification-toast, .notification');
-  existingNotifications.forEach(notification => notification.remove());
+// // Notification Functions
+// function showNotification(message, type = 'info') {
+//   // Remove existing notifications
+//   const existingNotifications = document.querySelectorAll('.notification-toast, .notification');
+//   existingNotifications.forEach(notification => notification.remove());
 
-  let container = document.getElementById('notificationToastContainer');
-  if (!container) {
-    container = document.createElement('div');
-    container.id = 'notificationToastContainer';
-    container.style.cssText = `
-      position: fixed;
-      top: 20px;
-      right: 20px;
-      z-index: 1001;
-    `;
-    document.body.appendChild(container);
-  }
+//   let container = document.getElementById('notificationToastContainer');
+//   if (!container) {
+//     container = document.createElement('div');
+//     container.id = 'notificationToastContainer';
+//     container.style.cssText = `
+//       position: fixed;
+//       top: 20px;
+//       right: 20px;
+//       z-index: 1001;
+//     `;
+//     document.body.appendChild(container);
+//   }
 
-  const toast = document.createElement('div');
-  toast.className = `notification-toast ${type}`;
-  toast.style.cssText = `
-    background: ${type === 'success' ? '#10B981' : type === 'error' ? '#EF4444' : '#3B82F6'};
-    color: white;
-    padding: 12px 20px;
-    border-radius: 8px;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    margin-bottom: 10px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-    animation: slideIn 0.3s ease-out;
-  `;
+//   const toast = document.createElement('div');
+//   toast.className = `notification-toast ${type}`;
+//   toast.style.cssText = `
+//     background: ${type === 'success' ? '#10B981' : type === 'error' ? '#EF4444' : '#3B82F6'};
+//     color: white;
+//     padding: 12px 20px;
+//     border-radius: 8px;
+//     display: flex;
+//     align-items: center;
+//     gap: 10px;
+//     margin-bottom: 10px;
+//     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+//     animation: slideIn 0.3s ease-out;
+//   `;
 
-  toast.innerHTML = `
-    <i class="fas fa-${type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-circle' : 'info-circle'}"></i>
-    <span>${message}</span>
-  `;
+//   toast.innerHTML = `
+//     <i class="fas fa-${type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-circle' : 'info-circle'}"></i>
+//     <span>${message}</span>
+//   `;
 
-  // Add animation styles if not already present
-  if (!document.querySelector('#notification-styles')) {
-    const style = document.createElement('style');
-    style.id = 'notification-styles';
-    style.textContent = `
-      @keyframes slideIn {
-        from { transform: translateX(100%); opacity: 0; }
-        to { transform: translateX(0); opacity: 1; }
-      }
-      @keyframes slideOut {
-        from { transform: translateX(0); opacity: 1; }
-        to { transform: translateX(100%); opacity: 0; }
-      }
-    `;
-    document.head.appendChild(style);
-  }
+//   // Add animation styles if not already present
+//   if (!document.querySelector('#notification-styles')) {
+//     const style = document.createElement('style');
+//     style.id = 'notification-styles';
+//     style.textContent = `
+//       @keyframes slideIn {
+//         from { transform: translateX(100%); opacity: 0; }
+//         to { transform: translateX(0); opacity: 1; }
+//       }
+//       @keyframes slideOut {
+//         from { transform: translateX(0); opacity: 1; }
+//         to { transform: translateX(100%); opacity: 0; }
+//       }
+//     `;
+//     document.head.appendChild(style);
+//   }
 
-  container.appendChild(toast);
+//   container.appendChild(toast);
 
-  // Animate out and remove after 4 seconds
-  setTimeout(() => toast.classList.add('hide'), 4000);
-  setTimeout(() => toast.remove(), 4300);
-}
+//   // Animate out and remove after 4 seconds
+//   setTimeout(() => toast.classList.add('hide'), 4000);
+//   setTimeout(() => toast.remove(), 4300);
+// }
 
-function toggleNotificationsPanel() {
-  if (!notificationsPanel) return;
+// function toggleNotificationsPanel() {
+//   if (!notificationsPanel) return;
   
-  notificationsPanel.classList.toggle('active');
+//   notificationsPanel.classList.toggle('active');
   
-  if (notificationsPanel.classList.contains('active')) {
-    renderNotificationsPanel();
+//   if (notificationsPanel.classList.contains('active')) {
+//     renderNotificationsPanel();
     
-    if (!DEMO_MODE) {
-      markAllNotificationsAsRead();
-      updateUnreadCount(0);
-    }
+//     if (!DEMO_MODE) {
+//       markAllNotificationsAsRead();
+//       updateUnreadCount(0);
+//     }
     
-    clearTimeout(notificationPanelTimeout);
-  } else {
-    clearTimeout(notificationPanelTimeout);
-  }
-}
+//     clearTimeout(notificationPanelTimeout);
+//   } else {
+//     clearTimeout(notificationPanelTimeout);
+//   }
+// }
 
-async function markAllNotificationsAsRead() {
-  if (DEMO_MODE) return;
+// async function markAllNotificationsAsRead() {
+//   if (DEMO_MODE) return;
   
-  try {
-    await fetch(`${API_BASE_URL}/api/notifications/mark-read`, {
-      method: 'PUT',
-      headers: { Authorization: `Bearer ${getToken()}` }
-    });
-    notifications.forEach(n => n.read = true);
-  } catch (e) {
-    console.error('Error marking notifications as read:', e);
-  }
-}
+//   try {
+//     await fetch(`${API_BASE_URL}/api/notifications/mark-read`, {
+//       method: 'PUT',
+//       headers: { Authorization: `Bearer ${getToken()}` }
+//     });
+//     notifications.forEach(n => n.read = true);
+//   } catch (e) {
+//     console.error('Error marking notifications as read:', e);
+//   }
+// }
 
-function renderNotificationsPanel() {
-  if (!notificationsPanel) return;
+// function renderNotificationsPanel() {
+//   if (!notificationsPanel) return;
 
-  const backendNotifications = notifications.filter(n => n._id);
+//   const backendNotifications = notifications.filter(n => n._id);
 
-  if (!backendNotifications.length) {
-    notificationsPanel.innerHTML = `<div class="notification-item">No notifications yet.</div>`;
-    return;
-  }
+//   if (!backendNotifications.length) {
+//     notificationsPanel.innerHTML = `<div class="notification-item">No notifications yet.</div>`;
+//     return;
+//   }
 
-  notificationsPanel.innerHTML = backendNotifications
-    .map(n => `
-    <div class="notification-item${n.read ? '' : ' unread'}" data-id="${n._id}">
-      <span class="icon"><i class="fas fa-bell"></i></span>
-      <div class="content">
-        <div>${n.message}</div>
-        <div class="time">${new Date(n.createdAt).toLocaleString()}</div>
-      </div>
-      <button class="delete-notification-btn" title="Delete">
-        <i class="fas fa-trash"></i>
-      </button>
-    </div>
-  `).join('');
+//   notificationsPanel.innerHTML = backendNotifications
+//     .map(n => `
+//     <div class="notification-item${n.read ? '' : ' unread'}" data-id="${n._id}">
+//       <span class="icon"><i class="fas fa-bell"></i></span>
+//       <div class="content">
+//         <div>${n.message}</div>
+//         <div class="time">${new Date(n.createdAt).toLocaleString()}</div>
+//       </div>
+//       <button class="delete-notification-btn" title="Delete">
+//         <i class="fas fa-trash"></i>
+//       </button>
+//     </div>
+//   `).join('');
 
-  // Attach delete listeners
-  notificationsPanel.querySelectorAll('.delete-notification-btn').forEach(btn => {
-    btn.addEventListener('click', async (e) => {
-      e.stopPropagation();
-      const itemDiv = btn.closest('.notification-item');
-      const id = itemDiv.getAttribute('data-id');
+//   // Attach delete listeners
+//   notificationsPanel.querySelectorAll('.delete-notification-btn').forEach(btn => {
+//     btn.addEventListener('click', async (e) => {
+//       e.stopPropagation();
+//       const itemDiv = btn.closest('.notification-item');
+//       const id = itemDiv.getAttribute('data-id');
       
-      if (!id) {
-        showNotification('Notification ID not found', 'error');
-        return;
-      }
+//       if (!id) {
+//         showNotification('Notification ID not found', 'error');
+//         return;
+//       }
       
-      try {
-        await fetch(`${API_BASE_URL}/api/notifications/${id}`, { method: 'DELETE' });
+//       try {
+//         await fetch(`${API_BASE_URL}/api/notifications/${id}`, { method: 'DELETE' });
         
-        const idx = notifications.findIndex(n => n._id === id);
-        if (idx > -1) notifications.splice(idx, 1);
+//         const idx = notifications.findIndex(n => n._id === id);
+//         if (idx > -1) notifications.splice(idx, 1);
         
-        renderNotificationsPanel();
+//         renderNotificationsPanel();
         
-        clearTimeout(notificationPanelTimeout);
-        notificationPanelTimeout = setTimeout(() => {
-          if (!notificationPanelHovered) {
-            notificationsPanel.classList.remove('active');
-          }
-        }, 5000);
-      } catch (err) {
-        showNotification('Failed to delete notification', 'error');
-      }
-    });
-  });
-}
+//         clearTimeout(notificationPanelTimeout);
+//         notificationPanelTimeout = setTimeout(() => {
+//           if (!notificationPanelHovered) {
+//             notificationsPanel.classList.remove('active');
+//           }
+//         }, 5000);
+//       } catch (err) {
+//         showNotification('Failed to delete notification', 'error');
+//       }
+//     });
+//   });
+// }
 
-function updateUnreadCount(count) {
-  if (notificationBadge) {
-    notificationBadge.textContent = count;
-    notificationBadge.style.display = count > 0 ? 'inline-block' : 'none';
-  }
-}
+// function updateUnreadCount(count) {
+//   if (notificationBadge) {
+//     notificationBadge.textContent = count;
+//     notificationBadge.style.display = count > 0 ? 'inline-block' : 'none';
+//   }
+// }
 
-async function fetchUnreadNotificationCount() {
-  if (DEMO_MODE) return;
+// async function fetchUnreadNotificationCount() {
+//   if (DEMO_MODE) return;
   
-  const token = getToken();
-  try {
-    const response = await fetch(`${API_BASE_URL}/api/notifications/unread-count`, {
-      headers: { Authorization: `Bearer ${token}` }
-    });
-    if (!response.ok) return;
+//   const token = getToken();
+//   try {
+//     const response = await fetch(`${API_BASE_URL}/api/notifications/unread-count`, {
+//       headers: { Authorization: `Bearer ${token}` }
+//     });
+//     if (!response.ok) return;
     
-    const data = await response.json();
-    updateUnreadCount(data.count || 0);
-  } catch (err) {
-    console.error('Error fetching notification count:', err);
-  }
-}
+//     const data = await response.json();
+//     updateUnreadCount(data.count || 0);
+//   } catch (err) {
+//     console.error('Error fetching notification count:', err);
+//   }
+// }
 
-function initializeNotifications() {
-  if (!DEMO_MODE) return;
+// function initializeNotifications() {
+//   if (!DEMO_MODE) return;
   
-  const markAllReadBtn = document.querySelector('.mark-all-read');
-  const notificationItems = document.querySelectorAll('.notification-item');
-  let unreadCount = document.querySelectorAll('.notification-item.unread').length;
+//   const markAllReadBtn = document.querySelector('.mark-all-read');
+//   const notificationItems = document.querySelectorAll('.notification-item');
+//   let unreadCount = document.querySelectorAll('.notification-item.unread').length;
 
-  function updateBadgeCount() {
-    if (notificationBadge) {
-      notificationBadge.textContent = unreadCount;
-      notificationBadge.style.display = unreadCount === 0 ? 'none' : 'block';
-    }
-  }
+//   function updateBadgeCount() {
+//     if (notificationBadge) {
+//       notificationBadge.textContent = unreadCount;
+//       notificationBadge.style.display = unreadCount === 0 ? 'none' : 'block';
+//     }
+//   }
 
-  if (markAllReadBtn) {
-    markAllReadBtn.addEventListener('click', function() {
-      notificationItems.forEach(item => {
-        item.classList.remove('unread');
-      });
-      unreadCount = 0;
-      updateBadgeCount();
-    });
-  }
+//   if (markAllReadBtn) {
+//     markAllReadBtn.addEventListener('click', function() {
+//       notificationItems.forEach(item => {
+//         item.classList.remove('unread');
+//       });
+//       unreadCount = 0;
+//       updateBadgeCount();
+//     });
+//   }
 
-  notificationItems.forEach(item => {
-    item.addEventListener('click', function() {
-      if (this.classList.contains('unread')) {
-        this.classList.remove('unread');
-        unreadCount--;
-        updateBadgeCount();
-      }
-    });
-  });
+//   notificationItems.forEach(item => {
+//     item.addEventListener('click', function() {
+//       if (this.classList.contains('unread')) {
+//         this.classList.remove('unread');
+//         unreadCount--;
+//         updateBadgeCount();
+//       }
+//     });
+//   });
 
-  updateBadgeCount();
-}
+//   updateBadgeCount();
+// }
 
-// Utility Functions
-function isExpiringSoon(date) {
-  const expiryDate = new Date(date);
-  const today = new Date();
-  const diffTime = expiryDate - today;
-  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-  return diffDays > 0 && diffDays <= 7;
-}
+// // Utility Functions
+// function isExpiringSoon(date) {
+//   const expiryDate = new Date(date);
+//   const today = new Date();
+//   const diffTime = expiryDate - today;
+//   const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+//   return diffDays > 0 && diffDays <= 7;
+// }
 
-function isExpired(date) {
-  const expiryDate = new Date(date);
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  expiryDate.setHours(0, 0, 0, 0);
-  return expiryDate < today;
-}
+// function isExpired(date) {
+//   const expiryDate = new Date(date);
+//   const today = new Date();
+//   today.setHours(0, 0, 0, 0);
+//   expiryDate.setHours(0, 0, 0, 0);
+//   return expiryDate < today;
+// }
 
-function formatDate(date) {
-  return new Date(date).toLocaleDateString('en-US', {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric'
-  });
-}
+// function formatDate(date) {
+//   return new Date(date).toLocaleDateString('en-US', {
+//     year: 'numeric',
+//     month: 'short',
+//     day: 'numeric'
+//   });
+// }
 
-function initializeSampleData() {
-  if (!DEMO_MODE || getItems().length > 0) return;
+// function initializeSampleData() {
+//   if (!DEMO_MODE || getItems().length > 0) return;
   
-  const sampleItems = [
-    {
-      id: 1,
-      name: 'Milk',
-      category: 'dairy',
-      quantity: 2,
-      purchaseDate: '2025-06-15',
-      expiryDate: '2025-06-22',
-      notes: 'Organic whole milk',
-      createdAt: '2025-06-15T10:00:00.000Z'
-    },
-    {
-      id: 2,
-      name: 'Bread',
-      category: 'pantry',
-      quantity: 1,
-      purchaseDate: '2025-06-16',
-      expiryDate: '2025-06-23',
-      notes: 'Whole wheat bread',
-      createdAt: '2025-06-16T09:00:00.000Z'
-    },
-    {
-      id: 3,
-      name: 'Apples',
-      category: 'fruits',
-      quantity: 5,
-      purchaseDate: '2025-06-14',
-      expiryDate: '2025-06-28',
-      notes: 'Red delicious apples',
-      createdAt: '2025-06-14T14:00:00.000Z'
-    },
-    {
-      id: 4,
-      name: 'Yogurt',
-      category: 'dairy',
-      quantity:
+//   const sampleItems = [
+//     {
+//       id: 1,
+//       name: 'Milk',
+//       category: 'dairy',
+//       quantity: 2,
+//       purchaseDate: '2025-06-15',
+//       expiryDate: '2025-06-22',
+//       notes: 'Organic whole milk',
+//       createdAt: '2025-06-15T10:00:00.000Z'
+//     },
+//     {
+//       id: 2,
+//       name: 'Bread',
+//       category: 'pantry',
+//       quantity: 1,
+//       purchaseDate: '2025-06-16',
+//       expiryDate: '2025-06-23',
+//       notes: 'Whole wheat bread',
+//       createdAt: '2025-06-16T09:00:00.000Z'
+//     },
+//     {
+//       id: 3,
+//       name: 'Apples',
+//       category: 'fruits',
+//       quantity: 5,
+//       purchaseDate: '2025-06-14',
+//       expiryDate: '2025-06-28',
+//       notes: 'Red delicious apples',
+//       createdAt: '2025-06-14T14:00:00.000Z'
+//     },
+//     {
+//       id: 4,
+//       name: 'Yogurt',
+//       category: 'dairy',
+//       quantity:
