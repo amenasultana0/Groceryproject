@@ -227,6 +227,18 @@ document.addEventListener('keydown', (e) => {
 async function handleAddItem(e) {
   e.preventDefault();
   const newItem = getItemFormData();
+
+  const exists = currentItems.some(item =>
+  item.name === newItem.name &&
+  item.expiryDate === newItem.expiryDate &&
+  item.purchaseDate === newItem.purchaseDate
+);
+
+if (exists) {
+  showNotification('This item already exists in your inventory.', 'warning');
+  return;
+}
+  
   const token = getToken();
   try {
     const response = await fetch('http://localhost:3000/api/products/add', {
@@ -253,7 +265,7 @@ async function loadItems() {
     // Deduplicate by name+expiryDate
     const uniqueItemsMap = {};
     items.forEach(item => {
-      const key = `${item.name}_${item.expiryDate}`;
+      const key = `${item.name}_${item.expiryDate}_${item.quantity}`;
       uniqueItemsMap[key] = item;
     });
     items = Object.values(uniqueItemsMap);
@@ -284,9 +296,16 @@ function renderItems(container, items) {
         <span class="category-badge">${item.category}</span>
       </div>
       <div class="item-details">
-        <div class="detail"><i class="fas fa-calendar"></i><span>Expires: ${formatDate(item.expiryDate)}</span></div>
-        <div class="detail"><i class="fas fa-box"></i><span>Quantity: ${item.quantity}</span></div>
+        <div class="meta-info">
+          <i class="fas fa-calendar"></i>
+          <span>Expires: ${formatDate(item.expiryDate)}</span>
+        </div>
+        <div class="meta-info">
+          <i class="fas fa-box"></i>
+          <span>Quantity: ${item.quantity}</span>
+        </div>
       </div>
+
       <div class="item-actions">
         <button class="icon-btn edit-btn"><i class="fas fa-edit"></i></button>
         <button class="icon-btn delete-btn"><i class="fas fa-trash"></i></button>
