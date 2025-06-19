@@ -41,8 +41,6 @@
                 </div>
                 <div class="ingredient-input-container">
                     <input type="text" id="ingredientInput" placeholder="Type an ingredient and press Enter..." class="ingredient-input">
-                    <button onclick="addIngredient()" class="add-ingredient-btn">
-                        <i class="fas fa-plus"></i>
                     </button>
                 </div>
             </div>
@@ -73,7 +71,7 @@
         <div class="modal-content">
             <div class="modal-header">
                 <h3>Add Ingredients from Inventory</h3>
-                <button onclick="closeIngredientModal()" class="close-btn">
+                <button onclick="closeIngredientModal()" class="close-btn" </button>
                     <i class="fas fa-times"></i>
                 </button>
             </div>
@@ -81,34 +79,82 @@
                 <p>Select ingredients from your inventory:</p>
                 <div class="inventory-items" id="inventoryItems">
                     <!-- Mock inventory items - replace with your actual inventory data -->
-                    <div class="inventory-item" onclick="selectInventoryItem('Tomatoes')">
-                        <i class="fas fa-seedling"></i>
-                        <span>Tomatoes</span>
-                    </div>
-                    <div class="inventory-item" onclick="selectInventoryItem('Chicken Breast')">
-                        <i class="fas fa-drumstick-bite"></i>
-                        <span>Chicken Breast</span>
-                    </div>
-                    <div class="inventory-item" onclick="selectInventoryItem('Rice')">
-                        <i class="fas fa-seedling"></i>
-                        <span>Rice</span>
-                    </div>
-                    <div class="inventory-item" onclick="selectInventoryItem('Onions')">
-                        <i class="fas fa-seedling"></i>
-                        <span>Onions</span>
-                    </div>
-                    <div class="inventory-item" onclick="selectInventoryItem('Garlic')">
-                        <i class="fas fa-seedling"></i>
-                        <span>Garlic</span>
-                    </div>
-                    <div class="inventory-item" onclick="selectInventoryItem('Bell Peppers')">
-                        <i class="fas fa-seedling"></i>
-                        <span>Bell Peppers</span>
-                    </div>
+                    
                 </div>
+            <div class="modal-actions">
+                <button class="ok-btn" onclick="confirmIngredientSelection()">
+                    <i class="fas fa-check"></i> OK
+                </button>
+                <button class="cancel-btn" onclick="closeIngredientModal()">
+                    <i class="fas fa-times-circle"></i> Cancel
+                </button>
+            </div>
             </div>
         </div>
     </div>
+    <script>
+  const BACKEND_URL = 'http://localhost:3000'; // or your backend URL
+
+  // Example getToken function if using token auth
+  function getToken() {
+    const userData = localStorage.getItem('user') || sessionStorage.getItem('user');
+    if (!userData) return null;
+    try {
+      const user = JSON.parse(userData);
+      return user.token || null;
+    } catch {
+      return null;
+    }
+  }
+
+  async function populateInventoryModal() {
+    const container = document.getElementById('inventoryItems');
+    if (!container) return;
+
+    try {
+      const res = await fetch(`${BACKEND_URL}/api/products`, {
+        headers: {
+          'Authorization': `Bearer ${getToken()}` // remove if no auth
+        }
+      });
+      if (!res.ok) throw new Error('Failed to fetch inventory');
+
+      const items = await res.json();
+
+      if (items.length === 0) {
+        container.innerHTML = '<p>No inventory ingredients found.</p>';
+        return;
+      }
+
+      container.innerHTML = items.map(item => `
+        <div class="inventory-item" onclick="selectInventoryItem('${item.name.replace(/'/g, "\\'")}')">
+          <i class="fas fa-seedling"></i>
+          <span>${item.name}</span>
+        </div>
+      `).join('');
+    } catch (error) {
+      container.innerHTML = `<p>Error loading inventory: ${error.message}</p>`;
+    }
+  }
+
+  // Call this function to open modal and load data
+  function openIngredientModal() {
+    const modal = document.getElementById('ingredientModal');
+    if (modal.style.display !== 'block') {
+        populateInventoryModal();
+        modal.style.display = 'block';
+    }
+}
+  function closeIngredientModal() {
+    document.getElementById('ingredientModal').style.display = 'none';
+  }
+
+  // Sample placeholder function for item selection
+  function selectInventoryItem(name) {
+    alert(`You selected: ${name}`);
+    // Add your actual logic here
+  }
+</script>
 
     <script src="suggestions.js"></script>
 </body>

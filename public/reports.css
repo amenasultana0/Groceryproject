@@ -92,8 +92,9 @@ body {
     border-radius: 12px;
     backdrop-filter: blur(8px);
     display: flex;
+    flex-wrap: wrap;
     gap: 20px;
-    align-items: center;
+    align-items: flex-end;
 }
 
 .date-filter, .advanced-filters {
@@ -851,6 +852,8 @@ th[data-sort]:hover i {
     color: var(--text-primary);
 }
 
+
+
 /* Premium Chart Cards */
 .chart-card {
     transition: all 0.3s ease;
@@ -1158,3 +1161,32 @@ th[data-sort]:hover i {
         padding: 12px;
     }
 } 
+
+.chart-row-fixed {
+  display: flex;
+  justify-content: space-between;
+  gap: 24px;
+  margin-top: 24px;
+}
+
+.chart-card.fixed-width {
+  width: 32%;
+  min-width: 300px;
+}
+
+.progress-bar {
+  height: 8px;
+  background-color: #e5e7eb;
+  border-radius: 4px;
+  overflow: hidden;
+  width: 100%;
+  margin-top: 4px;
+}
+
+.progress {
+  height: 100%;
+  min-width: 1px;
+  background-color: var(--primary-color, #3b82f6);
+  transition: width 0.3s ease;
+  border-radius: 4px;
+}

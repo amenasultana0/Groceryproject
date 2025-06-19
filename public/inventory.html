@@ -14,7 +14,7 @@
     <!-- Top Bar -->
     <div class="top-bar">
       <h1><span class="label-box">Inventory</span></h1>
-      <button class="add-btn" id="openModal" type="button">+ Add Item</button>
+      <button class="add-btn" id="openModal" type="button"></button>
     </div>
 
     <!-- Search & Filter -->
@@ -22,10 +22,16 @@
       <input type="text" id="searchInput" placeholder="Search items..." />
       <select id="categoryFilter">
         <option value="">All Categories</option>
-        <option>Dairy</option>
-        <option>Fruits</option>
-        <option>Vegetables</option>
-        <option>Snacks</option>
+        <option value="fruits">Fruits</option>
+        <option value="vegetables">Vegetables</option>
+        <option value="dairy">Dairy</option>
+        <option value="meat">Meat</option>
+        <option value="bakery">Bakery</option>
+        <option value="beverages">Beverages</option>
+        <option value="snacks">Snacks</option>
+        <option value="frozen">Frozen</option>
+        <option value="grains">Grains</option>
+        <option value="condiments">Condiments</option>
       </select>
     </div>
 
@@ -43,14 +49,7 @@
           </tr>
         </thead>
         <tbody id="inventory-body-main">
-          <tr>
-            <td>1</td>
-            <td>Milk</td>
-            <td>2</td>
-            <td>2025-06-05</td>
-            <td><span class="status fresh">Fresh</span></td>
-            <td><button class="delete-btn" type="button">Delete</button></td>
-          </tr>
+          <!-- JS will populate -->
         </tbody>
       </table>
     </section>
@@ -68,12 +67,18 @@
           <div class="flex-row">
             <div>
               <label for="category">Category</label>
-              <select id="category">
-                <option value="">Select category</option>
-                <option>Dairy</option>
-                <option>Fruits</option>
-                <option>Vegetables</option>
-                <option>Snacks</option>
+              <select id="category" name="category" required>
+                <option value="">Select Category</option>
+                <option value="fruits">Fruits</option>
+                <option value="vegetables">Vegetables</option>
+                <option value="dairy">Dairy</option>
+                <option value="meat">Meat</option>
+                <option value="bakery">Bakery</option>
+                <option value="beverages">Beverages</option>
+                <option value="snacks">Snacks</option>
+                <option value="frozen">Frozen</option>
+                <option value="grains">Grains</option>
+                <option value="condiments">Condiments</option>
               </select>
             </div>
 
@@ -99,13 +104,13 @@
 
           <div class="form-actions">
             <button type="button" class="cancel-btn" id="cancelBtn">Cancel</button>
-            <button type="submit" class="submit-btn">Add Item</button>
+           <button type="submit" class="submit-btn">Add Item</button>
           </div>
         </form>
       </div>
     </div>
   </main>
 
-  <script src="inventory.js"></script>
+  <script type="module" src="inventory.js"></script>
 </body>
 </html>

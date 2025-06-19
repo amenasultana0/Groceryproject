@@ -537,3 +537,22 @@
         justify-content: flex-end;
     }
 }
+
+.expiring-list.list-view .expiring-item {
+  display: flex;
+  flex-direction: row;
+  gap: 1rem; /* space between child elements */
+  align-items: center; /* vertical alignment */
+  width: 100%;
+}
+
+.expiring-list.grid-view {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 1rem;
+}
+
+.expiring-list.grid-view .expiring-item {
+  display: block;
+  /* other styles for grid */
+}

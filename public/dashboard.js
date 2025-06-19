@@ -1,9 +1,37 @@
+import { populateCategoryDropdown } from './utils/categoryHelper.js'; 
+
+// This runs only once on redirect from Google login
+(function handleGoogleRedirect() {
+  const urlParams = new URLSearchParams(window.location.search);
+  const token = urlParams.get('token');
+  const userParam = urlParams.get('user');
+
+  if (token && userParam) {
+    try {
+      const userData = JSON.parse(decodeURIComponent(userParam));
+      const user = {
+        id: userData.id,  // optional: add `id` from backend if available
+        name: userData.name,
+        email: userData.email,
+        token
+      };
+
+      // You can decide to store in localStorage or sessionStorage
+      localStorage.setItem("user", JSON.stringify(user));
+
+      // Remove query params from URL after storing
+      const cleanUrl = window.location.origin + window.location.pathname;
+      window.history.replaceState({}, document.title, cleanUrl);
+    } catch (err) {
+      console.error("Failed to parse user data from Google login:", err);
+    }
+  }
+})();
+
 // DOM Elements
 const addItemBtn = document.querySelector('.add-item-btn');
 const modal = document.getElementById('addItemModal');
-const scannerModal = document.getElementById('scannerModal');
 const closeModalBtn = document.querySelector('.close-modal');
-const closeScannerBtn = document.querySelector('.close-scanner');
 const cancelModalBtn = document.querySelector('.cancel-modal');
 const addItemForm = document.getElementById('addItemForm');
 const mobileMenuBtn = document.querySelector('.mobile-menu');
@@ -13,50 +41,83 @@ const searchInput = document.querySelector('.search-bar input');
 const expiringItemsList = document.getElementById('expiringItems');
 const recentItemsList = document.getElementById('recentItems');
 const logoutBtn = document.querySelector('.user-actions .icon-btn[title="Logout"]');
-const scannerBtn = document.querySelector('.scanner-btn');
-const captureBtn = document.getElementById('captureBtn');
-const manualEntryBtn = document.getElementById('manualEntry');
-const notificationBtn = document.getElementById('notificationBtn');
-const notificationDropdown = document.getElementById('notificationDropdown');
+const notificationBtn = document.querySelector('.notification-btn');
+const notificationsPanel = document.getElementById('notificationsPanel');
+const notificationsIcon = document.querySelector('.notification-btn');
+const notificationBadge = notificationsIcon.querySelector('.badge');
+
+const urlParams = new URLSearchParams(window.location.search);
+const tokenFromUrl = urlParams.get('token');
+const email = urlParams.get('email');
+const name = urlParams.get('name');
+
+const socket = io('http://localhost:3000');
+
+let currentItems = [];
+let notifications = [];
 
 // Event Listeners
 addItemBtn?.addEventListener('click', openModal);
 closeModalBtn?.addEventListener('click', closeModal);
-closeScannerBtn?.addEventListener('click', closeScannerModal);
 cancelModalBtn?.addEventListener('click', closeModal);
 addItemForm?.addEventListener('submit', handleAddItem);
 mobileMenuBtn?.addEventListener('click', toggleSidebar);
 mobileCloseBtn?.addEventListener('click', toggleSidebar);
 searchInput?.addEventListener('input', handleSearch);
 logoutBtn?.addEventListener('click', handleLogout);
-scannerBtn?.addEventListener('click', openScannerModal);
-captureBtn?.addEventListener('click', handleCapture);
-manualEntryBtn?.addEventListener('click', openModalFromScanner);
+notificationBtn?.addEventListener('click', toggleNotificationsPanel);
 
-// Initialize
-document.addEventListener('DOMContentLoaded', () => {
+
+
+// Initial Load
+window.addEventListener('DOMContentLoaded', async () => {
+  setUserInfo();
+  setTimeout(async () => {
     loadItems();
-    updateStats();
-    loadUserData();
-    initializeNotifications();
-    initializeSampleData();
+    fetchUnreadNotificationCount();
+    //populateCategoryDropdown('category');
+    // Fetch notifications from backend
+    try {
+      const res = await fetch('http://localhost:3000/api/notifications', {
+        headers: { Authorization: `Bearer ${getToken()}` }
+      });
+      notifications = await res.json();
+      renderNotificationsPanel();
+    } catch {
+      notifications = [];
+      renderNotificationsPanel();
+    }
+  }, 100); 
 });
 
-// Storage Functions (using memory instead of localStorage for compatibility)
-let itemsStorage = [];
+// Notification socket
+socket.on('newNotification', (data) => {
+  notifications.unshift(data);
+  updateUnreadCount(notifications.length);
+  renderNotificationsPanel();
+  showNotification(data.message, 'info');
+});
 
-function getItems() {
-    return itemsStorage;
-}
+notificationsPanel.addEventListener('mouseenter', () => {
+  notificationPanelHovered = true;
+  clearTimeout(notificationPanelTimeout);
+});
+notificationsPanel.addEventListener('mouseleave', () => {
+  notificationPanelHovered = false;
+  if (notificationPanelShouldAutoClose) {
+    clearTimeout(notificationPanelTimeout);
+    notificationPanelTimeout = setTimeout(() => {
+      if (!notificationPanelHovered) {
+        notificationsPanel.classList.remove('active');
+        notificationPanelShouldAutoClose = false;
+      }
+    }, 5000);
+  }
+});
 
-function saveItems(items) {
-    itemsStorage = items;
-}
-
-// Modal Functions
+// Functions
 function openModal() {
     modal.classList.add('active');
-    // Set today as the minimum date for expiry
     const today = new Date().toISOString().split('T')[0];
     document.getElementById('purchaseDate').value = today;
     document.getElementById('purchaseDate').max = today;
@@ -66,368 +127,199 @@ function openModal() {
 function closeModal() {
     modal.classList.remove('active');
     addItemForm.reset();
+    addItemForm.onsubmit = handleAddItem;
 }
 
-function openScannerModal() {
-    scannerModal.classList.add('active');
-}
+async function handleAddItem(e) {
+  e.preventDefault();
+  const newItem = getItemFormData();
+  const token = getToken();
 
-function closeScannerModal() {
-    scannerModal.classList.remove('active');
-}
+  try {
+    const response = await fetch('http://localhost:3000/api/products/add', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      body: JSON.stringify(newItem)
+    });
 
-function openModalFromScanner() {
-    closeScannerModal();
-    openModal();
-}
+    if (!response.ok) throw new Error('Failed to add item');
 
-// Scanner Functions
-function handleCapture() {
-    // Simulate barcode scanning
-    const mockBarcodes = [
-        { code: '123456789012', name: 'Milk', category: 'dairy' },
-        { code: '987654321098', name: 'Bread', category: 'pantry' },
-        { code: '456789123456', name: 'Apples', category: 'fruits' },
-        { code: '789123456789', name: 'Chicken Breast', category: 'meat' },
-        { code: '321654987321', name: 'Yogurt', category: 'dairy' },
-        { code: '654987321654', name: 'Bananas', category: 'fruits' },
-        { code: '147258369147', name: 'Tomatoes', category: 'vegetables' },
-        { code: '258369147258', name: 'Cheese', category: 'dairy' }
-    ];
-
-    // Simulate scanning delay
-    captureBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Scanning...';
-    captureBtn.disabled = true;
-
-    setTimeout(() => {
-        // Randomly select a barcode
-        const scannedItem = mockBarcodes[Math.floor(Math.random() * mockBarcodes.length)];
-        
-        // Close scanner modal
-        closeScannerModal();
-        
-        // Open add item modal with pre-filled data
-        openModal();
-        
-        // Pre-fill form with scanned data
-        document.getElementById('itemName').value = scannedItem.name;
-        document.getElementById('category').value = scannedItem.category;
-        document.getElementById('quantity').value = '1';
-        
-        // Set default expiry date (7 days from now for demo)
-        const expiryDate = new Date();
-        expiryDate.setDate(expiryDate.getDate() + 7);
-        document.getElementById('expiryDate').value = expiryDate.toISOString().split('T')[0];
-        
-        showNotification(`Scanned: ${scannedItem.name}`, 'success');
-        
-        // Reset capture button
-        captureBtn.innerHTML = 'Capture';
-        captureBtn.disabled = false;
-    }, 2000);
-}
-
-// Item Management Functions
-function handleAddItem(e) {
-    e.preventDefault();
-
-    const newItem = {
-        id: Date.now(),
-        name: document.getElementById('itemName').value,
-        category: document.getElementById('category').value,
-        quantity: parseInt(document.getElementById('quantity').value),
-        purchaseDate: document.getElementById('purchaseDate').value,
-        expiryDate: document.getElementById('expiryDate').value,
-        notes: document.getElementById('notes').value,
-        createdAt: new Date().toISOString()
-    };
-
-    // Get existing items and add new item
-    const items = getItems();
-    items.push(newItem);
-    saveItems(items);
-
-    // Update UI
-    loadItems();
-    updateStats();
     closeModal();
-
-    // Show notification
-    showNotification('Item added successfully!', 'success');
+    loadItems();
+  } catch (err) {
+    showNotification('Error adding item. Please try again.', 'error');
+  }
 }
 
-function loadItems() {
-    const items = getItems();
-    
-    // Sort items by expiry date for expiring soon
-    const expiringItems = items
-        .filter(item => isExpiringSoon(item.expiryDate))
-        .sort((a, b) => new Date(a.expiryDate) - new Date(b.expiryDate));
+async function loadItems() {
+  const token = getToken();
+  try {
+    const response = await fetch('http://localhost:3000/api/products', {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    if (!response.ok) throw new Error('Failed to fetch items');
+    let items = await response.json();
 
-    // Sort items by creation date for recent items
-    const recentItems = [...items]
-        .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
-        .slice(0, 5);
+    // Deduplicate ALL items by a unique key (e.g., name + expiryDate)
+    const uniqueItemsMap = {};
+    items.forEach(item => {
+      const key = `${item.name}_${item.expiryDate}`;
+      uniqueItemsMap[key] = item;
+    });
+    items = Object.values(uniqueItemsMap);
 
-    // Render items
-    renderItems(expiringItemsList, expiringItems, 'expiring');
-    renderItems(recentItemsList, recentItems, 'recent');
+    currentItems = items;
+    updateStats(items);
+
+    // Deduplicate expiring items by _id
+    const expiringItems = items.filter(item => isExpiringSoon(item.expiryDate))
+    .sort((a, b) => new Date(a.expiryDate) - new Date(b.expiryDate))
+    .slice(0, 3);
+
+    renderItems(expiringItemsList, expiringItems);
+
+    const sortedItems = items
+      .filter(item => item.createdAt) // Only include items with a createdAt
+      .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+      renderItems(recentItemsList, sortedItems.slice(0, 3)); // pick latest 3
+
+  } catch (err) {
+    showNotification('Failed to load items from server', 'error');
+  }
 }
 
-function renderItems(container, items, type) {
-    if (!container) return;
+function renderItems(container, items) {
+  if (!container) return;
+  container.innerHTML = items.length === 0 ? `
+    <div class="empty-state">
+      <i class="fas fa-box-open"></i>
+      <p>No items to display</p>
+    </div>` : items.map(item => `
+    <div class="item-card ${isExpired(item.expiryDate) ? 'expired' : ''}" data-id="${item._id}">
+      <div class="item-header">
+        <h3>${item.name}</h3>
+        <span class="category-badge">${item.category}</span>
+      </div>
+      <div class="item-details">
+        <div class="detail"><i class="fas fa-calendar"></i><span>Expires: ${formatDate(item.expiryDate)}</span></div>
+        <div class="detail"><i class="fas fa-box"></i><span>Quantity: ${item.quantity}</span></div>
+      </div>
+      <div class="item-actions">
+        <button class="icon-btn edit-btn"><i class="fas fa-edit"></i></button>
+        <button class="icon-btn delete-btn"><i class="fas fa-trash"></i></button>
+      </div>
+    </div>`).join('');
 
-    if (items.length === 0) {
-        container.innerHTML = `
-            <div class="empty-state">
-                <i class="fas fa-box-open"></i>
-                <p>No items to display</p>
-            </div>
-        `;
-        return;
-    }
+  // Attach listeners after rendering
+  container.querySelectorAll('.delete-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const itemId = btn.closest('.item-card').dataset.id;
+      deleteItem(itemId);
+    });
+  });
 
-    container.innerHTML = items.map(item => `
-        <div class="item-card ${isExpired(item.expiryDate) ? 'expired' : ''}" data-id="${item.id}">
-            <div class="item-header">
-                <h3>${item.name}</h3>
-                <span class="category-badge">${item.category}</span>
-            </div>
-            <div class="item-details">
-                <div class="detail">
-                    <i class="fas fa-calendar"></i>
-                    <span>Expires: ${formatDate(item.expiryDate)}</span>
-                </div>
-                <div class="detail">
-                    <i class="fas fa-box"></i>
-                    <span>Quantity: ${item.quantity}</span>
-                </div>
-                ${item.notes ? `
-                <div class="detail">
-                    <i class="fas fa-sticky-note"></i>
-                    <span>${item.notes}</span>
-                </div>
-                ` : ''}
-            </div>
-            <div class="item-actions">
-                <button class="icon-btn" onclick="editItem(${item.id})" title="Edit">
-                    <i class="fas fa-edit"></i>
-                </button>
-                <button class="icon-btn delete" onclick="deleteItem(${item.id})" title="Delete">
-                    <i class="fas fa-trash"></i>
-                </button>
-            </div>
-        </div>
-    `).join('');
+  container.querySelectorAll('.edit-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const itemId = btn.closest('.item-card').dataset.id;
+      editItem(itemId);
+    });
+  });
 }
 
-function updateStats() {
-    const items = getItems();
-    
-    // Calculate stats (removed low stock calculation)
+
+function updateStats(items) {
     const expiringSoon = items.filter(item => isExpiringSoon(item.expiryDate)).length;
     const expired = items.filter(item => isExpired(item.expiryDate)).length;
-    const totalItems = items.length;
+    const lowStock = items.filter(item => item.quantity <= 2).length;
 
-    // Update stats in DOM (only 3 stat cards now)
-    const statCards = document.querySelectorAll('.stat-number');
-    if (statCards.length >= 3) {
-        statCards[0].textContent = expiringSoon;
-        statCards[1].textContent = totalItems;
-        statCards[2].textContent = expired;
-    }
-
-    // Update notification badge
-    const notificationBadge = document.querySelector('.badge');
-    if (notificationBadge) {
-        const totalNotifications = expiringSoon + expired;
-        notificationBadge.textContent = totalNotifications;
-        notificationBadge.style.display = totalNotifications > 0 ? 'block' : 'none';
-    }
+    document.querySelector('.stat-card:nth-child(1) .stat-number').textContent = expiringSoon;
+    document.querySelector('.stat-card:nth-child(2) .stat-number').textContent = items.length;
+    document.querySelector('.stat-card:nth-child(3) .stat-number').textContent = expired;
+    document.querySelector('.stat-card:nth-child(4) .stat-number').textContent = lowStock;
 }
 
 function handleSearch(e) {
-    const searchTerm = e.target.value.toLowerCase();
-    const items = getItems();
-
-    if (searchTerm.trim() === '') {
-        loadItems();
-        return;
-    }
-
-    const filteredItems = items.filter(item => 
-        item.name.toLowerCase().includes(searchTerm) ||
-        item.category.toLowerCase().includes(searchTerm) ||
-        (item.notes && item.notes.toLowerCase().includes(searchTerm))
-    );
-
-    renderItems(recentItemsList, filteredItems, 'search');
-    
-    // Update expiring items section header
-    const expiringHeader = document.querySelector('.expiring-items .section-header h2');
-    if (expiringHeader) {
-        expiringHeader.textContent = searchTerm ? 'Search Results' : 'Expiring Soon';
-    }
-    
-    if (searchTerm) {
-        renderItems(expiringItemsList, filteredItems.filter(item => isExpiringSoon(item.expiryDate)), 'search');
-    }
+  const term = e.target.value.toLowerCase();
+  const filtered = currentItems.filter(item => item.name.toLowerCase().includes(term) || item.category.toLowerCase().includes(term));
+  renderItems(recentItemsList, filtered);
 }
 
-function deleteItem(id) {
-    if (!confirm('Are you sure you want to delete this item?')) return;
-
-    const items = getItems();
-    const updatedItems = items.filter(item => item.id !== id);
-    saveItems(updatedItems);
-
+async function deleteItem(id) {
+  if (!confirm('Are you sure you want to delete this item?')) return;
+  const token = getToken();
+  try {
+    const response = await fetch(`http://localhost:3000/api/products/${id}`, {
+      method: 'DELETE',
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    if (!response.ok) throw new Error();
     loadItems();
-    updateStats();
-    showNotification('Item deleted successfully!', 'success');
+  } catch {
+    showNotification('Error deleting item.', 'error');
+  }
 }
 
 function editItem(id) {
-    const items = getItems();
-    const item = items.find(item => item.id === id);
-    if (!item) return;
+  const item = currentItems.find(i => i._id === id);
+  if (!item) return;
 
-    // Populate form
-    document.getElementById('itemName').value = item.name;
-    document.getElementById('category').value = item.category;
-    document.getElementById('quantity').value = item.quantity;
-    document.getElementById('purchaseDate').value = item.purchaseDate;
-    document.getElementById('expiryDate').value = item.expiryDate;
-    document.getElementById('notes').value = item.notes || '';
+  document.getElementById('itemName').value = item.name;
+  document.getElementById('category').value = item.category;
+  document.getElementById('quantity').value = item.quantity;
+  document.getElementById('purchaseDate').value = item.purchaseDate;
+  document.getElementById('expiryDate').value = item.expiryDate;
+  document.getElementById('notes').value = item.notes;
 
-    // Store original handler
-    const originalHandler = addItemForm.onsubmit;
-    
-    // Update form submission handler
-    addItemForm.onsubmit = (e) => {
-        e.preventDefault();
+  openModal();
+
+  addItemForm.onsubmit = async (e) => {
+    e.preventDefault();
+    const updatedItem = getItemFormData();
+    updatedItem._id = item._id;
+
+    try {
+      const token = getToken();
+      const response = await fetch(`http://localhost:3000/api/products/${updatedItem._id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify(updatedItem)
+      });
+      if (!response.ok) throw new Error();
+      showNotification('Item updated successfully!', 'success');
+      closeModal();
+      loadItems();
+    } catch {
+      showNotification('Error updating item.', 'error');
+    }
+  };
+}
         
-        const updatedItem = {
-            ...item,
-            name: document.getElementById('itemName').value,
-            category: document.getElementById('category').value,
-            quantity: parseInt(document.getElementById('quantity').value),
-            purchaseDate: document.getElementById('purchaseDate').value,
-            expiryDate: document.getElementById('expiryDate').value,
-            notes: document.getElementById('notes').value
-        };
-
-        const items = getItems();
-        const updatedItems = items.map(i => i.id === id ? updatedItem : i);
-        saveItems(updatedItems);
-
-        loadItems();
-        updateStats();
-        closeModal();
-        showNotification('Item updated successfully!', 'success');
-
-        // Reset form submission handler
-        addItemForm.onsubmit = originalHandler;
-    };
-
-    openModal();
+function getItemFormData() {
+  return {
+    name: document.getElementById('itemName').value,
+    category: document.getElementById('category').value,
+    quantity: document.getElementById('quantity').value,
+    purchaseDate: document.getElementById('purchaseDate').value,
+    expiryDate: document.getElementById('expiryDate').value,
+    notes: document.getElementById('notes').value,
+    createdAt: new Date().toISOString()
+  };
 }
 
-// UI Functions
 function toggleSidebar() {
     sidebar.classList.toggle('active');
 }
 
 function handleLogout() {
-    if (confirm('Are you sure you want to logout?')) {
-        // Clear all stored data
-        itemsStorage = [];
-        
-        showNotification('Logged out successfully!', 'success');
-        
-        // Redirect after a short delay
-        setTimeout(() => {
-            window.location.href = 'login.html';
-        }, 1000);
-    }
+    localStorage.removeItem('user');
+    sessionStorage.removeItem('user');
+    location.href = 'login.html';
 }
 
-function loadUserData() {
-    // Simulate user data - in a real app, this would come from authentication
-    const userData = {
-        name: 'John Doe',
-        email: 'john.doe@example.com',
-        plan: 'Pro Plan'
-    };
-
-    const userName = userData.name || userData.email.split('@')[0];
-
-    const userNameEl = document.getElementById('userName');
-    if (userNameEl) userNameEl.textContent = userName;
-
-    const userAvatarEl = document.getElementById('userAvatar');
-    if (userAvatarEl) {
-        const avatarUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(userName)}&background=0D6EFD&color=fff`;
-        userAvatarEl.src = avatarUrl;
-    }
+function isExpired(date) {
+    return new Date(date) < new Date();
 }
 
-// Notification Functions
-function initializeNotifications() {
-    if (!notificationBtn || !notificationDropdown) return;
-
-    const markAllReadBtn = document.querySelector('.mark-all-read');
-    const notificationItems = document.querySelectorAll('.notification-item');
-    let unreadCount = document.querySelectorAll('.notification-item.unread').length;
-    const badge = document.querySelector('.badge');
-
-    // Update badge count
-    function updateBadgeCount() {
-        if (badge) {
-            badge.textContent = unreadCount;
-            badge.style.display = unreadCount === 0 ? 'none' : 'block';
-        }
-    }
-
-    // Toggle notification dropdown
-    notificationBtn.addEventListener('click', function(e) {
-        e.stopPropagation();
-        notificationDropdown.classList.toggle('active');
-    });
-
-    // Close dropdown when clicking outside
-    document.addEventListener('click', function(e) {
-        if (!notificationDropdown.contains(e.target) && e.target !== notificationBtn) {
-            notificationDropdown.classList.remove('active');
-        }
-    });
-
-    // Mark all notifications as read
-    if (markAllReadBtn) {
-        markAllReadBtn.addEventListener('click', function() {
-            notificationItems.forEach(item => {
-                item.classList.remove('unread');
-            });
-            unreadCount = 0;
-            updateBadgeCount();
-        });
-    }
-
-    // Mark individual notification as read
-    notificationItems.forEach(item => {
-        item.addEventListener('click', function() {
-            if (this.classList.contains('unread')) {
-                this.classList.remove('unread');
-                unreadCount--;
-                updateBadgeCount();
-            }
-        });
-    });
-
-    // Initialize badge count
-    updateBadgeCount();
-}
-
-// Utility Functions
 function isExpiringSoon(date) {
     const expiryDate = new Date(date);
     const today = new Date();
@@ -436,166 +328,191 @@ function isExpiringSoon(date) {
     return diffDays > 0 && diffDays <= 7;
 }
 
-function isExpired(date) {
-    const expiryDate = new Date(date);
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    expiryDate.setHours(0, 0, 0, 0);
-    return expiryDate < today;
+function formatDate(date) {
+  return new Date(date).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
 }
 
-function formatDate(date) {
-    return new Date(date).toLocaleDateString('en-US', {
-        year: 'numeric',
-        month: 'short',
-        day: 'numeric'
-    });
+function getToken() {
+  const userStr = localStorage.getItem("user") || sessionStorage.getItem("user");
+  if (!userStr) return null;
+  try {
+    const user = JSON.parse(userStr);
+    return user.token || null;
+  } catch {
+    return null;
+  }
 }
+
+// function setUserInfo() {
+//   const userStr = localStorage.getItem('user') || sessionStorage.getItem('user');
+  
+//   if (!userStr) return;
+//   const user = JSON.parse(userStr);
+//   console.log('Parsed user object:', user);
+//   const name = user?.user?.name || (user?.user?.email ? user.user.email.split('@')[0] : 'User');
+
+//   const userNameEl = document.getElementById('userName');
+//   if (userNameEl) userNameEl.textContent = name;
+
+//   const userAvatarEl = document.getElementById('userAvatar');
+//   if (userAvatarEl) userAvatarEl.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=0D6EFD&color=fff`;
+// }
+
+function setUserInfo() {
+  const userStr = localStorage.getItem('user') || sessionStorage.getItem('user');
+  if (!userStr) return;
+
+  let user;
+  try {
+    user = JSON.parse(userStr);
+  } catch (err) {
+    console.error('Invalid user data:', userStr);
+    return;
+  }
+
+  const name = user?.name || (user?.email ? user.email.split('@')[0] : 'User');
+
+  const userNameEl = document.getElementById('userName');
+  if (userNameEl) userNameEl.textContent = name;
+
+  const userAvatarEl = document.getElementById('userAvatar');
+  if (userAvatarEl) {
+    userAvatarEl.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=0D6EFD&color=fff`;
+  }
+}
+
+
+
 
 function showNotification(message, type = 'info') {
-    // Remove existing notifications
-    const existingNotifications = document.querySelectorAll('.notification');
-    existingNotifications.forEach(notification => notification.remove());
+  let container = document.getElementById('notificationToastContainer');
+  if (!container) {
+    container = document.createElement('div');
+    container.id = 'notificationToastContainer';
+    document.body.appendChild(container);
+  }
 
-    const notification = document.createElement('div');
-    notification.className = `notification ${type}`;
-    notification.style.cssText = `
-        position: fixed;
-        top: 20px;
-        right: 20px;
-        background: ${type === 'success' ? '#10B981' : type === 'error' ? '#EF4444' : '#3B82F6'};
-        color: white;
-        padding: 12px 20px;
-        border-radius: 8px;
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        z-index: 1001;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-        animation: slideIn 0.3s ease-out;
-    `;
+  const toast = document.createElement('div');
+  toast.className = `notification-toast ${type}`;
+  toast.textContent = message;
 
-    notification.innerHTML = `
-        <i class="fas fa-${type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-circle' : 'info-circle'}"></i>
-        <span>${message}</span>
-    `;
+  container.appendChild(toast);
 
-    // Add animation styles if not already present
-    if (!document.querySelector('#notification-styles')) {
-        const style = document.createElement('style');
-        style.id = 'notification-styles';
-        style.textContent = `
-            @keyframes slideIn {
-                from {
-                    transform: translateX(100%);
-                    opacity: 0;
-                }
-                to {
-                    transform: translateX(0);
-                    opacity: 1;
-                }
-            }
-            @keyframes slideOut {
-                from {
-                    transform: translateX(0);
-                    opacity: 1;
-                }
-                to {
-                    transform: translateX(100%);
-                    opacity: 0;
-                }
-            }
-        `;
-        document.head.appendChild(style);
-    }
-
-    document.body.appendChild(notification);
-
-    // Remove notification after 3 seconds
-    setTimeout(() => {
-        notification.style.animation = 'slideOut 0.3s ease-in';
-        setTimeout(() => {
-            notification.remove();
-        }, 300);
-    }, 3000);
+  // Animate out and remove after 4 seconds
+  setTimeout(() => toast.classList.add('hide'), 4000);
+  setTimeout(() => toast.remove(), 4300);
 }
 
-function initializeSampleData() {
-    // Add sample data if no items exist
-    if (getItems().length === 0) {
-        const sampleItems = [
-            {
-                id: 1,
-                name: 'Milk',
-                category: 'dairy',
-                quantity: 2,
-                purchaseDate: '2025-06-03',
-                expiryDate: '2025-06-08',
-                notes: 'Organic whole milk',
-                createdAt: '2025-06-03T10:00:00.000Z'
-            },
-            {
-                id: 2,
-                name: 'Bread',
-                category: 'pantry',
-                quantity: 1,
-                purchaseDate: '2025-06-04',
-                expiryDate: '2025-06-10',
-                notes: 'Whole wheat bread',
-                createdAt: '2025-06-04T09:00:00.000Z'
-            },
-            {
-                id: 3,
-                name: 'Apples',
-                category: 'fruits',
-                quantity: 5,
-                purchaseDate: '2025-06-02',
-                expiryDate: '2025-06-12',
-                notes: 'Red delicious apples',
-                createdAt: '2025-06-02T14:00:00.000Z'
-            },
-            {
-                id: 4,
-                name: 'Yogurt',
-                category: 'dairy',
-                quantity: 3,
-                purchaseDate: '2025-06-01',
-                expiryDate: '2025-06-06',
-                notes: 'Greek yogurt',
-                createdAt: '2025-06-01T11:00:00.000Z'
-            }
-        ];
-        
-        saveItems(sampleItems);
-    }
+let notificationPanelTimeout = null;
+let notificationPanelHovered = false;
+let notificationPanelShouldAutoClose = false;
+function toggleNotificationsPanel() {
+  const panel = document.getElementById('notificationsPanel');
+  if (!panel) return;
+  panel.classList.toggle('active');
+  if (panel.classList.contains('active')) {
+    renderNotificationsPanel();
+    markAllNotificationsAsRead();
+    updateUnreadCount(0); // Set badge to zero
+    clearTimeout(notificationPanelTimeout);
+  } else {
+    clearTimeout(notificationPanelTimeout);
+  }
 }
 
-// Event Handlers for Modal and Keyboard Shortcuts
-document.addEventListener('click', (e) => {
-    if (e.target === modal) {
-        closeModal();
-    }
-    if (e.target === scannerModal) {
-        closeScannerModal();
-    }
-});
+async function markAllNotificationsAsRead() {
+  try {
+    await fetch('http://localhost:3000/api/notifications/mark-read', { method: 'PUT' , headers: {
+        'Authorization': `Bearer ${getToken()}`
+      }
+    });
+    notifications.forEach(n => n.read = true);
+  } catch (e) {
+    // handle error if needed
+  }
+}
 
-document.addEventListener('keydown', (e) => {
-    // Escape key to close modals
-    if (e.key === 'Escape') {
-        closeModal();
-        closeScannerModal();
-    }
-    
-    // Ctrl/Cmd + N to add new item
-    if ((e.ctrlKey || e.metaKey) && e.key === 'n') {
-        e.preventDefault();
-        openModal();
-    }
-    
-    // Ctrl/Cmd + S to open scanner
-    if ((e.ctrlKey || e.metaKey) && e.key === 's') {
-        e.preventDefault();
-        openScannerModal();
-    }
-});
+function renderNotificationsPanel() {
+  const panel = document.getElementById('notificationsPanel');
+  if (!panel) return;
+
+  const backendNotifications = notifications.filter(n => n._id);
+
+  if (!backendNotifications.length) {
+    panel.innerHTML = `<div class="notification-item">No notifications yet.</div>`;
+    return;
+  }
+
+  panel.innerHTML = backendNotifications
+    .map(n => `
+    <div class="notification-item${n.read ? '' : ' unread'}" data-id="${n._id}">
+      <span class="icon"><i class="fas fa-bell"></i></span>
+      <div class="content">
+        <div>${n.message}</div>
+        <div class="time">${new Date(n.createdAt).toLocaleString()}</div>
+      </div>
+      <button class="delete-notification-btn" title="Delete"><i class="fas fa-trash"></i></button>
+    </div>
+  `).join('');
+
+panel.querySelectorAll('.delete-notification-btn').forEach(btn => {
+    btn.addEventListener('click', async (e) => {
+      e.stopPropagation();
+      const itemDiv = btn.closest('.notification-item');
+      const id = itemDiv.getAttribute('data-id');
+      if (!id) {
+        showNotification('Notification ID not found', 'error');
+        return;
+      }
+      try {
+        await fetch(`http://localhost:3000/api/notifications/${id}`, { method: 'DELETE' });
+        // Remove from local array and re-render
+        const idx = notifications.findIndex(n => n._id === id);
+        if (idx > -1) notifications.splice(idx, 1);
+        renderNotificationsPanel();
+        clearTimeout(notificationPanelTimeout);
+        notificationPanelTimeout = setTimeout(() => {
+        // Only close if not hovered
+          if (!notificationPanelHovered) {
+            panel.classList.remove('active');
+          }
+        }, 5000);
+      } catch (err) {
+        showNotification('Failed to delete notification', 'error');
+      }
+    });
+  });
+}
+
+function updateUnreadCount(count) {
+  notificationBadge.textContent = count;
+  notificationBadge.style.display = count > 0 ? 'inline-block' : 'none';
+}
+
+async function fetchUnreadNotificationCount() {
+  const token = getToken();
+  try {
+    const response = await fetch('http://localhost:3000/api/notifications/unread-count', {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    if (!response.ok) return;
+    const data = await response.json();
+    updateUnreadCount(data.count || 0);
+  } catch (err) {
+    console.error('Error fetching notification count:', err);
+  }
+}
+
+async function markNotificationsAsRead() {
+  const token = getToken();
+  try {
+    const response = await fetch('http://localhost:3000/api/notifications/mark-read', {
+      method: 'PUT',
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    if (!response.ok) throw new Error();
+    updateUnreadCount(0);
+  } catch (err) {
+    console.error('Error marking notifications as read:', err);
+  }
+}
