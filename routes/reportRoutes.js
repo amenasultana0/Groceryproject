@@ -1,12 +1,13 @@
 const express = require('express');
+const authMiddleware = require('../middleware/authMiddleware');
 const router = express.Router();
 const Product = require('../models/Product');
 
 // GET: Basic summary (for legacy/simple use)
-router.get('/report', async (req, res) => {
+router.get('/report', authMiddleware, async (req, res) => {
   const today = new Date();
   try {
-    const products = await Product.find();
+    const products = await Product.find({ userId: req.user._id });
 
     const expiredItems = [];
     const expiringSoon = [];
@@ -45,12 +46,13 @@ router.get('/report', async (req, res) => {
 });
 
 // POST: Advanced filtered report with expiry summary
-router.post('/report', async (req, res) => {
+router.post('/report', authMiddleware, async (req, res) => {
   const { startDate, endDate, category, status } = req.body;
   const normalizedStatus = status ? status.toLowerCase().replace(/\s/g, '') : null;
 
   try {
-    const query = {};
+    const query = { userId: req.user._id };
+// ...date and category filtering...
 
     // Date filtering
     if (startDate || endDate) {

@@ -97,10 +97,14 @@ async function generateReport() {
         const endDate = dateRange[1] || dateRange[0];
         const category = document.getElementById('categoryFilter').value;
         const status = document.getElementById('statusFilter').value;
+        const user = JSON.parse(localStorage.getItem('user') || sessionStorage.getItem('user'));
+        const token = user?.token;
 
         const response = await fetch(`http://localhost:3000/api/reports/report`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: { 'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+             },
             body: JSON.stringify({ startDate, endDate, category, status: 'all' }),
         });
 
@@ -121,6 +125,39 @@ async function generateReport() {
         showError('Failed to generate report');
         hideLoading();
     }
+}
+
+function showNotification(message, type = 'info') {
+    let container = document.getElementById('notificationToastContainer');
+    if (!container) {
+        container = document.createElement('div');
+        container.id = 'notificationToastContainer';
+        container.style.position = 'fixed';
+        container.style.bottom = '20px'; // Bottom of the page
+        container.style.right = '20px';  // Right side
+        container.style.zIndex = '9999';
+        container.style.display = 'flex';
+        container.style.flexDirection = 'column';
+        container.style.alignItems = 'flex-end';
+        document.body.appendChild(container);
+    }
+    const toast = document.createElement('div');
+    toast.className = `notification-toast ${type}`;
+    toast.textContent = message;
+    toast.style.marginTop = '10px';
+    toast.style.minWidth = '180px';
+    toast.style.padding = '12px 20px';
+    toast.style.background = type === 'success' ? '#4caf50' : (type === 'error' ? '#f44336' : '#333');
+    toast.style.color = '#fff';
+    toast.style.borderRadius = '6px';
+    toast.style.boxShadow = '0 2px 8px rgba(0,0,0,0.15)';
+    toast.style.fontSize = '15px';
+    toast.style.opacity = '0.95';
+    toast.style.transition = 'opacity 0.3s';
+
+    container.appendChild(toast);
+    setTimeout(() => toast.style.opacity = '0', 1800);
+    setTimeout(() => toast.remove(), 2100);
 }
 
 // This function updates the table and charts based on the selected status
@@ -362,26 +399,57 @@ function updateInsights(data) {
 
 
     ['excellentQuality', 'goodQuality', 'fairQuality', 'poorQuality'].forEach(id => {
-        animateProgressBar(id, 0);
-    });
+    animateProgressBar(id, 0);
+});
 
-    // Highlight the correct freshness level based on index
-    if (freshnessIndex >= 75) {
-        animateProgressBar('excellentQuality', freshnessIndex);
-    } else if (freshnessIndex >= 50) {
-        animateProgressBar('goodQuality', freshnessIndex);
-    } else if (freshnessIndex >= 25) {
-        animateProgressBar('fairQuality', freshnessIndex);
-    } else {
-        animateProgressBar('poorQuality', freshnessIndex);
-    }
+// Highlight the correct freshness level based on index
+if (freshnessIndex >= 75) {
+    animateProgressBar('excellentQuality', 100);
+    animateProgressBar('goodQuality', 0);
+    animateProgressBar('fairQuality', 0);
+    animateProgressBar('poorQuality', 0);
+} else if (freshnessIndex >= 50) {
+    animateProgressBar('excellentQuality', 0);
+    animateProgressBar('goodQuality', 100);
+    animateProgressBar('fairQuality', 0);
+    animateProgressBar('poorQuality', 0);
+} else if (freshnessIndex >= 25) {
+    animateProgressBar('excellentQuality', 0);
+    animateProgressBar('goodQuality', 0);
+    animateProgressBar('fairQuality', 100);
+    animateProgressBar('poorQuality', 0);
+} else {
+    animateProgressBar('excellentQuality', 0);
+    animateProgressBar('goodQuality', 0);
+    animateProgressBar('fairQuality', 0);
+    animateProgressBar('poorQuality', 100);
+}
 
-    // Storage Optimization (dummy values)
-    const optScore = Math.round(Math.random() * 20 + 80);
-    document.getElementById('storageOptScore').textContent = optScore;
-    animateProgressBar('spaceUtilization', Math.round(Math.random() * 20 + 80));
-    animateProgressBar('tempCompliance', Math.round(Math.random() * 15 + 80));
-    animateProgressBar('orgScore', Math.round(Math.random() * 25 + 70));
+    // --- Real Storage Optimization Calculation ---
+
+// 1. Space Utilization: total quantity / max capacity (set max, e.g., 100)
+const maxCapacity = 100; // You can adjust this value
+const totalQuantity = (allItems || []).reduce((sum, item) => sum + (item.quantity || 0), 0);
+const spaceUtilization = Math.min(100, Math.round((totalQuantity / maxCapacity) * 100));
+
+// 2. Temperature Compliance: % of items in compliant categories
+const compliantCategories = ['refrigerated', 'frozen', 'produce']; // adjust as needed
+const compliantCount = (allItems || []).filter(item =>
+    item.category && compliantCategories.includes(item.category.toLowerCase())
+).length;
+const tempCompliance = allItems.length ? Math.round((compliantCount / allItems.length) * 100) : 100;
+
+// 3. Organization Score: % of items with a category assigned
+const withCategory = (allItems || []).filter(item => item.category && item.category !== 'others').length;
+const orgScore = allItems.length ? Math.round((withCategory / allItems.length) * 100) : 100;
+
+// 4. Optimization Score: average of the above
+const optScore = Math.round((spaceUtilization + tempCompliance + orgScore) / 3);
+
+document.getElementById('storageOptScore').textContent = optScore;
+animateProgressBar('spaceUtilization', spaceUtilization);
+animateProgressBar('tempCompliance', tempCompliance);
+animateProgressBar('orgScore', orgScore);
 }
 
 function addStatusToItems(items) {
@@ -546,4 +614,7 @@ function showError(message) {
         toast.style.opacity = '0';
         setTimeout(() => toast.remove(), 300);
     }, 3000);
-}
+}document.getElementById('generateReport').addEventListener('click', () => {
+    generateReport();
+    showNotification('Report updated!', 'success');
+});
