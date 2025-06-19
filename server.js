@@ -29,6 +29,7 @@ const settingsRoutes = require('./routes/settingsRoutes');
 const authRoutes = require('./routes/authRoutes');
 const productRoutes = require('./routes/productRoutes');
 const reportRoutes = require('./routes/reportRoutes');
+const suggestionsRouter = require('./routes/suggestionRoutes');
 
 
 
@@ -59,6 +60,7 @@ app.use('/api/products', productRoutes);
 app.use('/api/categories', categoryRoutes);
 app.use('/api', settingsRoutes);
 app.use('/api/reports', reportRoutes);
+app.use('/api', suggestionsRouter);
 
 
 // API route to fetch notifications

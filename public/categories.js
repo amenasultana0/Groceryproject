@@ -104,7 +104,7 @@ saveCategoryBtn.onclick = async () => {
 function createCategoryCard(category) {
   const card = document.createElement("div");
   card.className = "category-card";
-  card.dataset.categoryId = category.id;
+  card.dataset.categoryId = category._id;
 
   card.innerHTML = `
     <div class="category-color" style="background-color: ${category.color}"></div>
@@ -141,13 +141,13 @@ deleteBtn.onclick = async () => {
       const token = getToken();
       if (!token) throw new Error('No auth token');
 
-      const response = await fetch(`${BACKEND_URL}/api/categories/${category.id}`, {
+      const response = await fetch(`${BACKEND_URL}/api/categories/${category._id}`, {
         method: 'DELETE',
         headers: { Authorization: `Bearer ${token}` }
       });
       if (!response.ok) throw new Error('Failed to delete category');
 
-      categories = categories.filter(cat => cat.id !== category.id);
+      categories = categories.filter(cat => cat._id !== category._id);
       updateDisplay();
     } catch (error) {
       alert('Error deleting category, please try again.');
@@ -177,7 +177,7 @@ function setupCardEventListeners(card, category) {
       const token = getToken();
       if (!token) throw new Error('No auth token');
 
-      const res = await fetch(`${BACKEND_URL}/api/categories/${category.id}`, {
+      const res = await fetch(`${BACKEND_URL}/api/categories/${category._id}`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
@@ -221,7 +221,7 @@ function setupCardEventListeners(card, category) {
         const token = getToken();
         if (!token) throw new Error('No auth token');
 
-        const response = await fetch(`${BACKEND_URL}/api/categories/${category.id}`, {
+        const response = await fetch(`${BACKEND_URL}/api/categories/${category._id}`, {
           method: 'PATCH',
           headers: { 
             'Content-Type': 'application/json',
@@ -265,7 +265,7 @@ function renderItems(card, category) {
         const token = getToken();
         if (!token) throw new Error('No auth token');
 
-        const res = await fetch(`${BACKEND_URL}/api/categories/${category.id}`, {
+        const res = await fetch(`${BACKEND_URL}/api/categories/${category._id}`, {
           method: 'PATCH',
           headers: {
             'Content-Type': 'application/json',
@@ -286,7 +286,7 @@ function renderItems(card, category) {
 
     // Drag & Drop logic
     itemElement.addEventListener('dragstart', () => {
-      draggedElement = { type: 'item', categoryId: category.id, itemIndex: index };
+      draggedElement = { type: 'item', categoryId: category._id, itemIndex: index };
       itemElement.classList.add('dragging');
     });
 
@@ -304,7 +304,7 @@ function renderItems(card, category) {
       if (
         draggedElement &&
         draggedElement.type === 'item' &&
-        draggedElement.categoryId === category.id
+        draggedElement.categoryId === category._id
       ) {
         const fromIndex = draggedElement.itemIndex;
         const toIndex = index;
@@ -317,7 +317,7 @@ function renderItems(card, category) {
             const token = getToken();
             if (!token) throw new Error('No auth token');
 
-            const res = await fetch(`${BACKEND_URL}/api/categories/${category.id}`, {
+            const res = await fetch(`${BACKEND_URL}/api/categories/${category._id}`, {
               method: 'PATCH',
               headers: {
                 'Content-Type': 'application/json',

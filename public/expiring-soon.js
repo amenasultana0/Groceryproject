@@ -99,6 +99,14 @@ async function loadItems() {
 
     updatePriorityCounts(allItems);
 
+    // Deduplicate before rendering
+    const uniqueMap = {};
+    allItems.forEach(item => {
+      const key = `${item.name}_${new Date(item.expiryDate).toISOString()}`;
+      uniqueMap[key] = item;
+    });
+    allItems = Object.values(uniqueMap);
+    
     renderItems(allItems);
     updateStats(allItems); // pass items so updateStats can use it
 }

@@ -47,6 +47,7 @@ router.get('/report', async (req, res) => {
 // POST: Advanced filtered report with expiry summary
 router.post('/report', async (req, res) => {
   const { startDate, endDate, category, status } = req.body;
+  const normalizedStatus = status ? status.toLowerCase().replace(/\s/g, '') : null;
 
   try {
     const query = {};
@@ -77,16 +78,16 @@ router.post('/report', async (req, res) => {
       const item = { ...p, daysLeft };
 
       let match = false;
-      if (status === "Expired" && daysLeft < 0) {
+      if (normalizedStatus === "Expired" && daysLeft < 0) {
         expired++;
         match = true;
-      } else if (status === "Expiring Soon" && daysLeft >= 0 && daysLeft <= 7) {
+      } else if (normalizedStatus === "Expiring Soon" && daysLeft >= 0 && daysLeft <= 7) {
         expiringSoon++;
         match = true;
-      } else if (status === "Fresh" && daysLeft > 7) {
+      } else if (normalizedStatus === "Fresh" && daysLeft > 7) {
         fresh++;
         match = true;
-      } else if (!status || status === 'all') {
+      } else if (!normalizedStatus || status === 'all') {
         match = true;
         if (daysLeft < 0) expired++;
         else if (daysLeft <= 7) expiringSoon++;

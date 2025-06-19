@@ -332,11 +332,24 @@ async function generateReport() {
     showLoadingState();
 
     try {
-        const data = generateSampleData(expiryRange, selectedCategories);
-        updateDashboard(data);
+        const response = await fetch('http://localhost:3000/api/reports/report', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                startDate,
+                endDate,
+                expiryRange,
+                categories: selectedCategories
+            })
+        });
+        const data = await response.json();
+
+        // Use data.metrics if present, otherwise use data directly
+        const metrics = data.metrics || data;
+        updateDashboard(metrics);
         updateAllCharts(data);
         updateTable(data.items);
-        updateCategoryFilters(data.categories);
+        updateCategoryFilters(data.categories || []);
         hideLoadingState();
     } catch (error) {
         console.error('Error generating report:', error);
@@ -464,17 +477,13 @@ function calculateOverallTrend(items, metric) {
 }
 
 function updateDashboard(data) {
-    // Update Premium Insights
-    updatePremiumInsights(data.insights);
-    
-    // Update Key Metrics
-    document.getElementById('expiringSoon').textContent = data.expiringSoon;
-    document.getElementById('expiredItems').textContent = data.expired;
-    document.getElementById('freshItems').textContent = data.fresh;
-
-    // Update Value Analysis
-    document.getElementById('totalValue').textContent = formatCurrency(data.totalValue);
-    document.getElementById('potentialSavings').textContent = formatCurrency(data.insights.wastePrevention.potential_savings);
+    document.getElementById('expiringSoonCount').textContent = metrics.expiringSoon || 0;
+    document.getElementById('expiredItemsCount').textContent = metrics.expired || 0;
+    document.getElementById('freshItemsCount').textContent = metrics.fresh || 0;
+    document.getElementById('totalValue').textContent = formatCurrency(metrics.totalValue || 0);
+    if (data.insights && data.insights.wastePrevention) {
+        document.getElementById('potentialSavings').textContent = formatCurrency(data.insights.wastePrevention.potential_savings || 0);
+    }
 }
 
 function updatePremiumInsights(insights) {

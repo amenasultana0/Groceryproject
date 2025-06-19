@@ -13,6 +13,8 @@ let charts = {
     trend: null
 };
 
+let allItems = [];
+
 // Initialize date picker and event listeners
 document.addEventListener('DOMContentLoaded', function() {
     flatpickr("#dateRange", {
@@ -33,6 +35,12 @@ document.addEventListener('DOMContentLoaded', function() {
 function initializeEventListeners() {
     document.getElementById('categoryFilter').addEventListener('change', generateReport);
     document.getElementById('statusFilter').addEventListener('change', generateReport);
+    document.getElementById('chartAllToggle').addEventListener('change', () => {
+    // Use the last filtered items for data
+    const status = document.getElementById('statusFilter').value;
+    const filteredItems = filterItemsByStatus(allItems, status);
+    updateCharts({ ...generateChartData(filteredItems), items: filteredItems });
+    });
 
     document.querySelectorAll('.chart-controls button').forEach(button => {
         button.addEventListener('click', () => {
@@ -59,6 +67,28 @@ function initializeEventListeners() {
     });
 }
 
+function filterItemsByStatus(items, status) {
+    const now = new Date();
+    const in7Days = new Date(now);
+    in7Days.setDate(now.getDate() + 7);
+
+    if (!status || status === 'all') return items;
+
+    if (status === 'expired') {
+        return items.filter(item => new Date(item.expiryDate) < now);
+    }
+    if (status === 'expiring') {
+        return items.filter(item => {
+            const expiry = new Date(item.expiryDate);
+            return expiry >= now && expiry <= in7Days;
+        });
+    }
+    if (status === 'fresh') {
+        return items.filter(item => new Date(item.expiryDate) > in7Days);
+    }
+    return items;
+}
+
 async function generateReport() {
     showLoading();
     try {
@@ -71,14 +101,18 @@ async function generateReport() {
         const response = await fetch(`http://localhost:3000/api/reports/report`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ startDate, endDate, category, status }),
+            body: JSON.stringify({ startDate, endDate, category, status: 'all' }),
         });
 
         const data = await response.json();
+        allItems = data.items || [];
 
-        updateMetrics(data.metrics);
-        updateCharts(data);
-        updateTable(data.items);
+        updateMetrics(calculateMetrics(allItems));
+
+        updateFilteredView();
+
+        // updateCharts(data);
+        // updateTable(data.items);
         updateInsights(data);
 
         hideLoading();
@@ -89,6 +123,15 @@ async function generateReport() {
     }
 }
 
+// This function updates the table and charts based on the selected status
+function updateFilteredView() {
+    const status = document.getElementById('statusFilter').value;
+    const filteredItems = filterItemsByStatus(allItems, status);
+
+    updateCharts({ ...generateChartData(filteredItems), items: filteredItems });
+    updateTable(filteredItems);
+}
+
 function updateMetrics(metrics) {
     document.getElementById('expiringSoonCount').textContent = metrics.expiringSoon || 0;
     document.getElementById('expiredItemsCount').textContent = metrics.expired || 0;
@@ -96,17 +139,52 @@ function updateMetrics(metrics) {
     document.getElementById('totalValue').textContent = formatCurrency(metrics.totalValue || 0);
 }
 
-function updateCharts(data) {
-    const chartData = generateChartData(data.items || []);
-    updateExpiryChart();
-    updateCategoryChart(chartData.category);
-    updateStatusChart(chartData.status);
-    updateTrendChart(chartData.trend);
+function calculateMetrics(items) {
+    const now = new Date();
+    const in7Days = new Date(now);
+    in7Days.setDate(now.getDate() + 7);
+
+    let expired = 0, expiringSoon = 0, fresh = 0, totalValue = 0;
+
+    items.forEach(item => {
+        const expiry = new Date(item.expiryDate);
+        if (expiry < now) {
+            expired++;
+        } else if (expiry >= now && expiry <= in7Days) {
+            expiringSoon++;
+        } else if (expiry > in7Days) {
+            fresh++;
+        }
+        totalValue += (item.price || 0) * (item.quantity || 0);
+    });
+
+    return { expired, expiringSoon, fresh, totalValue };
 }
 
-function updateExpiryChart(type = 'line') {
+function updateCharts(data) {
+    // Check the toggle state
+    const showAll = document.getElementById('chartAllToggle')?.checked;
+    // Use allItems or filtered items based on toggle
+    const chartSourceItems = showAll ? allItems : (data.items || []);
+
+    addStatusToItems(chartSourceItems);
+
+    const categoryData = generateCategoryData(chartSourceItems);
+    const statusData = generateStatusData(chartSourceItems);
+    
+    const expiryData = generateExpiryData(chartSourceItems);
+
+    const weeklyTrendData = generateWeeklyExpiryTrend(chartSourceItems);
+    
+
+    updateExpiryChart(expiryData); // This can stay filtered if you want
+    updateCategoryChart(categoryData);
+    updateStatusChart(statusData);
+    updateTrendChart(weeklyTrendData);
+}
+
+function updateExpiryChart(expiryData, type = 'line') {
     const ctx = document.getElementById('expiryChart').getContext('2d');
-    const chartData = charts.expiry?.data || generateExpiryData([]);
     if (charts.expiry) charts.expiry.destroy();
 
     const gradientFill = ctx.createLinearGradient(0, 0, 0, 400);
@@ -116,10 +194,10 @@ function updateExpiryChart(type = 'line') {
     charts.expiry = new Chart(ctx, {
         type: type,
         data: {
-            labels: chartData.labels,
+            labels: expiryData.labels,
             datasets: [{
                 label: 'Items',
-                data: chartData.data,
+                data: expiryData.data,
                 borderColor: '#6366f1',
                 backgroundColor: type === 'line' ? gradientFill : 'rgba(99, 102, 241, 0.2)',
                 borderWidth: 3,
@@ -176,11 +254,33 @@ function updateStatusChart(data) {
     charts.status.render();
 }
 
-function updateTrendChart(data) {
+function generateWeeklyExpiryTrend(items) {
+    const labels = [];
+    const data = [];
+    const now = new Date();
+    for (let i = 6; i >= 0; i--) {
+        const day = new Date(now);
+        day.setDate(now.getDate() - i);
+        const dayStart = new Date(day.setHours(0,0,0,0));
+        const dayEnd = new Date(dayStart);
+        dayEnd.setDate(dayEnd.getDate() + 1);
+
+        labels.push(dayStart.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }));
+
+        const count = items.filter(item => {
+            const expiry = new Date(item.expiryDate);
+            return expiry >= dayStart && expiry < dayEnd;
+        }).length;
+        data.push(count);
+    }
+    return { labels, data };
+}
+
+function updateTrendChart(trendData) {
     const options = {
         chart: { type: 'area', height: '100%' },
-        series: [{ name: 'Items', data: data.data }],
-        xaxis: { categories: data.labels },
+        series: [{ name: 'Items', data: trendData.data }],
+        xaxis: { categories: trendData.labels },
         stroke: { curve: 'smooth', width: 2 },
         fill: { type: 'gradient', gradient: { shadeIntensity: 1, opacityFrom: 0.7, opacityTo: 0.2, stops: [0, 90, 100] } },
         colors: ['#6366f1']
@@ -241,6 +341,20 @@ function updateInsights(data) {
     document.getElementById('riskLevel').textContent = riskLevel;
     // Freshness Index
     document.getElementById('freshnessIndex').textContent = data.metrics.freshnessIndex || 0;
+
+    // Update Freshness Quality Distribution
+    if (data.metrics.freshnessQuality) {
+    const quality = data.metrics.freshnessQuality;
+    console.log("Freshness Quality:", data.metrics.freshnessQuality);
+
+    document.getElementById('excellentQuality').style.width = `${quality.excellent || 0}%`;
+    document.getElementById('goodQuality').style.width = `${quality.good || 0}%`;
+    document.getElementById('fairQuality').style.width = `${quality.fair || 0}%`;
+    document.getElementById('poorQuality').style.width = `${quality.poor || 0}%`;
+    } else {
+    console.warn("No freshness quality data found.");
+    }
+
     // Storage Optimization (dummy values)
     document.getElementById('storageOptScore').textContent = Math.round(Math.random() * 20 + 80);
     document.getElementById('spaceUtilization').style.width = `${Math.round(Math.random() * 20 + 80)}%`;
@@ -251,12 +365,35 @@ function updateInsights(data) {
     document.getElementById('shortTermAction').textContent = formatCurrency(Math.round(Math.random() * 2000));
 }
 
+function addStatusToItems(items) {
+    const now = new Date();
+    const in7Days = new Date(now);
+    in7Days.setDate(now.getDate() + 7);
+
+    items.forEach(item => {
+        const expiry = new Date(item.expiryDate);
+        if (expiry < now) {
+            item.status = 'expired';
+        } else if (expiry >= now && expiry <= in7Days) {
+            item.status = 'expiring';
+        } else {
+            item.status = 'fresh';
+        }
+    });
+}
+
 function generateChartData(items) {
+    const categories = {};
+    items.forEach(item => {
+        if (!item || !item.category) return;
+        // Count items instead of summing value
+        categories[item.category] = (categories[item.category] || 0) + 1;
+    });
     return {
         expiry: generateExpiryData(items),
         category: generateCategoryData(items),
         status: generateStatusData(items),
-        trend: generateTrendData(items)
+        trend: generateExpiryData(items)
     };
 }
 
@@ -277,7 +414,7 @@ function generateCategoryData(items) {
     const categories = {};
     items.forEach(item => {
         if (!item || !item.category) return;
-        categories[item.category] = (categories[item.category] || 0) + ((item.price || 0) * (item.quantity || 0));
+        categories[item.category] = (categories[item.category] || 0) + 1;
     });
     return {
         labels: Object.keys(categories),
@@ -297,21 +434,6 @@ function generateStatusData(items) {
     return { categories, data };
 }
 
-function generateTrendData(items) {
-    const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-    const data = new Array(7).fill(0);
-    const today = new Date().getDay();
-    items.forEach(item => {
-        const dayIndex = (today + item.daysLeft) % 7;
-        if (dayIndex >= 0 && dayIndex < 7) {
-            data[dayIndex]++;
-        }
-    });
-    return {
-        labels: [...days.slice(today), ...days.slice(0, today)],
-        data: [...data.slice(today), ...data.slice(0, today)]
-    };
-}
 
 function formatCurrency(value) {
     return new Intl.NumberFormat('en-IN', {

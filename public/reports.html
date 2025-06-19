@@ -44,15 +44,7 @@
                     <option value="bakery">Bakery</option>
                 </select>
             </div>
-            <div class="filter-group">
-                <label>Status</label>
-                <select id="statusFilter">
-                    <option value="all">All Status</option>
-                    <option value="expiring">Expiring Soon</option>
-                    <option value="expired">Expired</option>
-                    <option value="fresh">Fresh</option>
-                </select>
-            </div>
+            
             <button id="generateReport" class="btn-primary">
                 <i class="fas fa-sync"></i> Update Report
             </button>
@@ -104,7 +96,23 @@
 
         <!-- Charts Grid -->
         <section class="charts-grid">
+            <div class="chart-toggle">
+                <label>
+                    <input type="checkbox" id="chartAllToggle" checked>
+                    Show charts for all items
+                </label>
+            </div>
+            <div class="filter-group">
+                <label>Status</label>
+                <select id="statusFilter">
+                    <option value="all">All Status</option>
+                    <option value="expiring">Expiring Soon</option>
+                    <option value="expired">Expired</option>
+                    <option value="fresh">Fresh</option>
+                </select>
+            </div>
             <div class="chart-card full-width">
+            
                 <div class="chart-header">
                     <h3>Expiry Timeline</h3>
                     <div class="chart-controls">
@@ -116,6 +124,7 @@
                     <canvas id="expiryChart"></canvas>
                 </div>
             </div>
+
             <div class="chart-card">
                 <h3>Category Distribution</h3>
                 <div class="chart-container">
@@ -128,6 +137,7 @@
                     <div id="statusChart"></div>
                 </div>
             </div>
+        
             <div class="chart-card">
                 <h3>Weekly Trend</h3>
                 <div class="chart-container">
@@ -139,7 +149,7 @@
         <!-- Premium Insights -->
         <section class="premium-insights">
             <h2>Premium Insights</h2>
-            <div class="insights-grid">
+            <div class="insights-panel">
                 <div class="insight-card">
                     <div class="insight-header">
                         <i class="fas fa-clock"></i>
@@ -309,6 +319,13 @@
     <footer class="premium-footer">
         <p>Premium Analytics Dashboard | Grocery Expiry Tracking System</p>
     </footer>
+    <script>
+        window.addEventListener('DOMContentLoaded', () => {
+            document.getElementById('excellentQuality').style.width = '70%';
+            document.getElementById('excellentQuality').style.backgroundColor = 'blue';
+    });
+</script>
+
     <script src="scripts/reports.js"></script>
 </body>
 </html>
