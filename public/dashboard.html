@@ -230,30 +230,25 @@
 
   <!-- Scanner Modal -->
   <div class="modal" id="scannerModal">
-    <div class="modal-content scanner-modal">
-      <div class="modal-header">
-        <h2>Scan Item</h2>
-        <button class="close-scanner">
-          <i class="fas fa-times"></i>
-        </button>
-      </div>
-      <div class="scanner-content">
-        <div class="scanner-area">
-          <div class="scanner-frame">
-            <div class="scanner-line"></div>
-            <i class="fas fa-qrcode scanner-icon"></i>
-          </div>
-          <p class="scanner-text">Position the barcode/QR code within the frame</p>
-        </div>
-        <div class="scanner-actions">
-          <button class="btn-secondary" id="manualEntry">Manual Entry</button>
-          <button class="btn-primary" id="captureBtn">Capture</button>
-        </div>
+  <div class="modal-content scanner-modal">
+    <div class="modal-header">
+      <h2>Scan Item</h2>
+      <button class="close-scanner">
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
+    <div class="scanner-content">
+      <div id="reader" style="width: 100%; max-width: 350px; margin: 0 auto;"></div>
+      <div class="scanner-actions">
+        <button class="btn-secondary" id="manualEntry">Manual Entry</button>
+        <button class="btn-primary" id="captureBtn" style="display:none;">Capture</button>
       </div>
     </div>
   </div>
+</div>
 
   <div id="notificationToastContainer"></div>
+  <script src="https://unpkg.com/html5-qrcode"></script>
   <script src="https://cdn.socket.io/4.7.5/socket.io.min.js" crossorigin="anonymous"></script>
   <script src="dashboard.js" type="module"></script>
 </body>

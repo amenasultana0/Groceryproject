@@ -74,7 +74,7 @@ function showNotification(message, type = 'info') {
 // --- Storage Functions (fallback for demo) ---
 function getItems() {
   return itemsStorage;
-}
+}  
 function saveItems(items) {
   itemsStorage = items;
 }
@@ -104,34 +104,116 @@ function openModalFromScanner() {
 }
 
 // --- Scanner Functions ---
-function handleCapture() {
-  const mockBarcodes = [
-    { code: '123456789012', name: 'Milk', category: 'dairy' },
-    { code: '987654321098', name: 'Bread', category: 'pantry' },
-    { code: '456789123456', name: 'Apples', category: 'fruits' },
-    { code: '789123456789', name: 'Chicken Breast', category: 'meat' },
-    { code: '321654987321', name: 'Yogurt', category: 'dairy' },
-    { code: '654987321654', name: 'Bananas', category: 'fruits' },
-    { code: '147258369147', name: 'Tomatoes', category: 'vegetables' },
-    { code: '258369147258', name: 'Cheese', category: 'dairy' }
-  ];
-  captureBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Scanning...';
-  captureBtn.disabled = true;
-  setTimeout(() => {
-    const scannedItem = mockBarcodes[Math.floor(Math.random() * mockBarcodes.length)];
-    closeScannerModal();
-    openModal();
-    document.getElementById('itemName').value = scannedItem.name;
-    document.getElementById('category').value = scannedItem.category;
-    document.getElementById('quantity').value = '1';
-    const expiryDate = new Date();
-    expiryDate.setDate(expiryDate.getDate() + 7);
-    document.getElementById('expiryDate').value = expiryDate.toISOString().split('T')[0];
-    showNotification(`Scanned: ${scannedItem.name}`, 'success');
-    captureBtn.innerHTML = 'Capture';
-    captureBtn.disabled = false;
-  }, 2000);
+// ...existing code...
+
+let html5QrCode = null;
+let isScanning = false;
+
+async function startScanner() {
+  if (isScanning) return;
+  isScanning = true;
+  const qrRegion = document.getElementById('reader');
+  qrRegion.innerHTML = '';
+  html5QrCode = new Html5Qrcode("reader");
+  try {
+    await html5QrCode.start(
+      { facingMode: "environment" },
+      {
+        fps: 10,
+        qrbox: { width: 250, height: 250 }
+      },
+      onScanSuccess,
+      onScanError
+    );
+  } catch (err) {
+    showNotification("Camera error: " + err, "error");
+    isScanning = false;
+  }
 }
+
+function stopScanner() {
+  if (html5QrCode) {
+    html5QrCode.stop().then(() => {
+      html5QrCode.clear();
+      isScanning = false;
+    }).catch(() => {
+      isScanning = false;
+    });
+  }
+}
+
+async function onScanSuccess(decodedText, decodedResult) {
+  stopScanner();
+  closeScannerModal();
+  // Only digits? Assume barcode
+  const code = decodedText.replace(/\D/g, '');
+  if (!code) {
+    showNotification("Invalid code scanned.", "error");
+    return;
+  }
+  try {
+    const res = await fetch(`https://world.openfoodfacts.org/api/v0/product/${code}.json`);
+    const data = await res.json();
+    if (data.status === 1) {
+      const product = data.product;
+      document.getElementById('itemName').value = product.product_name || '';
+      document.getElementById('category').value = (product.categories_tags && product.categories_tags[0])
+        ? product.categories_tags[0].replace('en:', '') : 'others';
+      document.getElementById('quantity').value = 1;
+      const expiryDate = new Date();
+      expiryDate.setDate(expiryDate.getDate() + 7);
+      document.getElementById('expiryDate').value = expiryDate.toISOString().split('T')[0];
+      openModal();
+      showNotification(`Scanned: ${product.product_name || code}`, "success");
+    } else {
+      showNotification("Product not found. Please enter details manually.", "error");
+      openModal();
+    }
+  } catch (err) {
+    showNotification("API error. Please try again.", "error");
+    openModal();
+  }
+}
+
+function onScanError(errorMessage) {
+  // Optionally show scan errors in debug
+  // console.warn(errorMessage);
+}
+
+// --- Scanner Modal Events ---
+scannerBtn?.addEventListener('click', () => {
+  openScannerModal();
+  setTimeout(startScanner, 300); // Give modal time to show
+});
+closeScannerBtn?.addEventListener('click', () => {
+  stopScanner();
+  closeScannerModal();
+});
+cancelModalBtn?.addEventListener('click', () => {
+  stopScanner();
+  closeModal();
+});
+manualEntryBtn?.addEventListener('click', () => {
+  stopScanner();
+  closeScannerModal();
+  openModal();
+});
+
+// If you want to stop scanner on modal background click or ESC:
+document.addEventListener('click', (e) => {
+  if (e.target === scannerModal) {
+    stopScanner();
+    closeScannerModal();
+  }
+});
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') {
+    stopScanner();
+    closeScannerModal();
+  }
+});
+
+// ...existing code...
 
 // --- Item Management Functions ---
 async function handleAddItem(e) {
@@ -563,7 +645,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   searchInput?.addEventListener('input', handleSearch);
   logoutBtn?.addEventListener('click', handleLogout);
   scannerBtn?.addEventListener('click', openScannerModal);
-  captureBtn?.addEventListener('click', handleCapture);
+  //captureBtn?.addEventListener('click', handleCapture);
   manualEntryBtn?.addEventListener('click', openModalFromScanner);
   notificationBtn?.addEventListener('click', toggleNotificationsPanel);
 
