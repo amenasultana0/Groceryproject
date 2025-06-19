@@ -325,6 +325,20 @@ function updateTable(items) {
     document.getElementById('itemCount').textContent = items.length;
 }
 
+function animateProgressBar(id, value) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    if (parseFloat(el.style.width) === value) return;
+
+    el.style.transition = 'width 0.8s ease';
+    el.style.width = '0%';        // Reset first
+    el.offsetWidth;               // 🔧 Force reflow
+    setTimeout(() => {
+        el.style.width = `${value}%`;  // Then animate to the target width
+    }, 10); // Delay ensures transition is visible
+}
+
+
 function updateInsights(data) {
     if (!data || !data.metrics || !data.metrics.expiry) return;
     // Expiry Timeline
@@ -339,30 +353,35 @@ function updateInsights(data) {
             ? 'Medium'
             : 'Low';
     document.getElementById('riskLevel').textContent = riskLevel;
+    
     // Freshness Index
-    document.getElementById('freshnessIndex').textContent = data.metrics.freshnessIndex || 0;
+    let freshnessIndex = parseFloat(data?.metrics?.freshnessIndex);
+    if (isNaN(freshnessIndex)) freshnessIndex = 0;
 
-    // Update Freshness Quality Distribution
-    if (data.metrics.freshnessQuality) {
-    const quality = data.metrics.freshnessQuality;
-    console.log("Freshness Quality:", data.metrics.freshnessQuality);
+    document.getElementById('freshnessIndex').textContent = freshnessIndex;
 
-    document.getElementById('excellentQuality').style.width = `${quality.excellent || 0}%`;
-    document.getElementById('goodQuality').style.width = `${quality.good || 0}%`;
-    document.getElementById('fairQuality').style.width = `${quality.fair || 0}%`;
-    document.getElementById('poorQuality').style.width = `${quality.poor || 0}%`;
+
+    ['excellentQuality', 'goodQuality', 'fairQuality', 'poorQuality'].forEach(id => {
+        animateProgressBar(id, 0);
+    });
+
+    // Highlight the correct freshness level based on index
+    if (freshnessIndex >= 75) {
+        animateProgressBar('excellentQuality', freshnessIndex);
+    } else if (freshnessIndex >= 50) {
+        animateProgressBar('goodQuality', freshnessIndex);
+    } else if (freshnessIndex >= 25) {
+        animateProgressBar('fairQuality', freshnessIndex);
     } else {
-    console.warn("No freshness quality data found.");
+        animateProgressBar('poorQuality', freshnessIndex);
     }
 
     // Storage Optimization (dummy values)
-    document.getElementById('storageOptScore').textContent = Math.round(Math.random() * 20 + 80);
-    document.getElementById('spaceUtilization').style.width = `${Math.round(Math.random() * 20 + 80)}%`;
-    document.getElementById('tempCompliance').style.width = `${Math.round(Math.random() * 15 + 80)}%`;
-    document.getElementById('orgScore').style.width = `${Math.round(Math.random() * 25 + 70)}%`;
-    // Value Analysis (dummy values)
-    document.getElementById('immediateAction').textContent = formatCurrency(Math.round(Math.random() * 1000));
-    document.getElementById('shortTermAction').textContent = formatCurrency(Math.round(Math.random() * 2000));
+    const optScore = Math.round(Math.random() * 20 + 80);
+    document.getElementById('storageOptScore').textContent = optScore;
+    animateProgressBar('spaceUtilization', Math.round(Math.random() * 20 + 80));
+    animateProgressBar('tempCompliance', Math.round(Math.random() * 15 + 80));
+    animateProgressBar('orgScore', Math.round(Math.random() * 25 + 70));
 }
 
 function addStatusToItems(items) {
