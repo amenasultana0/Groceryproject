@@ -85,11 +85,17 @@
         <input type="text" placeholder="Search items..."/>
       </div>
 
-      <div class="top-actions">
-        <button class="notification-btn" title="Notifications">
-          <i class="fas fa-bell"></i>
-          <span class="badge">0</span>
-        </button>
+       <button id="notificationBtn" class="notification-btn" title="Notifications">
+        <i class="fas fa-bell"></i>
+        <span class="badge">0</span>
+      </button>
+      <div id="notificationsPanel" class="notifications-panel">
+        <div class="notifications-header">
+          <span>Notifications</span>
+          <button id="clearNotifications" title="Delete All"><i class="fas fa-trash"></i> Delete All</button>
+        </div>
+        <ul id="notificationList"></ul>
+      </div>
         <button class="scanner-btn" title="Scan Item">
           <i class="fas fa-qrcode"></i>
         </button>
@@ -98,7 +104,6 @@
           Add Item
         </button>
       </div>
-      <div id="notificationsPanel"></div>
     </header>
 
     <div class="dashboard-content">
