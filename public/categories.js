@@ -1,427 +1,672 @@
-import { populateCategoryDropdown } from './utils/categoryHelper.js';
-const BACKEND_URL = 'http://localhost:3000';
-
-// Category colors
-const CATEGORY_COLORS = [
-    '#ef4444', '#f97316', '#f59e0b', '#eab308', 
-    '#84cc16', '#22c55e', '#10b981', '#14b8a6',
-    '#06b6d4', '#0ea5e9', '#3b82f6', '#6366f1',
-    '#8b5cf6', '#a855f7', '#d946ef', '#ec4899'
-  ];
-  
-  // State management
-  let categories = [];
-  let draggedElement = null;
-  
-  // Element references
-  const categoriesWrapper = document.getElementById("categoriesWrapper");
-  const emptyState = document.getElementById("emptyState");
-  const openModalBtn = document.getElementById("openModalBtn");
-  const modalOverlay = document.getElementById("modalOverlay");
-  const closeModalBtn = document.getElementById("closeModalBtn");
-  const saveCategoryBtn = document.getElementById("saveCategoryBtn");
-  const categoryNameInput = document.getElementById("categoryName");
-  const categoryIconSelect = document.getElementById("categoryIcon");
-  const searchInput = document.getElementById("searchInput");
-  
-  // Initialize app
-  document.addEventListener('DOMContentLoaded', async () => {
-    await loadCategories();
-    updateDisplay();
-  });
-  
-  // Modal handlers
-  openModalBtn.onclick = () => showModal();
-  closeModalBtn.onclick = cancelBtn.onclick = () => closeModal();
-  
-  // Click outside modal to close
-  modalOverlay.onclick = (e) => {
-    if (e.target === modalOverlay) closeModal();
-  };
-  
-  function showModal() {
-    modalOverlay.style.display = "flex";
-    setTimeout(() => modalOverlay.classList.add('show'), 10);
-    categoryNameInput.focus();
-  }
-  
-  function closeModal() {
-    modalOverlay.classList.remove('show');
-    setTimeout(() => {
-      modalOverlay.style.display = "none";
-      categoryNameInput.value = "";
-      categoryIconSelect.selectedIndex = 0;
-    }, 300);
-  }
-  
-  // Add new category
-saveCategoryBtn.onclick = async () => {
-  const name = categoryNameInput.value.trim();
-  const icon = categoryIconSelect.value;
-
-  if (!name) {
-    categoryNameInput.focus();
-    categoryNameInput.style.borderColor = '#ef4444';
-    setTimeout(() => categoryNameInput.style.borderColor = '#e5e7eb', 2000);
-    return;
-  }
-
-  const newCategoryData = { name, icon };
-
-  // POST to backend
-  try {
-    const token = getToken();
-    if (!token) throw new Error('No auth token');
-
-    const response = await fetch(`${BACKEND_URL}/api/categories`, {
-      method: 'POST',
-      headers: { 
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`
-      },
-      body: JSON.stringify(newCategoryData)
-    });
-
-    if (!response.ok) throw new Error('Failed to save category');
-
-    const savedCategory = await response.json();
-
-    savedCategory.color = CATEGORY_COLORS[categories.length % CATEGORY_COLORS.length];
-    savedCategory.items = savedCategory.items || [];
-
-    categories.push(savedCategory);
-
-    updateDisplay();
-    closeModal();
-  } catch (error) {
-    alert('Error saving category, please try again.');
-    console.error(error);
-  }
-};
-
-  
-  // Create category card
-function createCategoryCard(category) {
-  const card = document.createElement("div");
-  card.className = "category-card";
-  card.dataset.categoryId = category._id;
-
-  card.innerHTML = `
-    <div class="category-color" style="background-color: ${category.color}"></div>
-    <div class="category-header">
-      <div class="category-info">
-        <span class="category-icon">${category.icon}</span>
-        <h3 class="category-name">${category.name}</h3>
-      </div>
-      <span class="category-count">${category.items.length} items</span>
-      <button class="color-picker-btn" title="Change Color">🎨</button>
-      <button class="delete-icon" title="Delete Category">×</button>
-      <div class="color-picker">
-        <div class="color-options">
-          ${CATEGORY_COLORS.map(color => 
-            `<div class="color-option ${color === category.color ? 'selected' : ''}" 
-                 style="background-color: ${color}" 
-                 data-color="${color}"></div>`
-          ).join('')}
-        </div>
-      </div>
-    </div>
-    <div class="inline-form">
-      <input type="text" placeholder="Add new item..." />
-      <button title="Add Item"><span class="button-text">+</span></button>
-    </div>
-    <div class="item-list"></div>
-  `;
-
-  // ✅ Add delete button handler here
-const deleteBtn = card.querySelector(".delete-icon");
-deleteBtn.onclick = async () => {
-  if (confirm(`Delete "${category.name}" and all its items?`)) {
-    try {
-      const token = getToken();
-      if (!token) throw new Error('No auth token');
-
-      const response = await fetch(`${BACKEND_URL}/api/categories/${category._id}`, {
-        method: 'DELETE',
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      if (!response.ok) throw new Error('Failed to delete category');
-
-      categories = categories.filter(cat => cat._id !== category._id);
-      updateDisplay();
-    } catch (error) {
-      alert('Error deleting category, please try again.');
-      console.error(error);
+// Enhanced seasonal items data with additional properties
+const seasonalItems = [
+    {
+        name: "Mangoes",
+        note: "Peak sweet and juicy season",
+        emoji: "🥭",
+        type: "fruits",
+        rating: 5,
+        price: "$3.50/kg",
+        benefits: ["Rich in Vitamin C", "Boosts immunity", "Good for digestion"],
+        season: "Peak Season",
+        availability: "Locally Available",
+        tips: "Choose mangoes that yield slightly to pressure and have a sweet aroma at the stem end."
+    },
+    {
+        name: "Watermelon",
+        note: "Perfect for hydration in summer heat",
+        emoji: "🍉",
+        type: "fruits",
+        rating: 4,
+        price: "$2.00/kg",
+        benefits: ["92% water content", "Rich in lycopene", "Low in calories"],
+        season: "Peak Season", 
+        availability: "Locally Available",
+        tips: "Look for a creamy yellow spot where it sat on the ground and a hollow sound when tapped."
+    },
+    {
+        name: "Sweet Corn",
+        note: "Best time to grill and enjoy",
+        emoji: "🌽",
+        type: "vegetables",
+        rating: 4,
+        price: "$1.50/ear",
+        benefits: ["High in fiber", "Good source of antioxidants", "Contains folate"],
+        season: "Peak Season",
+        availability: "Locally Available",
+        tips: "Choose corn with bright green husks and golden silk. The kernels should be plump and milky."
+    },
+    {
+        name: "Litchis",
+        note: "Short and sweet seasonal delicacy",
+        emoji: "🍈",
+        type: "fruits",
+        rating: 4,
+        price: "$5.00/kg",
+        benefits: ["High in Vitamin C", "Rich in copper", "Good for skin health"],
+        season: "Limited Season",
+        availability: "Specialty Stores",
+        tips: "Select litchis with pink-red skin that gives slightly when pressed. Avoid brown or cracked ones."
+    },
+    {
+        name: "Cucumbers",
+        note: "Cooling and refreshing for summer",
+        emoji: "🥒",
+        type: "vegetables",
+        rating: 3,
+        price: "$1.20/kg",
+        benefits: ["High water content", "Low in calories", "Contains silica for healthy skin"],
+        season: "Peak Season",
+        availability: "Locally Available",
+        tips: "Choose firm cucumbers with bright green color. Avoid yellowing or soft spots."
+    },
+    {
+        name: "Bottle Gourd",
+        note: "Light and nutritious summer vegetable",
+        emoji: "🥗",
+        type: "vegetables",
+        rating: 3,
+        price: "$0.80/kg",
+        benefits: ["Low in calories", "High in water", "Good for weight management"],
+        season: "Peak Season",
+        availability: "Locally Available",
+        tips: "Select young, tender bottle gourds with smooth skin and no blemishes."
+    },
+    {
+        name: "Jamun",
+        note: "Great for digestion and blood sugar",
+        emoji: "🫐",
+        type: "fruits",
+        rating: 4,
+        price: "$4.00/kg",
+        benefits: ["Controls blood sugar", "Rich in antioxidants", "Good for digestive health"],
+        season: "Short Season",
+        availability: "Local Markets",
+        tips: "Choose deep purple jamuns that are soft to touch. Best consumed fresh and ripe."
+    },
+    {
+        name: "Okra (Bhindi)",
+        note: "Tender and fresh, perfect for cooking",
+        emoji: "🌱",
+        type: "vegetables",
+        rating: 3,
+        price: "$2.50/kg",
+        benefits: ["High in fiber", "Rich in folate", "Good source of Vitamin K"],
+        season: "Peak Season",
+        availability: "Locally Available",
+        tips: "Choose small to medium sized okra that snap crisply. Avoid slimy or brown pods."
     }
-  }
-};
+];
 
-setupCardEventListeners(card, category);
-renderItems(card, category);
-categoriesWrapper.appendChild(card);
-}
+// Application state
+let shoppingList = [];
+let currentFilter = 'all';
+let currentView = 'grid';
 
-function setupCardEventListeners(card, category) {
-  // Add new item handler
-  const input = card.querySelector('.inline-form input');
-  const addBtn = card.querySelector('.inline-form button');
+// Seasonal tips array
+const seasonalTips = [
+    "Buy seasonal produce for the best taste, nutrition, and value!",
+    "Summer fruits are naturally cooling and help maintain body temperature.",
+    "Local seasonal vegetables are freshest and most environmentally friendly.",
+    "Preserve summer produce by freezing or making jams for year-round enjoyment.",
+    "Visit farmers markets early morning for the best selection of seasonal items."
+];
 
-  addBtn.onclick = async () => {
-    const text = input.value.trim();
-    if (!text) return;
+// DOM elements
+const seasonalList = document.getElementById('seasonal-list');
+const searchInput = document.getElementById('search-input');
+const filterButtons = document.querySelectorAll('.filter-btn');
+const viewButtons = document.querySelectorAll('.view-btn');
+const shoppingModal = document.getElementById('shopping-modal');
+const detailsModal = document.getElementById('details-modal');
+const shoppingListFab = document.getElementById('shopping-list-fab');
+const fabBadge = document.getElementById('fab-badge');
 
-    category.items.push({ text });
-    input.value = '';
-
-    try {
-      const token = getToken();
-      if (!token) throw new Error('No auth token');
-
-      const res = await fetch(`${BACKEND_URL}/api/categories/${category._id}`, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`
-        },
-        body: JSON.stringify({ items: category.items }) // send the full updated list
-      });
-
-      if (!res.ok) throw new Error('Failed to update items');
-
-      renderItems(card, category);
-      updateCategoryCount(card, category);
-    } catch (err) {
-      alert('Failed to add item');
-      console.error(err);
-    }
-  };
-
-  input.addEventListener('keypress', (e) => {
-    if (e.key === 'Enter') {
-      addBtn.click();
-    }
-  });
-
-  // Color picker toggle
-  const colorPickerBtn = card.querySelector('.color-picker-btn');
-  const colorPicker = card.querySelector('.color-picker');
-
-  colorPickerBtn.onclick = () => {
-    colorPicker.classList.toggle('show');
-  };
-
-  // ✅ Fixed: Add click listeners to all color options
-  const colorOptions = card.querySelectorAll('.color-option');
-  colorOptions.forEach(option => {
-    option.onclick = async () => {
-      const selectedColor = option.dataset.color;
-      category.color = selectedColor;
-
-      try {
-        const token = getToken();
-        if (!token) throw new Error('No auth token');
-
-        const response = await fetch(`${BACKEND_URL}/api/categories/${category._id}`, {
-          method: 'PATCH',
-          headers: { 
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`
-          },
-          body: JSON.stringify({ color: selectedColor })
-        });
-
-        if (!response.ok) throw new Error('Failed to update category color');
-
-        updateDisplay();
-      } catch (error) {
-        alert('Error updating category color');
-        console.error(error);
-      }
-    };
-  });
-}
-
-  
-function renderItems(card, category) {
-  const itemList = card.querySelector('.item-list');
-  itemList.innerHTML = '';
-
-  category.items.forEach((item, index) => {
-    const itemElement = document.createElement("div");
-    itemElement.className = "item";
-    itemElement.draggable = true;
-    itemElement.dataset.itemIndex = index;
-
-    itemElement.innerHTML = `
-      <span class="item-text">${item.text}</span>
-      <span class="delete-item" title="Remove Item">×</span>
-    `;
-
-    // Delete item
-    itemElement.querySelector(".delete-item").onclick = async () => {
-      category.items.splice(index, 1);
-
-      try {
-        const token = getToken();
-        if (!token) throw new Error('No auth token');
-
-        const res = await fetch(`${BACKEND_URL}/api/categories/${category._id}`, {
-          method: 'PATCH',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${token}`
-          },
-          body: JSON.stringify({ items: category.items })
-        });
-
-        if (!res.ok) throw new Error('Failed to update items after deletion');
-
-        renderItems(card, category);
-        updateCategoryCount(card, category);
-      } catch (err) {
-        alert('Failed to delete item');
-        console.error(err);
-      }
-    };
-
-    // Drag & Drop logic
-    itemElement.addEventListener('dragstart', () => {
-      draggedElement = { type: 'item', categoryId: category._id, itemIndex: index };
-      itemElement.classList.add('dragging');
-    });
-
-    itemElement.addEventListener('dragend', () => {
-      itemElement.classList.remove('dragging');
-      draggedElement = null;
-    });
-
-    itemElement.addEventListener('dragover', (e) => {
-      e.preventDefault();
-    });
-
-    itemElement.addEventListener('drop', async (e) => {
-      e.preventDefault();
-      if (
-        draggedElement &&
-        draggedElement.type === 'item' &&
-        draggedElement.categoryId === category._id
-      ) {
-        const fromIndex = draggedElement.itemIndex;
-        const toIndex = index;
-
-        if (fromIndex !== toIndex) {
-          const [movedItem] = category.items.splice(fromIndex, 1);
-          category.items.splice(toIndex, 0, movedItem);
-
-          try {
-            const token = getToken();
-            if (!token) throw new Error('No auth token');
-
-            const res = await fetch(`${BACKEND_URL}/api/categories/${category._id}`, {
-              method: 'PATCH',
-              headers: {
-                'Content-Type': 'application/json',
-                Authorization: `Bearer ${token}`
-              },
-              body: JSON.stringify({ items: category.items })
-            });
-
-            if (!res.ok) throw new Error('Failed to update item order');
-
-            renderItems(card, category);
-          } catch (err) {
-            alert('Failed to save reordered items');
-            console.error(err);
-          }
-        }
-      }
-    });
-
-    itemList.appendChild(itemElement);
-  });
-}
-  
-function updateCategoryCount(card, category) {
-  const countElement = card.querySelector('.category-count');
-  countElement.textContent = `${category.items.length} items`;
-}
-
-// Search functionality
-searchInput.addEventListener('input', (e) => {
-  const searchTerm = e.target.value.toLowerCase();
-  const cards = categoriesWrapper.querySelectorAll('.category-card');
-
-  cards.forEach(card => {
-    const categoryName = card.querySelector('.category-name').textContent.toLowerCase();
-    const items = Array.from(card.querySelectorAll('.item-text')).map(el => 
-      el.textContent.toLowerCase());
-
-    const matches = categoryName.includes(searchTerm) || 
-                   items.some(item => item.includes(searchTerm));
-
-    card.style.display = matches ? 'block' : 'none';
-  });
+// Initialize the application
+document.addEventListener('DOMContentLoaded', function() {
+    renderItems();
+    setupEventListeners();
+    updateStats();
+    rotateTips();
 });
 
-// Data persistence
-function saveCategories() {
-  try {
-    localStorage.setItem('groceryCategories', JSON.stringify(categories));
-  } catch (e) {
-    console.log('Storage not available');
-  }
-}
-
-function getToken() {
-  const userStr = localStorage.getItem("user") || sessionStorage.getItem("user");
-  if (!userStr) return null;
-  try {
-    const user = JSON.parse(userStr);
-    return user.token || null;
-  } catch {
-    return null;
-  }
-}
-
-async function loadCategories() {
-  const token = getToken();
-  console.log('Token being sent:', token);
-  if (!token) {
-    console.log("No token found");
-    return;
-  }
-  try {
-    const response = await fetch(`${BACKEND_URL}/api/categories`, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
-
-    if (!response.ok) {
-      throw new Error('Failed to fetch categories');
+// Render items based on current filter and search
+function renderItems() {
+    const filteredItems = getFilteredItems();
+    seasonalList.innerHTML = '';
+    
+    if (filteredItems.length === 0) {
+        seasonalList.innerHTML = `
+            <div class="no-results">
+                <i class="fas fa-search" style="font-size: 3rem; color: #ccc; margin-bottom: 1rem;"></i>
+                <h3>No items found</h3>
+                <p>Try adjusting your search or filter criteria.</p>
+            </div>
+        `;
+        return;
     }
 
-    const data = await response.json();
-    categories = data.map((category, index) => ({
-      ...category,
-      color: category.color || CATEGORY_COLORS[index % CATEGORY_COLORS.length],
-      items: category.items || []
-    }));
+    filteredItems.forEach((item, index) => {
+        const card = createItemCard(item, index);
+        seasonalList.appendChild(card);
+    });
 
-    updateDisplay();
-  } catch (err) {
-    console.error("Error loading categories:", err);
-  }
+    // Apply view mode
+    seasonalList.className = `seasonal-grid ${currentView === 'list' ? 'list-view' : ''}`;
+    
+    // Update total items count
+    document.getElementById('total-items').textContent = filteredItems.length;
 }
 
-function updateDisplay() {
-  // Clear existing cards
-  categoriesWrapper.innerHTML = '';
-
-  if (categories.length === 0) {
-    emptyState.style.display = 'block';
-  } else {
-    emptyState.style.display = 'none';
-    categories.forEach(category => createCategoryCard(category));
-  }
+// Create individual item card
+function createItemCard(item, index) {
+    const isInList = shoppingList.some(listItem => listItem.name === item.name);
+    const stars = '★'.repeat(item.rating) + '☆'.repeat(5 - item.rating);
+    
+    const card = document.createElement('div');
+    card.className = `item-card ${isInList ? 'in-shopping-list' : ''}`;
+    card.setAttribute('data-type', item.type);
+    card.setAttribute('data-index', index);
+    
+    card.innerHTML = `
+        <div class="item-header">
+            <div>
+                <h3>${item.emoji} ${item.name}</h3>
+                <span class="item-badge">${item.season}</span>
+            </div>
+            <span class="price-tag">${item.price}</span>
+        </div>
+        <div class="item-content">
+            <p>${item.note}</p>
+            <div class="item-actions">
+                <button class="add-to-list-btn ${isInList ? 'added' : ''}" 
+                        onclick="toggleShoppingList('${item.name}', event)">
+                    <i class="fas ${isInList ? 'fa-check' : 'fa-plus'}"></i>
+                    ${isInList ? 'Added' : 'Add to List'}
+                </button>
+                <div class="item-rating" title="Seasonal Rating: ${item.rating}/5">
+                    ${stars}
+                </div>
+            </div>
+        </div>
+    `;
+    
+    // Add click event for item details (but not on button)
+    card.addEventListener('click', (e) => {
+        if (!e.target.closest('.add-to-list-btn')) {
+            showItemDetails(item);
+        }
+    });
+    
+    return card;
 }
+
+// Filter items based on current criteria
+function getFilteredItems() {
+    let filtered = [...seasonalItems];
+    
+    // Apply type filter
+    if (currentFilter !== 'all') {
+        filtered = filtered.filter(item => item.type === currentFilter);
+    }
+    
+    // Apply search filter
+    const searchTerm = searchInput.value.toLowerCase().trim();
+    if (searchTerm) {
+        filtered = filtered.filter(item => 
+            item.name.toLowerCase().includes(searchTerm) ||
+            item.note.toLowerCase().includes(searchTerm) ||
+            item.benefits.some(benefit => benefit.toLowerCase().includes(searchTerm))
+        );
+    }
+    
+    return filtered;
+}
+
+// Toggle item in shopping list
+function toggleShoppingList(itemName, event) {
+    event.stopPropagation();
+    const item = seasonalItems.find(i => i.name === itemName);
+    const existingIndex = shoppingList.findIndex(i => i.name === itemName);
+    
+    if (existingIndex > -1) {
+        shoppingList.splice(existingIndex, 1);
+        showNotification(`${itemName} removed from shopping list`, 'removed');
+    } else {
+        shoppingList.push({
+            ...item,
+            addedAt: new Date().toISOString()
+        });
+        showNotification(`${itemName} added to shopping list`, 'added');
+        
+        // Add bounce animation to FAB
+        shoppingListFab.classList.add('bounce');
+        setTimeout(() => shoppingListFab.classList.remove('bounce'), 600);
+    }
+    
+    updateShoppingListDisplay();
+    renderItems();
+}
+
+// Show item details in modal
+function showItemDetails(item) {
+    const modal = document.getElementById('details-modal');
+    const title = document.getElementById('item-title');
+    const details = document.getElementById('item-details');
+    
+    title.innerHTML = `${item.emoji} ${item.name}`;
+    
+    details.innerHTML = `
+        <div class="item-detail-content">
+            <div class="detail-section">
+                <h4><i class="fas fa-info-circle"></i> About</h4>
+                <p>${item.note}</p>
+            </div>
+            
+            <div class="detail-section">
+                <h4><i class="fas fa-heart"></i> Health Benefits</h4>
+                <ul>
+                    ${item.benefits.map(benefit => `<li>${benefit}</li>`).join('')}
+                </ul>
+            </div>
+            
+            <div class="detail-grid">
+                <div class="detail-item">
+                    <i class="fas fa-star"></i>
+                    <strong>Rating</strong>
+                    <span>${'★'.repeat(item.rating)}${'☆'.repeat(5 - item.rating)}</span>
+                </div>
+                <div class="detail-item">
+                    <i class="fas fa-tag"></i>
+                    <strong>Price</strong>
+                    <span>${item.price}</span>
+                </div>
+                <div class="detail-item">
+                    <i class="fas fa-calendar"></i>
+                    <strong>Season</strong>
+                    <span>${item.season}</span>
+                </div>
+                <div class="detail-item">
+                    <i class="fas fa-map-marker-alt"></i>
+                    <strong>Availability</strong>
+                    <span>${item.availability}</span>
+                </div>
+            </div>
+            
+            <div class="detail-section">
+                <h4><i class="fas fa-lightbulb"></i> Selection Tips</h4>
+                <p>${item.tips}</p>
+            </div>
+            
+            <div class="detail-actions">
+                <button class="btn btn-primary" onclick="toggleShoppingList('${item.name}', event)">
+                    <i class="fas ${shoppingList.some(i => i.name === item.name) ? 'fa-check' : 'fa-plus'}"></i>
+                    ${shoppingList.some(i => i.name === item.name) ? 'Remove from List' : 'Add to Shopping List'}
+                </button>
+            </div>
+        </div>
+    `;
+    
+    modal.classList.add('show');
+}
+
+// Update shopping list display
+function updateShoppingListDisplay() {
+    const count = shoppingList.length;
+    document.getElementById('shopping-list-count').textContent = count;
+    fabBadge.textContent = count;
+    fabBadge.style.display = count > 0 ? 'flex' : 'none';
+    
+    const shoppingListItems = document.getElementById('shopping-list-items');
+    
+    if (count === 0) {
+        shoppingListItems.innerHTML = '<p class="empty-list">Your shopping list is empty. Add some seasonal items!</p>';
+        return;
+    }
+    
+    shoppingListItems.innerHTML = shoppingList.map(item => `
+        <div class="shopping-list-item">
+            <div>
+                <strong>${item.emoji} ${item.name}</strong>
+                <div style="font-size: 0.9rem; color: #666;">${item.price} • ${item.availability}</div>
+            </div>
+            <button class="remove-item" onclick="toggleShoppingList('${item.name}', event)">
+                <i class="fas fa-trash"></i>
+            </button>
+        </div>
+    `).join('');
+}
+
+// Setup event listeners
+function setupEventListeners() {
+    // Search functionality
+    searchInput.addEventListener('input', debounce(renderItems, 300));
+    
+    // Filter buttons
+    filterButtons.forEach(btn => {
+        btn.addEventListener('click', () => {
+            filterButtons.forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            currentFilter = btn.dataset.filter;
+            renderItems();
+        });
+    });
+    
+    // View toggle buttons
+    viewButtons.forEach(btn => {
+        btn.addEventListener('click', () => {
+            viewButtons.forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            currentView = btn.dataset.view;
+            renderItems();
+        });
+    });
+    
+    // Shopping list FAB
+    shoppingListFab.addEventListener('click', () => {
+        shoppingModal.classList.add('show');
+    });
+    
+    // Modal close buttons
+    document.getElementById('close-modal').addEventListener('click', () => {
+        shoppingModal.classList.remove('show');
+    });
+    
+    document.getElementById('close-details').addEventListener('click', () => {
+        detailsModal.classList.remove('show');
+    });
+    
+    // Clear shopping list
+    document.getElementById('clear-list').addEventListener('click', () => {
+        if (confirm('Are you sure you want to clear your entire shopping list?')) {
+            shoppingList = [];
+            updateShoppingListDisplay();
+            renderItems();
+            showNotification('Shopping list cleared', 'removed');
+        }
+    });
+    
+    // Export shopping list
+    document.getElementById('export-list').addEventListener('click', exportShoppingList);
+    
+    // Close modals when clicking outside
+    [shoppingModal, detailsModal].forEach(modal => {
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) {
+                modal.classList.remove('show');
+            }
+        });
+    });
+    
+    // Keyboard shortcuts
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+            shoppingModal.classList.remove('show');
+            detailsModal.classList.remove('show');
+        }
+        if (e.ctrlKey && e.key === 'f') {
+            e.preventDefault();
+            searchInput.focus();
+        }
+    });
+}
+
+// Export shopping list functionality
+function exportShoppingList() {
+    if (shoppingList.length === 0) {
+        showNotification('Shopping list is empty', 'error');
+        return;
+    }
+    
+    const exportData = {
+        title: 'My Seasonal Shopping List',
+        date: new Date().toLocaleDateString(),
+        items: shoppingList.map(item => ({
+            name: item.name,
+            price: item.price,
+            note: item.note,
+            benefits: item.benefits,
+            tips: item.tips
+        }))
+    };
+    
+    // Create downloadable text file
+    const textContent = `
+${exportData.title}
+Generated on: ${exportData.date}
+
+Shopping Items:
+${exportData.items.map((item, index) => `
+${index + 1}. ${item.name} - ${item.price}
+   ${item.note}
+   Health Benefits: ${item.benefits.join(', ')}
+   Tip: ${item.tips}
+`).join('')}
+
+Total Items: ${exportData.items.length}
+    `.trim();
+    
+    downloadFile('seasonal-shopping-list.txt', textContent);
+    showNotification('Shopping list exported successfully!', 'success');
+}
+
+// Download file helper
+function downloadFile(filename, content) {
+    const blob = new Blob([content], { type: 'text/plain' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    window.URL.revokeObjectURL(url);
+}
+
+// Show notification
+function showNotification(message, type = 'info') {
+    const notification = document.createElement('div');
+    notification.className = `notification notification-${type}`;
+    notification.innerHTML = `
+        <i class="fas ${getNotificationIcon(type)}"></i>
+        <span>${message}</span>
+    `;
+    
+    // Style the notification
+    Object.assign(notification.style, {
+        position: 'fixed',
+        top: '20px',
+        right: '20px',
+        background: getNotificationColor(type),
+        color: 'white',
+        padding: '1rem 1.5rem',
+        borderRadius: '8px',
+        boxShadow: '0 4px 20px rgba(0,0,0,0.3)',
+        zIndex: '3000',
+        display: 'flex',
+        alignItems: 'center',
+        gap: '0.5rem',
+        transform: 'translateX(400px)',
+        transition: 'transform 0.3s ease'
+    });
+    
+    document.body.appendChild(notification);
+    
+    // Animate in
+    setTimeout(() => {
+        notification.style.transform = 'translateX(0)';
+    }, 100);
+    
+    // Remove after 3 seconds
+    setTimeout(() => {
+        notification.style.transform = 'translateX(400px)';
+        setTimeout(() => document.body.removeChild(notification), 300);
+    }, 3000);
+}
+
+// Get notification icon based on type
+function getNotificationIcon(type) {
+    switch(type) {
+        case 'success': case 'added': return 'fa-check-circle';
+        case 'error': case 'removed': return 'fa-exclamation-circle';
+        case 'warning': return 'fa-exclamation-triangle';
+        default: return 'fa-info-circle';
+    }
+}
+
+// Get notification color based on type
+function getNotificationColor(type) {
+    switch(type) {
+        case 'success': case 'added': return '#28a745';
+        case 'error': case 'removed': return '#dc3545';
+        case 'warning': return '#ffc107';
+        default: return '#17a2b8';
+    }
+}
+
+// Update statistics
+function updateStats() {
+    const totalItems = seasonalItems.length;
+    const inSeasonItems = seasonalItems.filter(item => item.season === 'Peak Season').length;
+    const locallyAvailable = seasonalItems.filter(item => item.availability === 'Locally Available').length;
+    
+    document.getElementById('total-items').textContent = totalItems;
+    
+    // Calculate local availability percentage
+    const localPercentage = Math.round((locallyAvailable / totalItems) * 100);
+    document.querySelector('.stat-item:last-child .stat-number').textContent = `${localPercentage}%`;
+}
+
+// Rotate seasonal tips
+function rotateTips() {
+    const tipElement = document.getElementById('seasonal-tip');
+    let currentTipIndex = 0;
+    
+    setInterval(() => {
+        tipElement.style.opacity = '0';
+        setTimeout(() => {
+            currentTipIndex = (currentTipIndex + 1) % seasonalTips.length;
+            tipElement.textContent = seasonalTips[currentTipIndex];
+            tipElement.style.opacity = '1';
+        }, 300);
+    }, 5000);
+    
+    tipElement.style.transition = 'opacity 0.3s ease';
+}
+
+// Debounce function for search
+function debounce(func, wait) {
+    let timeout;
+    return function executedFunction(...args) {
+        const later = () => {
+            clearTimeout(timeout);
+            func(...args);
+        };
+        clearTimeout(timeout);
+        timeout = setTimeout(later, wait);
+    };
+}
+
+// Add some fun interactions
+function addFunInteractions() {
+    // Add ripple effect to buttons
+    document.addEventListener('click', function(e) {
+        if (e.target.matches('button') || e.target.closest('button')) {
+            const button = e.target.matches('button') ? e.target : e.target.closest('button');
+            const ripple = document.createElement('span');
+            const rect = button.getBoundingClientRect();
+            const size = Math.max(rect.width, rect.height);
+            const x = e.clientX - rect.left - size / 2;
+            const y = e.clientY - rect.top - size / 2;
+            
+            ripple.style.cssText = `
+                position: absolute;
+                width: ${size}px;
+                height: ${size}px;
+                background: rgba(255,255,255,0.3);
+                border-radius: 50%;
+                transform: scale(0);
+                animation: ripple 0.6s linear;
+                left: ${x}px;
+                top: ${y}px;
+                pointer-events: none;
+            `;
+            
+            button.style.position = 'relative';
+            button.style.overflow = 'hidden';
+            button.appendChild(ripple);
+            
+            setTimeout(() => ripple.remove(), 600);
+        }
+    });
+    
+    // Add CSS for ripple animation
+    const style = document.createElement('style');
+    style.textContent = `
+        @keyframes ripple {
+            to {
+                transform: scale(4);
+                opacity: 0;
+            }
+        }
+        .detail-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1rem;
+            margin: 1.5rem 0;
+        }
+        .detail-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            padding: 1rem;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+        .detail-item i {
+            color: #4CAF50;
+            margin-bottom: 0.5rem;
+        }
+        .detail-section {
+            margin-bottom: 1.5rem;
+        }
+        .detail-section h4 {
+            color: #2c3e50;
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .detail-section ul {
+            list-style: none;
+            padding: 0;
+        }
+        .detail-section li {
+            padding: 0.25rem 0;
+            position: relative;
+            padding-left: 1.5rem;
+        }
+        .detail-section li::before {
+            content: '✓';
+            position: absolute;
+            left: 0;
+            color: #4CAF50;
+            font-weight: bold;
+        }
+        .detail-actions {
+            text-align: center;
+            margin-top: 2rem;
+        }
+        .no-results {
+            grid-column: 1 / -1;
+            text-align: center;
+            padding: 3rem;
+            color: #6c757d;
+        }
+    `;
+    document.head.appendChild(style);
+}
+
+// Initialize fun interactions
+addFunInteractions();

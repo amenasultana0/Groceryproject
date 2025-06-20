@@ -1,69 +1,131 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Categories | GroceryTrack</title>
-  <link rel="stylesheet" href="categories.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>What's in Season - June 2025</title>
+    <link rel="stylesheet" href="categories.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
 </head>
 <body>
-  <div class="main-container">
-    <div class="page-header">
-      <button class="back-btn" onclick="window.location.href='dashboard.html'">← Back to Dashboard</button>
-      <h2>Grocery Categories</h2>
-      <button class="primary-btn" id="openModalBtn">+ Add Category</button>
+    <header>
+        <div class="header-content">
+            <h1>🌿 What's in Season</h1>
+            <p class="month-display">June 2025</p>
+            <div class="season-indicator">
+                <i class="fas fa-sun"></i>
+                <span>Summer Harvest</span>
+            </div>
+        </div>
+    </header>
+
+    <nav class="controls">
+        <div class="filter-section">
+            <button class="filter-btn active" data-filter="all">
+                <i class="fas fa-th"></i> All Items
+            </button>
+            <button class="filter-btn" data-filter="fruits">
+                <i class="fas fa-apple-alt"></i> Fruits
+            </button>
+            <button class="filter-btn" data-filter="vegetables">
+                <i class="fas fa-carrot"></i> Vegetables
+            </button>
+        </div>
+        
+        <div class="view-toggle">
+            <button class="view-btn active" data-view="grid">
+                <i class="fas fa-th"></i>
+            </button>
+            <button class="view-btn" data-view="list">
+                <i class="fas fa-list"></i>
+            </button>
+        </div>
+
+        <div class="search-section">
+            <input type="text" id="search-input" placeholder="Search seasonal items...">
+            <i class="fas fa-search search-icon"></i>
+        </div>
+    </nav>
+
+    <div class="stats-bar">
+        <div class="stat-item">
+            <span class="stat-number" id="total-items">8</span>
+            <span class="stat-label">Items in Season</span>
+        </div>
+        <div class="stat-item">
+            <span class="stat-number" id="shopping-list-count">0</span>
+            <span class="stat-label">In Shopping List</span>
+        </div>
+        <div class="stat-item">
+            <span class="stat-number">85%</span>
+            <span class="stat-label">Locally Available</span>
+        </div>
     </div>
 
-    <div class="search-container">
-      <div class="search-icon">🔍</div>
-      <input type="text" class="search-input" id="searchInput" placeholder="Search categories and items...">
+    <main class="seasonal-grid" id="seasonal-list">
+        <!-- Items will be populated by JavaScript -->
+    </main>
+
+    <div class="floating-actions">
+        <button class="fab shopping-list-btn" id="shopping-list-fab">
+            <i class="fas fa-shopping-cart"></i>
+            <span class="fab-badge" id="fab-badge">0</span>
+        </button>
     </div>
 
-    <div id="categoriesWrapper" class="categories-grid">
-      <!-- Categories will be dynamically added here -->
+    <!-- Shopping List Modal -->
+    <div class="modal" id="shopping-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2><i class="fas fa-shopping-cart"></i> My Shopping List</h2>
+                <button class="close-btn" id="close-modal">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div id="shopping-list-items">
+                    <p class="empty-list">Your shopping list is empty. Add some seasonal items!</p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" id="clear-list">
+                    <i class="fas fa-trash"></i> Clear All
+                </button>
+                <button class="btn btn-primary" id="export-list">
+                    <i class="fas fa-download"></i> Export List
+                </button>
+            </div>
+        </div>
     </div>
 
-    <!-- Empty State -->
-    <div id="emptyState" class="empty-state">
-      <div class="empty-state-icon">📋</div>
-      <h3>No Categories Yet</h3>
-      <p>Create your first grocery category to get started organizing your shopping lists!</p>
-      <button class="primary-btn" onclick="document.getElementById('openModalBtn').click()">+ Create First Category</button>
+    <!-- Item Details Modal -->
+    <div class="modal" id="details-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="item-title"></h2>
+                <button class="close-btn" id="close-details">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body" id="item-details">
+                <!-- Item details will be populated by JavaScript -->
+            </div>
+        </div>
     </div>
-  </div>
 
-  <!-- Modal for Adding Category -->
-  <div class="modal-overlay" id="modalOverlay">
-    <div class="modal">
-      <div class="modal-header">
-        <h3>Add New Category</h3>
-        <span id="closeModalBtn" class="close">×</span>
-      </div>
-      <div class="modal-body">
-        <label for="categoryName">Category Name</label>
-        <input type="text" id="categoryName" placeholder="e.g. Fruits & Vegetables" />
+    <footer>
+        <div class="footer-content">
+            <div class="tip-section">
+                <h3><i class="fas fa-lightbulb"></i> Seasonal Tip</h3>
+                <p id="seasonal-tip">Buy seasonal produce for the best taste, nutrition, and value!</p>
+            </div>
+            <div class="next-month">
+                <h4>Coming Next Month:</h4>
+                <p>Peaches, Plums, Zucchini, Tomatoes</p>
+            </div>
+        </div>
+    </footer>
 
-        <label for="categoryIcon">Category Icon</label>
-        <select id="categoryIcon">
-          <option value="🍎">🍎 Fruits</option>
-          <option value="🥦">🥦 Vegetables</option>
-          <option value="🥩">🥩 Meat</option>
-          <option value="🧀">🧀 Dairy</option>
-          <option value="🍞">🍞 Bakery</option>
-          <option value="🍫">🍫 Snacks</option>
-          <option value="💧">💧 Beverages</option>
-          <option value="🧊">🧊 Frozen</option>
-          <option value="🧴">🧴 Household</option>
-          <option value="💊">💊 Health</option>
-        </select>
-      </div>
-      <div class="modal-footer">
-        <button class="secondary-btn" id="cancelBtn">Cancel</button>
-        <button class="primary-btn" id="saveCategoryBtn">Add Category</button>
-      </div>
-    </div>
-  </div>
-
-  <script type="module" src="./categories.js"></script>
+    <script src="categories.js"></script>
 </body>
 </html>
