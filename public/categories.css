@@ -14,7 +14,7 @@ body {
 
 /* Header Styles */
 header {
-    background: linear-gradient(135deg, #4CAF50, #45a049);
+    background: linear-gradient(135deg, #007bff, #45a049);
     color: white;
     padding: 2rem 1rem;
     text-align: center;
@@ -79,9 +79,9 @@ header {
 }
 
 .filter-btn.active, .view-btn.active {
-    background: #4CAF50;
+    background: #007bff;
     color: white;
-    border-color: #4CAF50;
+    border-color: #007bff;
 }
 
 .view-toggle {
@@ -104,7 +104,7 @@ header {
 
 #search-input:focus {
     outline: none;
-    border-color: #4CAF50;
+    border-color: #007bff;
     box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.1);
 }
 
@@ -134,7 +134,7 @@ header {
     display: block;
     font-size: 2rem;
     font-weight: bold;
-    color: #4CAF50;
+    color: #007bff;
 }
 
 .stat-label {
@@ -176,7 +176,7 @@ header {
     left: 0;
     right: 0;
     height: 4px;
-    background: linear-gradient(90deg, #4CAF50, #45a049);
+    background: linear-gradient(90deg, #007bff, #45a049);
 }
 
 .item-card:hover {
@@ -185,12 +185,12 @@ header {
 }
 
 .item-card.in-shopping-list {
-    border: 2px solid #4CAF50;
+    border: 2px solid #007bff;
     background: linear-gradient(135deg, #f8fff8, #ffffff);
 }
 
 .item-card.in-shopping-list::before {
-    background: linear-gradient(90deg, #4CAF50, #66BB6A);
+    background: linear-gradient(90deg, #007bff, #66BB6A);
     height: 6px;
 }
 
@@ -209,7 +209,7 @@ header {
 
 .item-badge {
     background: #e8f5e8;
-    color: #4CAF50;
+    color: #007bff;
     padding: 0.25rem 0.75rem;
     border-radius: 12px;
     font-size: 0.8rem;
@@ -229,7 +229,7 @@ header {
 }
 
 .add-to-list-btn {
-    background: #4CAF50;
+    background: #007bff;
     color: white;
     border: none;
     padding: 0.5rem 1rem;
@@ -298,7 +298,7 @@ header {
     width: 60px;
     height: 60px;
     border-radius: 50%;
-    background: #4CAF50;
+    background: #007bff;
     color: white;
     border: none;
     box-shadow: 0 4px 20px rgba(76, 175, 80, 0.4);
@@ -416,7 +416,7 @@ header {
 }
 
 .btn-primary {
-    background: #4CAF50;
+    background: #007bff;
     color: white;
 }
 
@@ -472,12 +472,12 @@ footer {
 }
 
 .tip-section h3 {
-    color: #4CAF50;
+    color: #007bff;
     margin-bottom: 1rem;
 }
 
 .next-month h4 {
-    color: #4CAF50;
+    color: #007bff;
     margin-bottom: 0.5rem;
 }
 
@@ -550,4 +550,30 @@ footer {
     .controls {
         padding: 1rem;
     }
+}
+
+.back-dashboard-btn {
+    position: fixed;
+    top: 1.5rem;
+    left: 1.5rem;
+    z-index: 3001;
+    background: #fff;
+    color: #007bff;
+    border: 2px solid #007bff;
+    border-radius: 25px;
+    padding: 0.5rem 1.25rem;
+    font-size: 1rem;
+    font-weight: 600;
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    box-shadow: 0 2px 8px rgba(76,175,80,0.08);
+    transition: background 0.2s, color 0.2s, border 0.2s;
+}
+
+.back-dashboard-btn:hover {
+    background: #007bff;
+    color: #fff;
+    border-color: #388e3c;
 }

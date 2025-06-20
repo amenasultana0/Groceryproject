@@ -6,7 +6,6 @@ const seasonalItems = [
         emoji: "🥭",
         type: "fruits",
         rating: 5,
-        price: "$3.50/kg",
         benefits: ["Rich in Vitamin C", "Boosts immunity", "Good for digestion"],
         season: "Peak Season",
         availability: "Locally Available",
@@ -17,8 +16,7 @@ const seasonalItems = [
         note: "Perfect for hydration in summer heat",
         emoji: "🍉",
         type: "fruits",
-        rating: 4,
-        price: "$2.00/kg",
+        rating: 5,
         benefits: ["92% water content", "Rich in lycopene", "Low in calories"],
         season: "Peak Season", 
         availability: "Locally Available",
@@ -30,7 +28,6 @@ const seasonalItems = [
         emoji: "🌽",
         type: "vegetables",
         rating: 4,
-        price: "$1.50/ear",
         benefits: ["High in fiber", "Good source of antioxidants", "Contains folate"],
         season: "Peak Season",
         availability: "Locally Available",
@@ -42,7 +39,6 @@ const seasonalItems = [
         emoji: "🍈",
         type: "fruits",
         rating: 4,
-        price: "$5.00/kg",
         benefits: ["High in Vitamin C", "Rich in copper", "Good for skin health"],
         season: "Limited Season",
         availability: "Specialty Stores",
@@ -54,7 +50,6 @@ const seasonalItems = [
         emoji: "🥒",
         type: "vegetables",
         rating: 3,
-        price: "$1.20/kg",
         benefits: ["High water content", "Low in calories", "Contains silica for healthy skin"],
         season: "Peak Season",
         availability: "Locally Available",
@@ -66,7 +61,6 @@ const seasonalItems = [
         emoji: "🥗",
         type: "vegetables",
         rating: 3,
-        price: "$0.80/kg",
         benefits: ["Low in calories", "High in water", "Good for weight management"],
         season: "Peak Season",
         availability: "Locally Available",
@@ -78,7 +72,6 @@ const seasonalItems = [
         emoji: "🫐",
         type: "fruits",
         rating: 4,
-        price: "$4.00/kg",
         benefits: ["Controls blood sugar", "Rich in antioxidants", "Good for digestive health"],
         season: "Short Season",
         availability: "Local Markets",
@@ -90,7 +83,6 @@ const seasonalItems = [
         emoji: "🌱",
         type: "vegetables",
         rating: 3,
-        price: "$2.50/kg",
         benefits: ["High in fiber", "Rich in folate", "Good source of Vitamin K"],
         season: "Peak Season",
         availability: "Locally Available",
@@ -173,9 +165,6 @@ function createItemCard(item, index) {
             <div>
                 <h3>${item.emoji} ${item.name}</h3>
                 <span class="item-badge">${item.season}</span>
-            </div>
-            <span class="price-tag">${item.price}</span>
-        </div>
         <div class="item-content">
             <p>${item.note}</p>
             <div class="item-actions">
