@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Personalize Your Experience</title>
+    <link rel="stylesheet" href="personalization.css">
+</head>
+<body>
+    <div id="loader-overlay">
+        <div class="loader"></div>
+    </div>
+    <div id="bg-slideshow"></div>
+    <div class="personalization-container">
+        <div class="personalization-box">
+            <div id="progress-bar"></div>
+            <form id="personalization-form">
+                <!-- Step 1: Dietary Needs -->
+                <div class="step active">
+                    <h2>What are your dietary needs?</h2>
+                    <p>Select any that apply to you.</p>
+                    <div class="options-grid">
+                        <div class="option" data-value="vegetarian">🥬 Vegetarian</div>
+                        <div class="option" data-value="vegan">🌿 Vegan</div>
+                        <div class="option" data-value="gluten-free">🌾 Gluten-Free</div>
+                        <div class="option" data-value="pescatarian">🐟 Pescatarian</div>
+                    </div>
+                    <div class="nav-buttons">
+                        <button type="button" class="next-btn">Next</button>
+                    </div>
+                </div>
+
+                <!-- Step 2: Cuisines -->
+                <div class="step">
+                    <h2>What are your favorite cuisines?</h2>
+                    <p>This helps us recommend recipes.</p>
+                     <div class="options-grid">
+                        <div class="option" data-value="italian">🍝 Italian</div>
+                        <div class="option" data-value="mexican">🌮 Mexican</div>
+                        <div class="option" data-value="chinese">🍜 Chinese</div>
+                        <div class="option" data-value="indian">🍛 Indian</div>
+                        <div class="option" data-value="japanese">🍣 Japanese</div>
+                        <div class="option" data-value="american">🍔 American</div>
+                    </div>
+                    <div class="nav-buttons">
+                        <button type="button" class="prev-btn">Back</button>
+                        <button type="button" class="next-btn">Next</button>
+                    </div>
+                </div>
+
+                <!-- Step 3: Shopping Habits -->
+                <div class="step">
+                    <h2>How do you typically shop for groceries?</h2>
+                    <p>Let us know your style.</p>
+                     <div class="options-grid single-select">
+                        <div class="option" data-value="weekly-trip">🛒 One big weekly trip</div>
+                        <div class="option" data-value="several-small">🛍️ Several small trips</div>
+                        <div class="option" data-value="online-delivery">💻 Mostly online/delivery</div>
+                        <div class="option" data-value="as-needed">🏃 As needed</div>
+                    </div>
+                    <div class="nav-buttons">
+                        <button type="button" class="prev-btn">Back</button>
+                        <button type="button" class="next-btn">Next</button>
+                    </div>
+                </div>
+
+                <!-- Step 4: Health Preferences -->
+                <div class="step">
+                    <h2>How important is buying organic?</h2>
+                    <p>This helps us find the right products for you.</p>
+                     <div class="options-grid single-select">
+                        <div class="option" data-value="very-important">🌟 Very important</div>
+                        <div class="option" data-value="somewhat-important">👍 Somewhat important</div>
+                        <div class="option" data-value="not-a-priority">🤷 Not a priority</div>
+                    </div>
+                    <div class="nav-buttons">
+                        <button type="button" class="prev-btn">Back</button>
+                        <button type="button" class="next-btn">Next</button>
+                    </div>
+                </div>
+
+                <!-- Step 5: Cooking Frequency -->
+                <div class="step">
+                    <h2>How often do you cook at home?</h2>
+                    <p>Be honest, we won't judge!</p>
+                     <div class="options-grid single-select">
+                        <div class="option" data-value="daily">🍳 Every day</div>
+                        <div class="option" data-value="few-times-week">🧑‍🍳 A few times a week</div>
+                        <div class="option" data-value="once-a-week">📅 Once a week</div>
+                        <div class="option" data-value="rarely">🥡 Rarely</div>
+                    </div>
+                    <div class="nav-buttons">
+                        <button type="button" class="prev-btn">Back</button>
+                        <button type="button" class="next-btn">Next</button>
+                    </div>
+                </div>
+
+                <!-- Step 6: Budget -->
+                <div class="step">
+                    <h2>What's your weekly grocery budget?</h2>
+                    <p>This helps us find deals that fit your wallet.</p>
+                    <div class="budget-slider">
+                        <input type="range" id="grocery-budget" min="25" max="500" step="25" value="100">
+                        <div class="budget-value-display">
+                            <span>$</span><span id="budget-value">100</span>
+                        </div>
+                    </div>
+                    <div class="nav-buttons">
+                        <button type="button" class="prev-btn">Back</button>
+                        <button type="button" class="next-btn">Next</button>
+                    </div>
+                </div>
+
+                <!-- Step 7: Product Interests -->
+                 <div class="step">
+                    <h2>What are you most interested in?</h2>
+                    <p>Select a few categories to get started.</p>
+                     <div class="options-grid">
+                        <div class="option" data-value="fresh-produce">🍎 Fresh Produce</div>
+                        <div class="option" data-value="meats-seafood">🥩 Meats & Seafood</div>
+                        <div class="option" data-value="pantry-staples">🥫 Pantry Staples</div>
+                        <div class="option" data-value="snacks-sweets">🍫 Snacks & Sweets</div>
+                        <div class="option" data-value="beverages">🥤 Beverages</div>
+                        <div class="option" data-value="household">🧻 Household</div>
+                    </div>
+                    <div class="nav-buttons">
+                        <button type="button" class="prev-btn">Back</button>
+                        <button type="button" class="next-btn">Next</button>
+                    </div>
+                </div>
+
+                <!-- Step 8: Finish -->
+                <div class="step">
+                    <h2>You're all set!</h2>
+                    <p>We're ready to personalize your grocery experience.</p>
+                    <div class="nav-buttons">
+                         <button type="button" class="next-btn">Continue</button>
+                    </div>
+                </div>
+
+                <!-- Step 9: Terms and Conditions -->
+                <div class="step">
+                    <h2>Legal Stuff</h2>
+                    <p>Please review and accept our terms to continue.</p>
+                    <div class="terms-container">
+                        <div class="terms-box">
+                            <h4>Terms and Conditions</h4>
+                            <p><strong>1. Acceptance of Terms:</strong> By creating an account and using our service ("Service"), you agree to be bound by these Terms and Conditions. If you do not agree to all the terms, do not use this Service.</p>
+                            <p><strong>2. User Conduct:</strong> You agree to use the Service only for lawful purposes. You are responsible for all data and content that you upload. You agree not to upload any content that is illegal, harmful, or infringes on the rights of others.</p>
+                            <p><strong>3. Intellectual Property:</strong> All content provided on the Service, including text, graphics, logos, and software, is the property of the Service provider or its suppliers and protected by intellectual property laws. You are granted a limited, non-exclusive license to access and use the Service for personal, non-commercial purposes.</p>
+                            <p><strong>4. Disclaimer of Warranties:</strong> The Service is provided "as is" and "as available" without any warranties of any kind, including that the Service will be uninterrupted or error-free. We do not guarantee the accuracy of any information provided, including product data or pricing.</p>
+                            <p><strong>5. Limitation of Liability:</strong> In no event shall the Service provider be liable for any indirect, incidental, special, or consequential damages arising out of or in connection with your use of the Service.</p>
+                        </div>
+                        <div class="terms-box">
+                            <h4>Privacy Policy</h4>
+                            <p><strong>1. Information We Collect:</strong> We collect information you provide directly to us, such as your name, email address, dietary restrictions, and product preferences. We also automatically collect technical data, including your IP address and usage patterns within the app.</p>
+                            <p><strong>2. How We Use Information:</strong> We use the information to operate, maintain, and provide you with the features of the Service, such as personalizing grocery suggestions and recipes. We also use data for analytics to understand and improve our Service.</p>
+                            <p><strong>3. Data Sharing:</strong> We do not sell your personal data. We may share information with third-party vendors and service providers who perform services on our behalf, such as cloud hosting, under strict confidentiality agreements. We may also disclose information if required by law.</p>
+                            <p><strong>4. Data Security:</strong> We implement reasonable security measures to protect your information from unauthorized access, alteration, or disclosure. However, no security system is impenetrable, and we cannot guarantee the absolute security of your data.</p>
+                            <p><strong>5. Your Rights:</strong> You have the right to access, update, or delete your personal information at any time through your account settings or by contacting us directly.</p>
+                        </div>
+                    </div>
+                    <div class="acceptance-grid">
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="terms-agree">
+                            <span>I agree to the Terms and Conditions</span>
+                        </label>
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="privacy-agree">
+                            <span>I agree to the Privacy Policy</span>
+                        </label>
+                    </div>
+                    <div class="nav-buttons">
+                        <button type="button" class="prev-btn">Back</button>
+                        <button type="submit" class="submit-btn" disabled>Go to Dashboard</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+    <script src="personalization.js"></script>
+</body>
+</html> 
