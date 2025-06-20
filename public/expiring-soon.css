@@ -11,12 +11,21 @@
 /* Expiring Dashboard Styles */
 .expiring-dashboard {
     padding: 6rem 2rem 2rem;
-    max-width: 1400px;
+    max-width: none !important;
+    width: 100%;
+    padding: 2rem;
+    padding-left: 2rem;
+    padding-right: 2rem;
     margin: 0 auto;
     position: relative;
     background: #fff;
     min-height: calc(100vh - 64px);
 }
+
+.expiring-list.grid-view {
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+}
+
 
 .expiring-dashboard::before,
 .expiring-dashboard::after {
@@ -322,16 +331,20 @@
     display: flex;
     flex-direction: column;
     gap: 1rem;
+    max-height: none;
+    overflow: visible;
+    width: 100%;
 }
 
 .expiring-item {
     background: white;
-    padding: 1.5rem;
+    padding: 2rem;
     border-radius: 16px;
     box-shadow: var(--card-shadow);
     transition: all 0.3s ease;
     border: 1px solid rgba(0, 0, 0, 0.05);
     margin-bottom: 1rem;
+    width: 100%;
 }
 
 .expiring-item:hover {
@@ -555,4 +568,47 @@
 .expiring-list.grid-view .expiring-item {
   display: block;
   /* other styles for grid */
+}
+
+.inventory-table-container {
+    width: 100%;
+    overflow-x: auto;
+    background: white;
+    border-radius: 16px;
+    box-shadow: var(--card-shadow);
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.inventory-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    font-size: 1rem;
+}
+
+.inventory-table th, .inventory-table td {
+    text-align: left;
+    padding: 1rem 1.25rem;
+    border-bottom: 1px solid #eee;
+}
+
+.inventory-table th {
+    background-color: #f8f9fa;
+    font-weight: 600;
+    color: #333;
+}
+
+.inventory-table tbody tr:hover {
+    background-color: #f4f4f4;
+}
+
+.inventory-table td {
+    color: #555;
+}
+
+@media (max-width: 768px) {
+    .inventory-table th, .inventory-table td {
+        padding: 0.75rem 1rem;
+    }
 }

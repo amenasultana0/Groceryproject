@@ -1,5 +1,28 @@
 import { populateCategoryDropdown } from './utils/categoryHelper.js';
 
+// --- Google Login Redirect Handler ---
+(function handleGoogleRedirect() {
+  const urlParams = new URLSearchParams(window.location.search);
+  const token = urlParams.get('token');
+  const userParam = urlParams.get('user');
+  if (token && userParam) {
+    try {
+      const userData = JSON.parse(decodeURIComponent(userParam));
+      const user = {
+        id: userData.id,
+        name: userData.name,
+        email: userData.email,
+        token
+      };
+      localStorage.setItem("user", JSON.stringify(user));
+      const cleanUrl = window.location.origin + window.location.pathname;
+      window.history.replaceState({}, document.title, cleanUrl);
+    } catch (err) {
+      console.error("Failed to parse user data from Google login:", err);
+    }
+  }
+})();
+
 // --- DOM Elements ---
 const addItemBtn = document.querySelector('.add-item-btn');
 const modal = document.getElementById('addItemModal');
@@ -15,18 +38,23 @@ const searchInput = document.querySelector('.search-bar input');
 const expiringItemsList = document.getElementById('expiringItems');
 const recentItemsList = document.getElementById('recentItems');
 const logoutBtn = document.querySelector('.user-actions .icon-btn[title="Logout"]');
-const scannerBtn = document.querySelector('.scanner-btn');
-const captureBtn = document.getElementById('captureBtn');
+const scannerBtn = document.getElementById('scannerBtn') || document.querySelector('.scanner-btn');
 const manualEntryBtn = document.getElementById('manualEntry');
-const notificationBtn = document.querySelector('.notification-btn') || document.getElementById('notificationBtn');
+const notificationBtn = document.querySelector('.notification-btn');
 const notificationsPanel = document.getElementById('notificationsPanel');
 const notificationBadge = document.querySelector('.notification-btn .badge') || document.querySelector('.badge');
 
-// --- Storage fallback for demo mode ---
-let itemsStorage = [];
+// --- State ---
+let currentItems = [];
 let notifications = [];
-let useBackend = false;
-let socket = null;
+let isScanning = false;
+let html5QrCode = null;
+let notificationPanelTimeout = null;
+let notificationPanelHovered = false;
+let notificationPanelShouldAutoClose = false;
+
+// --- Socket ---
+const socket = io('http://localhost:3000');
 
 // --- Utility Functions ---
 function getToken() {
@@ -71,14 +99,6 @@ function showNotification(message, type = 'info') {
   setTimeout(() => toast.remove(), 4300);
 }
 
-// --- Storage Functions (fallback for demo) ---
-function getItems() {
-  return itemsStorage;
-}
-function saveItems(items) {
-  itemsStorage = items;
-}
-
 // --- Modal Functions ---
 function openModal() {
   modal.classList.add('active');
@@ -102,146 +122,195 @@ function openModalFromScanner() {
   closeScannerModal();
   openModal();
 }
+function toggleSidebar() {
+  sidebar.classList.toggle('active');
+}
 
 // --- Scanner Functions ---
-function handleCapture() {
-  const mockBarcodes = [
-    { code: '123456789012', name: 'Milk', category: 'dairy' },
-    { code: '987654321098', name: 'Bread', category: 'pantry' },
-    { code: '456789123456', name: 'Apples', category: 'fruits' },
-    { code: '789123456789', name: 'Chicken Breast', category: 'meat' },
-    { code: '321654987321', name: 'Yogurt', category: 'dairy' },
-    { code: '654987321654', name: 'Bananas', category: 'fruits' },
-    { code: '147258369147', name: 'Tomatoes', category: 'vegetables' },
-    { code: '258369147258', name: 'Cheese', category: 'dairy' }
-  ];
-  captureBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Scanning...';
-  captureBtn.disabled = true;
-  setTimeout(() => {
-    const scannedItem = mockBarcodes[Math.floor(Math.random() * mockBarcodes.length)];
-    closeScannerModal();
-    openModal();
-    document.getElementById('itemName').value = scannedItem.name;
-    document.getElementById('category').value = scannedItem.category;
-    document.getElementById('quantity').value = '1';
-    const expiryDate = new Date();
-    expiryDate.setDate(expiryDate.getDate() + 7);
-    document.getElementById('expiryDate').value = expiryDate.toISOString().split('T')[0];
-    showNotification(`Scanned: ${scannedItem.name}`, 'success');
-    captureBtn.innerHTML = 'Capture';
-    captureBtn.disabled = false;
-  }, 2000);
-}
-
-// --- Item Management Functions ---
-async function handleAddItem(e) {
-  e.preventDefault();
-  const newItem = {
-    name: document.getElementById('itemName').value,
-    category: document.getElementById('category').value,
-    quantity: parseInt(document.getElementById('quantity').value),
-    purchaseDate: document.getElementById('purchaseDate').value,
-    expiryDate: document.getElementById('expiryDate').value,
-    notes: document.getElementById('notes').value,
-    createdAt: new Date().toISOString()
-  };
-  if (useBackend) {
-    const token = getToken();
-    try {
-      const response = await fetch('http://localhost:3000/api/products/add', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-        body: JSON.stringify(newItem)
-      });
-      if (!response.ok) throw new Error('Failed to add item');
-      closeModal();
-      loadItems();
-      showNotification('Item added successfully!', 'success');
-    } catch (err) {
-      showNotification('Error adding item. Please try again.', 'error');
-    }
-  } else {
-    newItem.id = Date.now();
-    const items = getItems();
-    items.push(newItem);
-    saveItems(items);
-    loadItems();
-    updateStats();
-    closeModal();
-    showNotification('Item added successfully!', 'success');
+async function startScanner() {
+  if (isScanning) return;
+  isScanning = true;
+  const qrRegion = document.getElementById('reader');
+  qrRegion.innerHTML = '';
+  html5QrCode = new Html5Qrcode("reader");
+  try {
+    await html5QrCode.start(
+      { facingMode: "environment" },
+      { fps: 10, qrbox: { width: 250, height: 250 } },
+      onScanSuccess,
+      onScanError
+    );
+  } catch (err) {
+    showNotification("Camera error: " + err, "error");
+    isScanning = false;
   }
 }
-
-async function loadItems() {
-  if (useBackend) {
-    const token = getToken();
-    try {
-      const response = await fetch('http://localhost:3000/api/products', {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      if (!response.ok) throw new Error('Failed to fetch items');
-      let items = await response.json();
-      // Deduplicate by name+expiryDate
-      const uniqueItemsMap = {};
-      items.forEach(item => {
-        const key = `${item.name}_${item.expiryDate}`;
-        uniqueItemsMap[key] = item;
-      });
-      items = Object.values(uniqueItemsMap);
-      window.currentItems = items;
-      updateStats(items);
-      const expiringItems = items.filter(item => isExpiringSoon(item.expiryDate))
-        .sort((a, b) => new Date(a.expiryDate) - new Date(b.expiryDate))
-        .slice(0, 3);
-      renderItems(expiringItemsList, expiringItems);
-      const sortedItems = items
-        .filter(item => item.createdAt)
-        .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-      renderItems(recentItemsList, sortedItems.slice(0, 3));
-    } catch (err) {
-      showNotification('Failed to load items from server', 'error');
-    }
-  } else {
-    const items = getItems();
-    window.currentItems = items;
-    const expiringItems = items.filter(item => isExpiringSoon(item.expiryDate))
-      .sort((a, b) => new Date(a.expiryDate) - new Date(b.expiryDate));
-    const recentItems = [...items]
-      .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
-      .slice(0, 5);
-    renderItems(expiringItemsList, expiringItems);
-    renderItems(recentItemsList, recentItems);
-    updateStats();
+function stopScanner() {
+  if (html5QrCode) {
+    html5QrCode.stop().then(() => {
+      html5QrCode.clear();
+      isScanning = false;
+    }).catch(() => {
+      isScanning = false;
+    });
   }
 }
-
-function renderItems(container, items) {
-  if (!container) return;
-  if (items.length === 0) {
-    container.innerHTML = `
-      <div class="empty-state">
-        <i class="fas fa-box-open"></i>
-        <p>No items to display</p>
-      </div>`;
+async function onScanSuccess(decodedText, decodedResult) {
+  stopScanner();
+  closeScannerModal();
+  // Only digits? Assume barcode
+  const code = decodedText.replace(/\D/g, '');
+  if (!code) {
+    showNotification("Invalid code scanned.", "error");
     return;
   }
-  container.innerHTML = items.map(item => `
-    <div class="item-card ${isExpired(item.expiryDate) ? 'expired' : ''}" data-id="${item._id || item.id}">
+  try {
+    const res = await fetch(`https://world.openfoodfacts.org/api/v0/product/${code}.json`);
+    const data = await res.json();
+    if (data.status === 1) {
+      const product = data.product;
+      document.getElementById('itemName').value = product.product_name || '';
+      document.getElementById('category').value = (product.categories_tags && product.categories_tags[0])
+        ? product.categories_tags[0].replace('en:', '') : 'others';
+      document.getElementById('quantity').value = 1;
+      const expiryDate = new Date();
+      expiryDate.setDate(expiryDate.getDate() + 7);
+      document.getElementById('expiryDate').value = expiryDate.toISOString().split('T')[0];
+      openModal();
+      showNotification(`Scanned: ${product.product_name || code}`, "success");
+    } else {
+      showNotification("Product not found. Please enter details manually.", "error");
+      openModal();
+    }
+  } catch (err) {
+    showNotification("API error. Please try again.", "error");
+    openModal();
+  }
+}
+function onScanError(errorMessage) {
+  // Optionally show scan errors in debug
+  // console.warn(errorMessage);
+}
+
+// --- Scanner Modal Events ---
+scannerBtn?.addEventListener('click', () => {
+  openScannerModal();
+  setTimeout(startScanner, 300); // Give modal time to show
+});
+closeScannerBtn?.addEventListener('click', () => {
+  stopScanner();
+  closeScannerModal();
+});
+cancelModalBtn?.addEventListener('click', () => {
+  stopScanner();
+  closeModal();
+});
+manualEntryBtn?.addEventListener('click', () => {
+  stopScanner();
+  closeScannerModal();
+  openModal();
+});
+document.addEventListener('click', (e) => {
+  if (e.target === scannerModal) {
+    stopScanner();
+    closeScannerModal();
+  }
+});
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') {
+    stopScanner();
+    closeScannerModal();
+  }
+});
+
+// --- Item Management ---
+async function handleAddItem(e) {
+  e.preventDefault();
+  const newItem = getItemFormData();
+
+  const exists = currentItems.some(item =>
+  item.name === newItem.name &&
+  item.expiryDate === newItem.expiryDate &&
+  item.purchaseDate === newItem.purchaseDate
+);
+
+if (exists) {
+  showNotification('This item already exists in your inventory.', 'warning');
+  return;
+}
+  
+  const token = getToken();
+  try {
+    const response = await fetch('http://localhost:3000/api/products/add', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      body: JSON.stringify(newItem)
+    });
+    if (!response.ok) throw new Error('Failed to add item');
+    closeModal();
+    loadItems();
+    showNotification('Item added successfully!', 'success');
+  } catch (err) {
+    showNotification('Error adding item. Please try again.', 'error');
+  }
+}
+async function loadItems() {
+  const token = getToken();
+  try {
+    const response = await fetch('http://localhost:3000/api/products', {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    if (!response.ok) throw new Error('Failed to fetch items');
+    let items = await response.json();
+    // Deduplicate by name+expiryDate
+    const uniqueItemsMap = {};
+    items.forEach(item => {
+      const key = `${item.name}_${item.expiryDate}_${item.quantity}`;
+      uniqueItemsMap[key] = item;
+    });
+    items = Object.values(uniqueItemsMap);
+    currentItems = items;
+    updateStats(items);
+    const expiringItems = items.filter(item => isExpiringSoon(item.expiryDate))
+      .sort((a, b) => new Date(a.expiryDate) - new Date(b.expiryDate))
+      .slice(0, 3);
+    renderItems(expiringItemsList, expiringItems);
+    const sortedItems = items
+      .filter(item => item.createdAt)
+      .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+    renderItems(recentItemsList, sortedItems.slice(0, 3));
+  } catch (err) {
+    showNotification('Failed to load items from server', 'error');
+  }
+}
+function renderItems(container, items) {
+  if (!container) return;
+  container.innerHTML = items.length === 0 ? `
+    <div class="empty-state">
+      <i class="fas fa-box-open"></i>
+      <p>No items to display</p>
+    </div>` : items.map(item => `
+    <div class="item-card ${isExpired(item.expiryDate) ? 'expired' : ''}" data-id="${item._id}">
       <div class="item-header">
         <h3>${item.name}</h3>
         <span class="category-badge">${item.category}</span>
       </div>
       <div class="item-details">
-        <div class="detail"><i class="fas fa-calendar"></i><span>Expires: ${formatDate(item.expiryDate)}</span></div>
-        <div class="detail"><i class="fas fa-box"></i><span>Quantity: ${item.quantity}</span></div>
-        ${item.notes ? `<div class="detail"><i class="fas fa-sticky-note"></i><span>${item.notes}</span></div>` : ''}
+        <div class="meta-info">
+          <i class="fas fa-calendar"></i>
+          <span>Expires: ${formatDate(item.expiryDate)}</span>
+        </div>
+        <div class="meta-info">
+          <i class="fas fa-box"></i>
+          <span>Quantity: ${item.quantity}</span>
+        </div>
       </div>
+
       <div class="item-actions">
         <button class="icon-btn edit-btn"><i class="fas fa-edit"></i></button>
         <button class="icon-btn delete-btn"><i class="fas fa-trash"></i></button>
       </div>
-    </div>
-  `).join('');
+    </div>`).join('');
   container.querySelectorAll('.delete-btn').forEach(btn => {
     btn.addEventListener('click', () => {
       const itemId = btn.closest('.item-card').dataset.id;
@@ -255,126 +324,74 @@ function renderItems(container, items) {
     });
   });
 }
-
 function updateStats(items) {
-  items = items || getItems();
   const expiringSoon = items.filter(item => isExpiringSoon(item.expiryDate)).length;
   const expired = items.filter(item => isExpired(item.expiryDate)).length;
-  const totalItems = items.length;
-  const statCards = document.querySelectorAll('.stat-number');
-  if (statCards.length >= 3) {
-    statCards[0].textContent = expiringSoon;
-    statCards[1].textContent = totalItems;
-    statCards[2].textContent = expired;
-  }
-  if (notificationBadge) {
-    const totalNotifications = expiringSoon + expired;
-    notificationBadge.textContent = totalNotifications;
-    notificationBadge.style.display = totalNotifications > 0 ? 'block' : 'none';
-  }
+  const lowStock = items.filter(item => item.quantity <= 2).length;
+  document.querySelector('.stat-card:nth-child(1) .stat-number').textContent = expiringSoon;
+  document.querySelector('.stat-card:nth-child(2) .stat-number').textContent = items.length;
+  document.querySelector('.stat-card:nth-child(3) .stat-number').textContent = expired;
+  document.querySelector('.stat-card:nth-child(4) .stat-number').textContent = lowStock;
 }
-
 function handleSearch(e) {
   const term = e.target.value.toLowerCase();
-  const items = window.currentItems || getItems();
-  if (term.trim() === '') {
-    loadItems();
-    return;
-  }
-  const filtered = items.filter(item =>
-    item.name.toLowerCase().includes(term) ||
-    item.category.toLowerCase().includes(term) ||
-    (item.notes && item.notes.toLowerCase().includes(term))
-  );
+  const filtered = currentItems.filter(item => item.name.toLowerCase().includes(term) || item.category.toLowerCase().includes(term));
   renderItems(recentItemsList, filtered);
-  renderItems(expiringItemsList, filtered.filter(item => isExpiringSoon(item.expiryDate)));
 }
-
 async function deleteItem(id) {
   if (!confirm('Are you sure you want to delete this item?')) return;
-  if (useBackend) {
-    const token = getToken();
-    try {
-      const response = await fetch(`http://localhost:3000/api/products/${id}`, {
-        method: 'DELETE',
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      if (!response.ok) throw new Error();
-      loadItems();
-      showNotification('Item deleted successfully!', 'success');
-    } catch {
-      showNotification('Error deleting item.', 'error');
-    }
-  } else {
-    const items = getItems();
-    const updatedItems = items.filter(item => String(item.id) !== String(id));
-    saveItems(updatedItems);
+  const token = getToken();
+  try {
+    const response = await fetch(`http://localhost:3000/api/products/${id}`, {
+      method: 'DELETE',
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    if (!response.ok) throw new Error();
     loadItems();
-    updateStats();
     showNotification('Item deleted successfully!', 'success');
+  } catch {
+    showNotification('Error deleting item.', 'error');
   }
 }
-
 function editItem(id) {
-  let item;
-  if (useBackend) {
-    item = (window.currentItems || []).find(i => String(i._id) === String(id));
-  } else {
-    item = getItems().find(i => String(i.id) === String(id));
-  }
+  const item = currentItems.find(i => i._id === id);
   if (!item) return;
   document.getElementById('itemName').value = item.name;
   document.getElementById('category').value = item.category;
   document.getElementById('quantity').value = item.quantity;
   document.getElementById('purchaseDate').value = item.purchaseDate;
   document.getElementById('expiryDate').value = item.expiryDate;
-  document.getElementById('notes').value = item.notes || '';
+  document.getElementById('notes').value = item.notes;
   openModal();
   addItemForm.onsubmit = async (e) => {
     e.preventDefault();
-    if (useBackend) {
-      const updatedItem = {
-        ...item,
-        name: document.getElementById('itemName').value,
-        category: document.getElementById('category').value,
-        quantity: parseInt(document.getElementById('quantity').value),
-        purchaseDate: document.getElementById('purchaseDate').value,
-        expiryDate: document.getElementById('expiryDate').value,
-        notes: document.getElementById('notes').value
-      };
-      try {
-        const token = getToken();
-        const response = await fetch(`http://localhost:3000/api/products/${item._id}`, {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-          body: JSON.stringify(updatedItem)
-        });
-        if (!response.ok) throw new Error();
-        showNotification('Item updated successfully!', 'success');
-        closeModal();
-        loadItems();
-      } catch {
-        showNotification('Error updating item.', 'error');
-      }
-    } else {
-      const updatedItem = {
-        ...item,
-        name: document.getElementById('itemName').value,
-        category: document.getElementById('category').value,
-        quantity: parseInt(document.getElementById('quantity').value),
-        purchaseDate: document.getElementById('purchaseDate').value,
-        expiryDate: document.getElementById('expiryDate').value,
-        notes: document.getElementById('notes').value
-      };
-      const items = getItems();
-      const updatedItems = items.map(i => String(i.id) === String(id) ? updatedItem : i);
-      saveItems(updatedItems);
-      loadItems();
-      updateStats();
-      closeModal();
+    const updatedItem = getItemFormData();
+    updatedItem._id = item._id;
+    try {
+      const token = getToken();
+      const response = await fetch(`http://localhost:3000/api/products/${updatedItem._id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify(updatedItem)
+      });
+      if (!response.ok) throw new Error();
       showNotification('Item updated successfully!', 'success');
+      closeModal();
+      loadItems();
+    } catch {
+      showNotification('Error updating item.', 'error');
     }
-    addItemForm.onsubmit = handleAddItem;
+  };
+}
+function getItemFormData() {
+  return {
+    name: document.getElementById('itemName').value,
+    category: document.getElementById('category').value,
+    quantity: document.getElementById('quantity').value,
+    purchaseDate: document.getElementById('purchaseDate').value,
+    expiryDate: document.getElementById('expiryDate').value,
+    notes: document.getElementById('notes').value,
+    createdAt: new Date().toISOString()
   };
 }
 
@@ -399,19 +416,75 @@ function setUserInfo() {
 }
 
 // --- Notification Functions ---
-let notificationPanelTimeout = null;
-let notificationPanelHovered = false;
-let notificationPanelShouldAutoClose = false;
-
+function toggleNotificationsPanel() {
+  if (!notificationsPanel) return;
+  notificationsPanel.classList.toggle('active');
+  if (notificationsPanel.classList.contains('active')) {
+    renderNotificationsPanel();
+    markAllNotificationsAsRead();
+    updateUnreadCount(0);
+    clearTimeout(notificationPanelTimeout);
+  } else {
+    clearTimeout(notificationPanelTimeout);
+  }
+}
+async function markAllNotificationsAsRead() {
+  try {
+    await fetch('http://localhost:3000/api/notifications/mark-read', { method: 'PUT', headers: { 'Authorization': `Bearer ${getToken()}` } });
+    notifications.forEach(n => n.read = true);
+  } catch (e) {}
+}
+function renderNotificationsPanel() {
+  if (!notificationsPanel) return;
+  const backendNotifications = notifications.filter(n => n._id);
+  if (!backendNotifications.length) {
+    notificationsPanel.innerHTML = `<div class="notification-item">No notifications yet.</div>`;
+    return;
+  }
+  notificationsPanel.innerHTML = backendNotifications
+    .map(n => `
+    <div class="notification-item${n.read ? '' : ' unread'}" data-id="${n._id}">
+      <span class="icon"><i class="fas fa-bell"></i></span>
+      <div class="content">
+        <div>${n.message}</div>
+        <div class="time">${new Date(n.createdAt).toLocaleString()}</div>
+      </div>
+      <button class="delete-notification-btn" title="Delete"><i class="fas fa-trash"></i></button>
+    </div>
+  `).join('');
+  notificationsPanel.querySelectorAll('.delete-notification-btn').forEach(btn => {
+    btn.addEventListener('click', async (e) => {
+      e.stopPropagation();
+      const itemDiv = btn.closest('.notification-item');
+      const id = itemDiv.getAttribute('data-id');
+      if (!id) {
+        showNotification('Notification ID not found', 'error');
+        return;
+      }
+      try {
+        await fetch(`http://localhost:3000/api/notifications/${id}`, { method: 'DELETE' });
+        const idx = notifications.findIndex(n => n._id === id);
+        if (idx > -1) notifications.splice(idx, 1);
+        renderNotificationsPanel();
+        clearTimeout(notificationPanelTimeout);
+        notificationPanelTimeout = setTimeout(() => {
+          if (!notificationPanelHovered) {
+            notificationsPanel.classList.remove('active');
+          }
+        }, 5000);
+      } catch (err) {
+        showNotification('Failed to delete notification', 'error');
+      }
+    });
+  });
+}
 function updateUnreadCount(count) {
   if (notificationBadge) {
     notificationBadge.textContent = count;
     notificationBadge.style.display = count > 0 ? 'inline-block' : 'none';
   }
 }
-
 async function fetchUnreadNotificationCount() {
-  if (!useBackend) return;
   const token = getToken();
   try {
     const response = await fetch('http://localhost:3000/api/notifications/unread-count', {
@@ -425,177 +498,56 @@ async function fetchUnreadNotificationCount() {
   }
 }
 
-async function markAllNotificationsAsRead() {
-  if (!useBackend) return;
-  try {
-    await fetch('http://localhost:3000/api/notifications/mark-read', {
-      method: 'PUT',
-      headers: { Authorization: `Bearer ${getToken()}` }
-    });
-    notifications.forEach(n => n.read = true);
-  } catch (e) {}
-}
+// --- Event Listeners ---
+addItemBtn?.addEventListener('click', openModal);
+closeModalBtn?.addEventListener('click', closeModal);
+closeScannerBtn?.addEventListener('click', closeScannerModal);
+cancelModalBtn?.addEventListener('click', closeModal);
+addItemForm?.addEventListener('submit', handleAddItem);
+mobileMenuBtn?.addEventListener('click', toggleSidebar);
+mobileCloseBtn?.addEventListener('click', toggleSidebar);
+searchInput?.addEventListener('input', handleSearch);
+logoutBtn?.addEventListener('click', handleLogout);
+scannerBtn?.addEventListener('click', () => {
+  openScannerModal();
+  setTimeout(startScanner, 300);
+});
+manualEntryBtn?.addEventListener('click', () => {
+  stopScanner();
+  closeScannerModal();
+  openModal();
+});
+notificationBtn?.addEventListener('click', toggleNotificationsPanel);
 
-function renderNotificationsPanel() {
-  if (!notificationsPanel) return;
-  const backendNotifications = notifications.filter(n => n._id || n.id);
-  if (!backendNotifications.length) {
-    notificationsPanel.innerHTML = `<div class="notification-item">No notifications yet.</div>`;
-    return;
+document.addEventListener('click', (e) => {
+  if (e.target === modal) closeModal();
+  if (e.target === scannerModal) {
+    stopScanner();
+    closeScannerModal();
   }
-  notificationsPanel.innerHTML = backendNotifications
-    .map(n => `
-      <div class="notification-item${n.read ? '' : ' unread'}" data-id="${n._id || n.id}">
-        <span class="icon"><i class="fas fa-bell"></i></span>
-        <div class="content">
-          <div>${n.message || n.notes || n.name}</div>
-          <div class="time">${n.createdAt ? new Date(n.createdAt).toLocaleString() : ''}</div>
-        </div>
-        <button class="delete-notification-btn" title="Delete"><i class="fas fa-trash"></i></button>
-      </div>
-    `).join('');
-  notificationsPanel.querySelectorAll('.delete-notification-btn').forEach(btn => {
-    btn.addEventListener('click', async (e) => {
-      e.stopPropagation();
-      const itemDiv = btn.closest('.notification-item');
-      const id = itemDiv.getAttribute('data-id');
-      if (!id) {
-        showNotification('Notification ID not found', 'error');
-        return;
-      }
-      if (useBackend) {
-        try {
-          await fetch(`http://localhost:3000/api/notifications/${id}`, { method: 'DELETE' });
-          const idx = notifications.findIndex(n => (n._id || n.id) == id);
-          if (idx > -1) notifications.splice(idx, 1);
-          renderNotificationsPanel();
-        } catch (err) {
-          showNotification('Failed to delete notification', 'error');
-        }
-      } else {
-        notifications = notifications.filter(n => (n._id || n.id) != id);
-        renderNotificationsPanel();
-      }
-    });
-  });
-}
-
-function toggleNotificationsPanel() {
-  if (!notificationsPanel) return;
-  notificationsPanel.classList.toggle('active');
-  if (notificationsPanel.classList.contains('active')) {
-    renderNotificationsPanel();
-    markAllNotificationsAsRead();
-    updateUnreadCount(0);
-    clearTimeout(notificationPanelTimeout);
-  } else {
-    clearTimeout(notificationPanelTimeout);
+});
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') {
+    stopScanner();
+    closeScannerModal();
+    closeModal();
   }
-}
-
-// --- Demo Sample Data ---
-function initializeSampleData() {
-  if (getItems().length === 0) {
-    const sampleItems = [
-      {
-        id: 1,
-        name: 'Milk',
-        category: 'dairy',
-        quantity: 2,
-        purchaseDate: '2025-06-03',
-        expiryDate: '2025-06-08',
-        notes: 'Organic whole milk',
-        createdAt: '2025-06-03T10:00:00.000Z'
-      },
-      {
-        id: 2,
-        name: 'Bread',
-        category: 'pantry',
-        quantity: 1,
-        purchaseDate: '2025-06-04',
-        expiryDate: '2025-06-10',
-        notes: 'Whole wheat bread',
-        createdAt: '2025-06-04T09:00:00.000Z'
-      },
-      {
-        id: 3,
-        name: 'Apples',
-        category: 'fruits',
-        quantity: 5,
-        purchaseDate: '2025-06-02',
-        expiryDate: '2025-06-12',
-        notes: 'Red delicious apples',
-        createdAt: '2025-06-02T14:00:00.000Z'
-      },
-      {
-        id: 4,
-        name: 'Yogurt',
-        category: 'dairy',
-        quantity: 3,
-        purchaseDate: '2025-06-01',
-        expiryDate: '2025-06-06',
-        notes: 'Greek yogurt',
-        createdAt: '2025-06-01T11:00:00.000Z'
-      }
-    ];
-    saveItems(sampleItems);
+  if ((e.ctrlKey || e.metaKey) && e.key === 'n') {
+    e.preventDefault();
+    openModal();
   }
-}
+  if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+    e.preventDefault();
+    openScannerModal();
+    setTimeout(startScanner, 300);
+  }
+});
 
-// --- Sidebar Toggle ---
-function toggleSidebar() {
-  sidebar.classList.toggle('active');
-}
-
-// --- Event Listeners & Initialization ---
+// --- Initial Load ---
 window.addEventListener('DOMContentLoaded', async () => {
-  useBackend = !!getToken();
   setUserInfo();
-
-  // Attach all event listeners here to ensure DOM is ready
-  addItemBtn?.addEventListener('click', openModal);
-  closeModalBtn?.addEventListener('click', closeModal);
-  closeScannerBtn?.addEventListener('click', closeScannerModal);
-  cancelModalBtn?.addEventListener('click', closeModal);
-  addItemForm?.addEventListener('submit', handleAddItem);
-  mobileMenuBtn?.addEventListener('click', toggleSidebar);
-  mobileCloseBtn?.addEventListener('click', toggleSidebar);
-  searchInput?.addEventListener('input', handleSearch);
-  logoutBtn?.addEventListener('click', handleLogout);
-  scannerBtn?.addEventListener('click', openScannerModal);
-  captureBtn?.addEventListener('click', handleCapture);
-  manualEntryBtn?.addEventListener('click', openModalFromScanner);
-  notificationBtn?.addEventListener('click', toggleNotificationsPanel);
-
-  document.addEventListener('click', (e) => {
-    if (e.target === modal) closeModal();
-    if (e.target === scannerModal) closeScannerModal();
-  });
-  document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape') {
-      closeModal();
-      closeScannerModal();
-    }
-    if ((e.ctrlKey || e.metaKey) && e.key === 'n') {
-      e.preventDefault();
-      openModal();
-    }
-    if ((e.ctrlKey || e.metaKey) && e.key === 's') {
-      e.preventDefault();
-      openScannerModal();
-    }
-  });
-
-  // Initialization logic
-  if (useBackend) {
-    socket = io('http://localhost:3000');
-    socket.on('newNotification', (data) => {
-      notifications.unshift(data);
-      updateUnreadCount(notifications.length);
-      renderNotificationsPanel();
-      showNotification(data.message, 'info');
-    });
-    await loadItems();
+  setTimeout(async () => {
+    loadItems();
     fetchUnreadNotificationCount();
     try {
       const res = await fetch('http://localhost:3000/api/notifications', {
@@ -607,26 +559,37 @@ window.addEventListener('DOMContentLoaded', async () => {
       notifications = [];
       renderNotificationsPanel();
     }
-  } else {
-    initializeSampleData();
-    loadItems();
-    renderNotificationsPanel();
+  }, 100);
+});
+
+// --- Notification socket ---
+socket.on('newNotification', (data) => {
+  notifications.unshift(data);
+  updateUnreadCount(notifications.length);
+  renderNotificationsPanel();
+  showNotification(data.message, 'info');
+});
+
+notificationsPanel?.addEventListener('mouseenter', () => {
+  notificationPanelHovered = true;
+  clearTimeout(notificationPanelTimeout);
+});
+notificationsPanel?.addEventListener('mouseleave', () => {
+  notificationPanelHovered = false;
+  if (notificationPanelShouldAutoClose) {
+    clearTimeout(notificationPanelTimeout);
+    notificationPanelTimeout = setTimeout(() => {
+      if (!notificationPanelHovered) {
+        notificationsPanel.classList.remove('active');
+        notificationPanelShouldAutoClose = false;
+      }
+    }, 5000);
   }
 });
 
 // --- Logout ---
 function handleLogout() {
-  if (useBackend) {
-    localStorage.removeItem('user');
-    sessionStorage.removeItem('user');
-    location.href = 'login.html';
-  } else {
-    if (confirm('Are you sure you want to logout?')) {
-      itemsStorage = [];
-      showNotification('Logged out successfully!', 'success');
-      setTimeout(() => {
-        window.location.href = 'login.html';
-      }, 1000);
-    }
-  }
+  localStorage.removeItem('user');
+  sessionStorage.removeItem('user');
+  location.href = 'login.html';
 }
