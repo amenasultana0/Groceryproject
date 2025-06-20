@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Grocery List</title>
+    <link rel="stylesheet" href="list.css">
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🛒 My Grocery List</h1>
+        </div>
+
+        <div class="stats-bar">
+            <div class="stat-item">
+                <span class="stat-number" id="totalItems">0</span>
+                <span>Total Items</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-number" id="purchasedItems">0</span>
+                <span>Purchased</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-number" id="remainingItems">0</span>
+                <span>Remaining</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-number" id="totalCost">$0.00</span>
+                <span>Total Cost</span>
+            </div>
+        </div>
+
+        <div class="add-item-form">
+            <form id="addItemForm">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="itemName">Item Name</label>
+                        <input type="text" id="itemName" required placeholder="Enter item name">
+                    </div>
+                    <div class="form-group">
+                        <label for="itemQuantity">Quantity</label>
+                        <input type="number" id="itemQuantity" min="1" value="1">
+                    </div>
+                    <div class="form-group">
+                        <label for="itemPrice">Price ($)</label>
+                        <input type="number" id="itemPrice" step="0.01" min="0" placeholder="0.00">
+                    </div>
+                    <div class="form-group">
+                        <label for="itemCategory">Category</label>
+                        <select id="itemCategory">
+                            <option value="fruits">🍎 Fruits</option>
+                            <option value="vegetables">🥕 Vegetables</option>
+                            <option value="dairy">🥛 Dairy</option>
+                            <option value="meat">🥩 Meat</option>
+                            <option value="bakery">🍞 Bakery</option>
+                            <option value="pantry">🥫 Pantry</option>
+                            <option value="frozen">🧊 Frozen</option>
+                            <option value="snacks">🍿 Snacks</option>
+                            <option value="beverages">🥤 Beverages</option>
+                            <option value="household">🧽 Household</option>
+                            <option value="other">📦 Other</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="add-btn">+ Add Item</button>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="itemPriority">Priority</label>
+                        <select id="itemPriority">
+                            <option value="medium">Medium</option>
+                            <option value="high">High</option>
+                            <option value="low">Low</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="itemNotes">Notes</label>
+                        <input type="text" id="itemNotes" placeholder="Optional notes">
+                    </div>
+                    <div></div>
+                    <div></div>
+                    <div></div>
+                </div>
+            </form>
+        </div>
+
+        <div class="controls">
+            <input type="text" class="search-box" id="searchBox" placeholder="🔍 Search items...">
+            <select class="filter-select" id="categoryFilter">
+                <option value="">All Categories</option>
+                <option value="fruits">🍎 Fruits</option>
+                <option value="vegetables">🥕 Vegetables</option>
+                <option value="dairy">🥛 Dairy</option>
+                <option value="meat">🥩 Meat</option>
+                <option value="bakery">🍞 Bakery</option>
+                <option value="pantry">🥫 Pantry</option>
+                <option value="frozen">🧊 Frozen</option>
+                <option value="snacks">🍿 Snacks</option>
+                <option value="beverages">🥤 Beverages</option>
+                <option value="household">🧽 Household</option>
+                <option value="other">📦 Other</option>
+            </select>
+            <select class="filter-select" id="statusFilter">
+                <option value="">All Items</option>
+                <option value="pending">Not Purchased</option>
+                <option value="purchased">Purchased</option>
+            </select>
+            <div class="action-buttons">
+                <button class="btn btn-clear" onclick="clearPurchased()">Clear Purchased</button>
+                <button class="btn btn-export" onclick="exportList()">Export List</button>
+            </div>
+        </div>
+
+        <div class="grocery-list" id="groceryList">
+            <div class="empty-state">
+                <div style="font-size: 4em; margin-bottom: 20px;">🛒</div>
+                <h3>Your grocery list is empty</h3>
+                <p>Add some items to get started!</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal" id="editModal">
+        <div class="modal-content">
+            <h3>Edit Item</h3>
+            <form id="editForm">
+                <div class="form-group" style="margin-bottom: 15px;">
+                    <label for="editName">Item Name</label>
+                    <input type="text" id="editName" required>
+                </div>
+                <div class="form-group" style="margin-bottom: 15px;">
+                    <label for="editQuantity">Quantity</label>
+                    <input type="number" id="editQuantity" min="1">
+                </div>
+                <div class="form-group" style="margin-bottom: 15px;">
+                    <label for="editPrice">Price ($)</label>
+                    <input type="number" id="editPrice" step="0.01" min="0">
+                </div>
+                <div class="form-group" style="margin-bottom: 15px;">
+                    <label for="editCategory">Category</label>
+                    <select id="editCategory">
+                        <option value="fruits">🍎 Fruits</option>
+                        <option value="vegetables">🥕 Vegetables</option>
+                        <option value="dairy">🥛 Dairy</option>
+                        <option value="meat">🥩 Meat</option>
+                        <option value="bakery">🍞 Bakery</option>
+                        <option value="pantry">🥫 Pantry</option>
+                        <option value="frozen">🧊 Frozen</option>
+                        <option value="snacks">🍿 Snacks</option>
+                        <option value="beverages">🥤 Beverages</option>
+                        <option value="household">🧽 Household</option>
+                        <option value="other">📦 Other</option>
+                    </select>
+                </div>
+                <div style="display: flex; gap: 10px; justify-content: flex-end;">
+                    <button type="button" class="btn" style="background: #a0aec0; color: white;" onclick="closeEditModal()">Cancel</button>
+                    <button type="submit" class="btn" style="background: #4299e1; color: white;">Save Changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="notification" id="notification"></div>
+
+    <script src="list.js"></script>
+</body>
+</html>

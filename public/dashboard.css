@@ -140,7 +140,7 @@
 /* Main Content */
 .main-content {
     flex: 1;
-    margin-left: 280px;
+    margin-left: 200px;
     padding: 1.5rem;
 }
 
@@ -1042,3 +1042,4 @@ textarea:focus {
   gap: 0.5rem;
   margin-top: 0.75rem;
 }
+
