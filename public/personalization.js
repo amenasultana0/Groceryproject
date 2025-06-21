@@ -207,7 +207,7 @@ document.addEventListener('DOMContentLoaded', () => {
         
         setTimeout(() => {
             alert("Thanks! Your preferences have been saved.");
-            window.location.href = '/dashboard.html'; // Redirect after saving
+            window.location.href = 'dashboard.html'; // Redirect after saving
         }, 500);
     });
 
