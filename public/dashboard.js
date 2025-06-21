@@ -125,8 +125,25 @@ function openModalFromScanner() {
   closeScannerModal();
   openModal();
 }
+// --- Sidebar Functions ---
 function toggleSidebar() {
-  sidebar.classList.toggle('active');
+  sidebar.classList.toggle('collapsed');
+  sidebar.classList.toggle('open');
+  document.getElementById('sidebarOverlay').classList.toggle('active');
+  document.querySelector('.main-content').classList.toggle('sidebar-collapsed');
+}
+
+function openSidebar() {
+  sidebar.classList.remove('collapsed');
+  sidebar.classList.add('open');
+  document.getElementById('sidebarOverlay').classList.add('active');
+}
+
+function closeSidebar() {
+  sidebar.classList.add('collapsed');
+  sidebar.classList.remove('open');
+  document.getElementById('sidebarOverlay').classList.remove('active');
+  document.querySelector('.main-content').classList.add('sidebar-collapsed');
 }
 
 // --- Scanner Functions ---
@@ -518,7 +535,27 @@ closeScannerBtn?.addEventListener('click', closeScannerModal);
 cancelModalBtn?.addEventListener('click', closeModal);
 addItemForm?.addEventListener('submit', handleAddItem);
 mobileMenuBtn?.addEventListener('click', toggleSidebar);
-mobileCloseBtn?.addEventListener('click', toggleSidebar);
+mobileCloseBtn?.addEventListener('click', closeSidebar);
+// Sidebar overlay click to close
+document.getElementById('sidebarOverlay')?.addEventListener('click', closeSidebar);
+
+// Close sidebar when clicking outside on mobile
+document.addEventListener('click', function(e) {
+  if (window.innerWidth > 768) return; // Only on mobile
+  
+  if (!sidebar.contains(e.target) && !mobileMenuBtn.contains(e.target)) {
+    closeSidebar();
+  }
+});
+
+// Handle window resize
+window.addEventListener('resize', function() {
+  if (window.innerWidth > 768) {
+    sidebar.classList.remove('collapsed', 'open');
+    document.getElementById('sidebarOverlay').classList.remove('active');
+    document.querySelector('.main-content').classList.remove('sidebar-collapsed');
+  }
+});
 searchInput?.addEventListener('input', handleSearch);
 logoutBtn?.addEventListener('click', handleLogout);
 scannerBtn?.addEventListener('click', () => {
