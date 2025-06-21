@@ -1128,6 +1128,13 @@ textarea:focus {
 }
 /* Sidebar Toggle Styles */
 .sidebar {
+  position: fixed;
+  left: 0;
+  top: 0;
+  width: 260px;
+  height: 100vh;
+  background: #fff;
+  box-shadow: 2px 0 10px rgba(0,0,0,0.1);
   transform: translateX(0);
   transition: transform 0.3s ease;
   z-index: 1000;
@@ -1156,11 +1163,27 @@ textarea:focus {
 }
 
 .main-content {
+  margin-left: 260px;
   transition: margin-left 0.3s ease;
 }
 
 .main-content.sidebar-collapsed {
   margin-left: 0;
+}
+
+/* Mobile specific adjustments */
+@media (max-width: 768px) {
+  .sidebar {
+    transform: translateX(-100%); /* Start hidden on mobile */
+  }
+  
+  .sidebar.open {
+    transform: translateX(0);
+  }
+  
+  .main-content {
+    margin-left: 0; /* No margin on mobile */
+  }
 }
 
 /* Mobile responsive adjustments */

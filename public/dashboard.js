@@ -556,9 +556,14 @@ document.addEventListener('click', function(e) {
 // Handle window resize
 window.addEventListener('resize', function() {
   if (window.innerWidth > 768) {
-    sidebar.classList.remove('collapsed', 'open');
+    // On desktop, remove mobile-specific classes but keep collapsed state if set
+    sidebar.classList.remove('open');
     document.getElementById('sidebarOverlay').classList.remove('active');
-    document.querySelector('.main-content').classList.remove('sidebar-collapsed');
+  } else {
+    // On mobile, start with sidebar hidden
+    if (!sidebar.classList.contains('open')) {
+      sidebar.classList.add('collapsed');
+    }
   }
 });
 searchInput?.addEventListener('input', handleSearch);
@@ -648,7 +653,12 @@ micButton?.addEventListener('click', () => {
 
   recognition.onresult = (event) => {
     const transcript = event.results[0][0].transcript.trim();
-    showNotification(`You said: ${transcript}`, "info");
+    // Set the recognized text in the search bar and trigger search
+    if (searchInput) {
+      searchInput.value = transcript.replace(/\.$/, "");
+      searchInput.dispatchEvent(new Event('input')); // This triggers your search/filter logic
+    }
+    showNotification('You said:${transcript}', "info");
     micPanel.classList.add('hidden');
   };
 
