@@ -92,32 +92,31 @@ function filterItemsByStatus(items, status) {
 async function generateReport() {
     showLoading();
     try {
-        const dateRange = document.getElementById('dateRange').value.split(' to ');
-        const startDate = dateRange[0];
-        const endDate = dateRange[1] || dateRange[0];
-        const category = document.getElementById('categoryFilter').value;
-        const status = document.getElementById('statusFilter').value;
-        const user = JSON.parse(localStorage.getItem('user') || sessionStorage.getItem('user'));
-        const token = user?.token;
-
-        const response = await fetch(`http://localhost:3000/api/reports/report`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json',
-                'Authorization': `Bearer ${token}`
-             },
-            body: JSON.stringify({ startDate, endDate, category, status: 'all' }),
-        });
-
-        const data = await response.json();
-        allItems = data.items || [];
+        // Use dummy data instead of API call
+        const dummyData = {
+            items: [
+                { name: 'Organic Bananas', category: 'Fruits', price: 150, quantity: 40, expiryDate: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000) },
+                { name: 'Whole Milk', category: 'Dairy', price: 120, quantity: 20, expiryDate: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000) },
+                { name: 'Artisan Bread', category: 'Bakery', price: 250, quantity: 15, expiryDate: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000) },
+                { name: 'Chicken Breast', category: 'Meat', price: 500, quantity: 10, expiryDate: new Date(Date.now() + 8 * 24 * 60 * 60 * 1000) },
+                { name: 'Cheddar Cheese', category: 'Dairy', price: 400, quantity: 25, expiryDate: new Date(Date.now() + 20 * 24 * 60 * 60 * 1000) },
+                { name: 'Apples', category: 'Fruits', price: 200, quantity: 50, expiryDate: new Date(Date.now() + 15 * 24 * 60 * 60 * 1000) },
+                { name: 'Tomatoes', category: 'Vegetables', price: 80, quantity: 60, expiryDate: new Date(Date.now() + 6 * 24 * 60 * 60 * 1000) },
+                { name: 'Yogurt', category: 'Dairy', price: 70, quantity: 30, expiryDate: new Date(Date.now() + 4 * 24 * 60 * 60 * 1000) },
+                { name: 'Frozen Pizza', category: 'Frozen', price: 450, quantity: 12, expiryDate: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000) },
+                { name: 'Spinach', category: 'Vegetables', price: 60, quantity: 35, expiryDate: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000) },
+                { name: 'Orange Juice', category: 'Beverages', price: 180, quantity: 18, expiryDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000) },
+                { name: 'Potato Chips', category: 'Snacks', price: 100, quantity: 45, expiryDate: new Date(Date.now() + 120 * 24 * 60 * 60 * 1000) }
+            ]
+        };
+        
+        allItems = dummyData.items || [];
 
         updateMetrics(calculateMetrics(allItems));
 
         updateFilteredView();
 
-        // updateCharts(data);
-        // updateTable(data.items);
-        updateInsights(data);
+        updateInsights({ items: allItems });
 
         hideLoading();
     } catch (error) {
@@ -614,7 +613,9 @@ function showError(message) {
         toast.style.opacity = '0';
         setTimeout(() => toast.remove(), 300);
     }, 3000);
-}document.getElementById('generateReport').addEventListener('click', () => {
+}
+
+document.getElementById('generateReport').addEventListener('click', () => {
     generateReport();
     showNotification('Report updated!', 'success');
 });
