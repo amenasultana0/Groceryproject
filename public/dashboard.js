@@ -274,6 +274,7 @@ if (exists) {
     showNotification('Error adding item. Please try again.', 'error');
   }
 }
+
 async function loadItems() {
   const token = getToken();
   try {
