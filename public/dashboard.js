@@ -32,7 +32,7 @@ const closeModalBtn = document.querySelector('.close-modal');
 const closeScannerBtn = document.querySelector('.close-scanner');
 const cancelModalBtn = document.querySelector('.cancel-modal');
 const addItemForm = document.getElementById('addItemForm');
-const mobileMenuBtn = document.querySelector('.mobile-menu');
+const sidebarToggleBtn = document.querySelector('.sidebar-toggle');
 const mobileCloseBtn = document.querySelector('.mobile-close');
 const sidebar = document.querySelector('.sidebar');
 const searchInput = document.querySelector('.search-bar input');
@@ -540,7 +540,7 @@ closeModalBtn?.addEventListener('click', closeModal);
 closeScannerBtn?.addEventListener('click', closeScannerModal);
 cancelModalBtn?.addEventListener('click', closeModal);
 addItemForm?.addEventListener('submit', handleAddItem);
-mobileMenuBtn?.addEventListener('click', toggleSidebar);
+sidebarToggleBtn?.addEventListener('click', toggleSidebar);
 mobileCloseBtn?.addEventListener('click', closeSidebar);
 // Sidebar overlay click to close
 document.getElementById('sidebarOverlay')?.addEventListener('click', closeSidebar);
@@ -549,7 +549,7 @@ document.getElementById('sidebarOverlay')?.addEventListener('click', closeSideba
 document.addEventListener('click', function(e) {
   if (window.innerWidth > 768) return; // Only on mobile
   
-  if (!sidebar.contains(e.target) && !mobileMenuBtn.contains(e.target)) {
+  if (!sidebar.contains(e.target) && !sidebarToggleBtn.contains(e.target)) {
     closeSidebar();
   }
 });
