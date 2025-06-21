@@ -167,6 +167,31 @@
     flex-grow: 1;           
     max-width:100%;       
     margin-right: 1rem;
+    display: flex;
+    align-items: center;
+
+}
+
+#inventory-search {
+  padding-right: 2em; /* Space for the clear button */
+}
+
+#clear-search-btn {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: transparent;
+  border: none;
+  font-size: 1.2em;
+  cursor: pointer;
+  color: #888;
+  display: none;
+  z-index: 2;
+  padding: 0;
+  line-height: 1;
+  height: 1.5em;
+  width: 1.5em;
 }
 
 .search-bar input {
