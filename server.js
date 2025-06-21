@@ -14,6 +14,7 @@ require('./config/passport');
 const Notification = require('./models/Notification');
 const Product = require('./models/Product');
 const authMiddleware = require('./middleware/authMiddleware');
+const notificationsRoute = require('./routes/notifications');
 
 app.use(session({
   secret: 'your-secret-key',
@@ -61,6 +62,7 @@ app.use('/api/categories', categoryRoutes);
 app.use('/api', settingsRoutes);
 app.use('/api/reports', reportRoutes);
 app.use('/api', suggestionsRouter);
+app.use('/api/notifications', notificationsRoute);
 
 
 // API route to fetch notifications

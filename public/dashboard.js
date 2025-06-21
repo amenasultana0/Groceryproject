@@ -472,7 +472,10 @@ if (notifications.length > 0) {
         return;
       }
       try {
-        await fetch(`http://localhost:3000/api/notifications/${id}`, { method: 'DELETE' });
+        await fetch(`http://localhost:3000/api/notifications/${id}`, {
+          method: 'DELETE',
+          headers: { Authorization: `Bearer ${getToken()}` }
+        });
         const idx = notifications.findIndex(n => n._id === id);
         if (idx > -1) notifications.splice(idx, 1);
         renderNotificationsPanel();
@@ -527,13 +530,26 @@ manualEntryBtn?.addEventListener('click', () => {
   closeScannerModal();
   openModal();
 });
-notificationBtn?.addEventListener('click', toggleNotificationsPanel);
-
+notificationBtn?.addEventListener('click', function(e) {
+  e.stopPropagation(); // Prevent document click from firing
+  toggleNotificationsPanel();
+});
 document.addEventListener('click', (e) => {
+  // Close modal if clicking outside
   if (e.target === modal) closeModal();
   if (e.target === scannerModal) {
     stopScanner();
     closeScannerModal();
+  }
+  // --- ADD THIS BLOCK ---
+  // Close notifications panel if clicking outside
+  if (
+    notificationsPanel &&
+    notificationsPanel.classList.contains('active') &&
+    !notificationsPanel.contains(e.target) &&
+    e.target !== notificationBtn
+  ) {
+    notificationsPanel.classList.remove('active');
   }
 });
 document.addEventListener('keydown', (e) => {
