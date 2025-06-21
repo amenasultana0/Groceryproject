@@ -64,10 +64,14 @@
         </div>
       </div>
       <div class="user-actions">
-        <a href="settings.html" class="icon-btn" title="Settings">
+         <button class="icon-btn notification-btn" title="Notifications">
+    <i class="fas fa-bell"></i>
+    <span class="badge">0</span>
+  </button>
+        <a href="settings.html" class="icon-btn icon-large" title="Settings">
           <i class="fas fa-cog"></i>
         </a>
-        <button class="icon-btn" title="Logout">
+        <button class="icon-btn icon-large" title="Logout">
           <i class="fas fa-sign-out-alt"></i>
         </button>
       </div>
@@ -86,10 +90,10 @@
       </div>
 
       <div class="top-actions">
-        <button class="notification-btn" title="Notifications">
-          <i class="fas fa-bell"></i>
-          <span class="badge">0</span>
-        </button>
+        <button class="mic-btn" id="micButton">
+  <i class="fas fa-microphone"></i>
+</button>
+
         <button class="scanner-btn" title="Scan Item">
           <i class="fas fa-qrcode"></i>
         </button>
@@ -257,6 +261,16 @@
     </div>
   </div>
 </div>
+
+<!-- Mic Listening Panel -->
+<div id="micPanel" class="mic-panel hidden">
+  <div class="mic-content">
+    <div class="pulse-ring"></div>
+    <i class="fas fa-microphone"></i>
+    <p>Listening...</p>
+  </div>
+</div>
+
 
   <div id="notificationToastContainer"></div>
   <script src="https://unpkg.com/html5-qrcode"></script>

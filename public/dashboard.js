@@ -44,6 +44,8 @@ const manualEntryBtn = document.getElementById('manualEntry');
 const notificationBtn = document.querySelector('.notification-btn');
 const notificationsPanel = document.getElementById('notificationsPanel');
 const notificationBadge = document.querySelector('.notification-btn .badge') || document.querySelector('.badge');
+const micButton = document.getElementById('micButton');
+
 
 // --- State ---
 let currentItems = [];
@@ -569,6 +571,40 @@ clearNotificationsBtn?.addEventListener('click', async () => {
     showNotification("Failed to clear notifications", "error");
   }
 });
+micButton?.addEventListener('click', () => {
+  const micPanel = document.getElementById('micPanel');
+  micPanel.classList.remove('hidden');
+
+  if (!('webkitSpeechRecognition' in window)) {
+    showNotification("Speech recognition not supported", "error");
+    micPanel.classList.add('hidden');
+    return;
+  }
+
+  const recognition = new webkitSpeechRecognition();
+  recognition.lang = 'en-US';
+  recognition.interimResults = false;
+  recognition.maxAlternatives = 1;
+
+  recognition.start();
+
+  recognition.onresult = (event) => {
+    const transcript = event.results[0][0].transcript.trim();
+    showNotification(`You said: ${transcript}`, "info");
+    micPanel.classList.add('hidden');
+  };
+
+  recognition.onerror = (event) => {
+    showNotification("Mic error: " + event.error, "error");
+    micPanel.classList.add('hidden');
+  };
+
+  recognition.onend = () => {
+    micPanel.classList.add('hidden');
+  };
+});
+
+
 
 
 // --- Initial Load ---
