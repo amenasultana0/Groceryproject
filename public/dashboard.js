@@ -24,6 +24,7 @@ import { populateCategoryDropdown } from './utils/categoryHelper.js';
 })();
 
 // --- DOM Elements ---
+const clearNotificationsBtn = document.getElementById('clearNotificationsBtn');
 const addItemBtn = document.querySelector('.add-item-btn');
 const modal = document.getElementById('addItemModal');
 const scannerModal = document.getElementById('scannerModal');
@@ -452,6 +453,13 @@ function renderNotificationsPanel() {
       <button class="delete-notification-btn" title="Delete"><i class="fas fa-trash"></i></button>
     </div>
   `).join('');
+  // Show or hide the Clear All button based on notifications
+if (notifications.length > 0) {
+  clearNotificationsBtn.style.display = 'block';
+} else {
+  clearNotificationsBtn.style.display = 'none';
+}
+
   notificationsPanel.querySelectorAll('.delete-notification-btn').forEach(btn => {
     btn.addEventListener('click', async (e) => {
       e.stopPropagation();
@@ -542,6 +550,26 @@ document.addEventListener('keydown', (e) => {
     setTimeout(startScanner, 300);
   }
 });
+clearNotificationsBtn?.addEventListener('click', async () => {
+  if (!confirm("Are you sure you want to clear all notifications?")) return;
+
+  try {
+    // Delete from server
+    await fetch('http://localhost:3000/api/notifications/clear', {
+      method: 'DELETE',
+      headers: { Authorization: `Bearer ${getToken()}` }
+    });
+
+    // Clear from local state
+    notifications = [];
+    updateUnreadCount(0);
+    renderNotificationsPanel();
+    showNotification("All notifications cleared!", "success");
+  } catch (err) {
+    showNotification("Failed to clear notifications", "error");
+  }
+});
+
 
 // --- Initial Load ---
 window.addEventListener('DOMContentLoaded', async () => {
