@@ -1,99 +1,52 @@
-// Enhanced seasonal items data with additional properties
-const seasonalItems = [
-    {
-        name: "Mangoes",
-        note: "Peak sweet and juicy season",
-        emoji: "🥭",
-        type: "fruits",
-        rating: 5,
-        benefits: ["Rich in Vitamin C", "Boosts immunity", "Good for digestion"],
-        season: "Peak Season",
-        availability: "Locally Available",
-        tips: "Choose mangoes that yield slightly to pressure and have a sweet aroma at the stem end."
-    },
-    {
-        name: "Watermelon",
-        note: "Perfect for hydration in summer heat",
-        emoji: "🍉",
-        type: "fruits",
-        rating: 5,
-        benefits: ["92% water content", "Rich in lycopene", "Low in calories"],
-        season: "Peak Season", 
-        availability: "Locally Available",
-        tips: "Look for a creamy yellow spot where it sat on the ground and a hollow sound when tapped."
-    },
-    {
-        name: "Sweet Corn",
-        note: "Best time to grill and enjoy",
-        emoji: "🌽",
-        type: "vegetables",
-        rating: 4,
-        benefits: ["High in fiber", "Good source of antioxidants", "Contains folate"],
-        season: "Peak Season",
-        availability: "Locally Available",
-        tips: "Choose corn with bright green husks and golden silk. The kernels should be plump and milky."
-    },
-    {
-        name: "Litchis",
-        note: "Short and sweet seasonal delicacy",
-        emoji: "🍈",
-        type: "fruits",
-        rating: 4,
-        benefits: ["High in Vitamin C", "Rich in copper", "Good for skin health"],
-        season: "Limited Season",
-        availability: "Specialty Stores",
-        tips: "Select litchis with pink-red skin that gives slightly when pressed. Avoid brown or cracked ones."
-    },
-    {
-        name: "Cucumbers",
-        note: "Cooling and refreshing for summer",
-        emoji: "🥒",
-        type: "vegetables",
-        rating: 3,
-        benefits: ["High water content", "Low in calories", "Contains silica for healthy skin"],
-        season: "Peak Season",
-        availability: "Locally Available",
-        tips: "Choose firm cucumbers with bright green color. Avoid yellowing or soft spots."
-    },
-    {
-        name: "Bottle Gourd",
-        note: "Light and nutritious summer vegetable",
-        emoji: "🥗",
-        type: "vegetables",
-        rating: 3,
-        benefits: ["Low in calories", "High in water", "Good for weight management"],
-        season: "Peak Season",
-        availability: "Locally Available",
-        tips: "Select young, tender bottle gourds with smooth skin and no blemishes."
-    },
-    {
-        name: "Jamun",
-        note: "Great for digestion and blood sugar",
-        emoji: "🫐",
-        type: "fruits",
-        rating: 4,
-        benefits: ["Controls blood sugar", "Rich in antioxidants", "Good for digestive health"],
-        season: "Short Season",
-        availability: "Local Markets",
-        tips: "Choose deep purple jamuns that are soft to touch. Best consumed fresh and ripe."
-    },
-    {
-        name: "Okra (Bhindi)",
-        note: "Tender and fresh, perfect for cooking",
-        emoji: "🌱",
-        type: "vegetables",
-        rating: 3,
-        benefits: ["High in fiber", "Rich in folate", "Good source of Vitamin K"],
-        season: "Peak Season",
-        availability: "Locally Available",
-        tips: "Choose small to medium sized okra that snap crisply. Avoid slimy or brown pods."
-    }
-];
+let seasonalItems = [];
+
+fetch('/data/seasonalItems.json')
+  .then(res => res.json())
+  .then(data => {
+    seasonalItems = data;
+    renderItems();
+    updateStats();
+  });
 
 // Application state
 let shoppingList = [];
 let currentFilter = 'all';
 let currentView = 'grid';
+let currentRegion = 'All';
+let currentMonth = 'June';
+let currentYear = '2025';
+
+
+const monthNames = [
+    "January", "February", "March", "April", "May", "June",
+    "July", "August", "September", "October", "November", "December"
+];
+
+function getSeason(month) {
+    switch(month) {
+        case "March":
+        case "April":
+        case "May":
+            return "Spring";
+        case "June":
+        case "July":
+        case "August":
+            return "Summer";
+        case "September":
+        case "October":
+            return "Monsoon";
+        case "November":
+            return "Autumn";
+        case "December":
+        case "January":
+        case "February":
+            return "Winter";
+        default:
+            return "";
+    }
+}
+
+
 
 // Seasonal tips array
 const seasonalTips = [
@@ -113,6 +66,8 @@ const shoppingModal = document.getElementById('shopping-modal');
 const detailsModal = document.getElementById('details-modal');
 const shoppingListFab = document.getElementById('shopping-list-fab');
 const fabBadge = document.getElementById('fab-badge');
+const regionSelect = document.getElementById('region-select');
+const dateSelect = document.getElementById('date-select');
 
 // Initialize the application
 document.addEventListener('DOMContentLoaded', function() {
@@ -120,6 +75,8 @@ document.addEventListener('DOMContentLoaded', function() {
     setupEventListeners();
     updateStats();
     rotateTips();
+    fetchTrendingItems(currentRegion);
+    updateSeasonHeader();
 });
 
 // Render items based on current filter and search
@@ -148,6 +105,24 @@ function renderItems() {
     
     // Update total items count
     document.getElementById('total-items').textContent = filteredItems.length;
+}
+
+async function fetchTrendingItems(region) {
+  const season = getSeason(currentMonth); // You already have this function
+
+  try {
+    const res = await fetch(`/api/trending-items?region=${region}&season=${season}`);
+    const trendingItems = await res.json();
+    renderTrendingItems(trendingItems); // Add this display function
+  } catch (err) {
+    console.error('Error fetching trending items:', err);
+  }
+}
+
+
+async function renderItems() {
+    const items = await fetchSeasonalItems(currentRegion, currentMonth);
+    // ...render as before...
 }
 
 // Create individual item card
@@ -190,25 +165,84 @@ function createItemCard(item, index) {
     return card;
 }
 
+async function fetchTrendingItems(region = 'India') {
+  try {
+    const res = await fetch(`/api/trending-items?region=${encodeURIComponent(region)}`);
+    const data = await res.json();
+
+    if (!data.trending || data.trending.length === 0) {
+      document.getElementById('seasonal-list').innerHTML = `
+        <div class="no-results">
+            <i class="fas fa-seedling" style="font-size: 3rem; color: #ccc; margin-bottom: 1rem;"></i>
+            <h3>No trending items found</h3>
+            <p>Please check again later or try a different region.</p>
+        </div>
+      `;
+      return;
+    }
+
+    renderTrendingItems(data.trending);
+  } catch (err) {
+    console.error("Error fetching trending items:", err);
+  }
+}
+
+function renderTrendingItems(items) {
+  const container = document.getElementById('seasonal-list');
+  container.innerHTML = '';
+
+  items.forEach((item, index) => {
+    const card = document.createElement('div');
+    card.className = 'item-card';
+    card.innerHTML = `
+      <div class="item-header">
+          <h3>🍃 ${item.name}</h3>
+          <span class="item-badge">Trending</span>
+      </div>
+      <div class="item-content">
+          <p>Calories: ${item.nutritions.calories}</p>
+          <p>Carbs: ${item.nutritions.carbohydrates}g</p>
+          <p>Sugar: ${item.nutritions.sugar}g</p>
+          <div class="item-actions">
+              <button class="add-to-list-btn" onclick="toggleShoppingList('${item.name}', event)">
+                  <i class="fas fa-plus"></i> Add to List
+              </button>
+          </div>
+      </div>
+    `;
+    container.appendChild(card);
+  });
+
+  updateStats();
+}
+
+
+function updateSeasonHeader() {
+  const season = getSeason(currentMonth); // you already have getSeason()
+  document.querySelector('.season-indicator span').textContent = `${season} Picks`;
+}
+
+
 // Filter items based on current criteria
 function getFilteredItems() {
     let filtered = [...seasonalItems];
-    
-    // Apply type filter
+
     if (currentFilter !== 'all') {
         filtered = filtered.filter(item => item.type === currentFilter);
     }
-    
-    // Apply search filter
-    const searchTerm = searchInput.value.toLowerCase().trim();
-    if (searchTerm) {
-        filtered = filtered.filter(item => 
-            item.name.toLowerCase().includes(searchTerm) ||
-            item.note.toLowerCase().includes(searchTerm) ||
-            item.benefits.some(benefit => benefit.toLowerCase().includes(searchTerm))
+
+    if (currentRegion !== 'All') {
+        filtered = filtered.filter(item =>
+            item.regionTags && item.regionTags.includes(currentRegion)
         );
     }
-    
+
+    if (currentMonth) {
+        filtered = filtered.filter(item =>
+            item.monthAvailable && item.monthAvailable.includes(currentMonth)
+        );
+    }
+
     return filtered;
 }
 
@@ -513,16 +547,62 @@ function getNotificationColor(type) {
     }
 }
 
+function getFilteredItems() {
+    let filtered = [...seasonalItems];
+
+    // Filter by type
+    if (currentFilter !== 'all') {
+        filtered = filtered.filter(item => item.type === currentFilter);
+    }
+
+    // Filter by region
+    if (currentRegion !== 'All') {
+        filtered = filtered.filter(item => item.regionTags && item.regionTags.includes(currentRegion));
+    }
+
+    // Filter by month
+    if (currentMonth) {
+        filtered = filtered.filter(item => item.monthAvailable && item.monthAvailable.includes(currentMonth));
+    }
+
+    // Search filter
+    const searchTerm = searchInput.value.toLowerCase().trim();
+    if (searchTerm) {
+        filtered = filtered.filter(item =>
+            item.name.toLowerCase().includes(searchTerm) ||
+            item.note.toLowerCase().includes(searchTerm) ||
+            item.benefits.some(benefit => benefit.toLowerCase().includes(searchTerm))
+        );
+    }
+
+    return filtered;
+}
+
+// Listen for region and date changes
+regionSelect.addEventListener('change', () => {
+    currentRegion = regionSelect.value;
+    fetchTrendingItems(currentRegion);
+    updateStats();
+});
+dateSelect.addEventListener('change', () => {
+    const [year, monthNum] = dateSelect.value.split('-');
+    currentYear = year;
+    currentMonth = monthNames[parseInt(monthNum, 10) - 1];
+    updateSeasonHeader();
+    // Update month display
+    document.querySelector('.month-display').textContent = `${currentMonth} ${currentYear}`;
+    renderItems();
+    updateStats();
+});
+
 // Update statistics
 function updateStats() {
-    const totalItems = seasonalItems.length;
-    const inSeasonItems = seasonalItems.filter(item => item.season === 'Peak Season').length;
-    const locallyAvailable = seasonalItems.filter(item => item.availability === 'Locally Available').length;
-    
-    document.getElementById('total-items').textContent = totalItems;
-    
-    // Calculate local availability percentage
-    const localPercentage = Math.round((locallyAvailable / totalItems) * 100);
+    const filtered = getFilteredItems();
+    document.getElementById('total-items').textContent = filtered.length;
+    document.getElementById('shopping-list-count').textContent = shoppingList.length;
+    // Locally available percentage
+    const locallyAvailable = filtered.filter(item => item.availability === 'Locally Available').length;
+    const localPercentage = filtered.length > 0 ? Math.round((locallyAvailable / filtered.length) * 100) : 0;
     document.querySelector('.stat-item:last-child .stat-number').textContent = `${localPercentage}%`;
 }
 
