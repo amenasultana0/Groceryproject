@@ -454,6 +454,11 @@ function renderNotificationsPanel() {
       </div>
       <button class="delete-notification-btn" title="Delete"><i class="fas fa-trash"></i></button>
     </div>
+    <div>
+    <button id="clearNotificationsBtn" class="btn-secondary" style="margin-top: 10px;">
+      Clear All
+    </button>
+  </div>
   `).join('');
   // Show or hide the Clear All button based on notifications
 if (notifications.length > 0) {
