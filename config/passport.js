@@ -10,21 +10,24 @@ passport.use(new GoogleStrategy({
   clientSecret: process.env.GOOGLE_CLIENT_SECRET,
   callbackURL: 'http://localhost:3000/api/auth/google/callback'
 }, async (accessToken, refreshToken, profile, done) => {
+  const newUser = {
+    googleId: profile.id,
+    displayName: profile.displayName,
+    email: profile.emails[0].value,
+    image: profile.photos[0].value,
+  };
+
   try {
-    let user = await User.findOne({ email: profile.emails[0].value });
+    let user = await User.findOne({ googleId: profile.id });
 
-    if (!user) {
-      user = await User.create({
-        name: profile.displayName,
-        email: profile.emails[0].value,
-        googleId: profile.id
-      });
+    if (user) {
+      done(null, user);
+    } else {
+      user = await User.create(newUser);
+      done(null, user);
     }
-
-    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: '7d' });
-
-    return done(null, user); // pass token too
   } catch (err) {
+    console.error(err);
     done(err, null);
   }
 }));
@@ -58,5 +61,5 @@ passport.serializeUser((user, done) => {
 });
 
 passport.deserializeUser((id, done) => {
-  User.findById(id).then((user) => done(null, user));
+  User.findById(id, (err, user) => done(err, user));
 });

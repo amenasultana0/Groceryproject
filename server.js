@@ -26,7 +26,6 @@ app.use(passport.session());
 
 const categoryRoutes = require('./routes/categoryRoutes');
 const settingsRoutes = require('./routes/settingsRoutes');
-const trendingRoute = require('./routes/trendingItems');
 
 const authRoutes = require('./routes/authRoutes');
 const productRoutes = require('./routes/productRoutes');
@@ -64,7 +63,6 @@ app.use('/api', settingsRoutes);
 app.use('/api/reports', reportRoutes);
 app.use('/api', suggestionsRouter);
 app.use('/api/notifications', notificationsRoute);
-app.use('/api/trending-items', trendingRoute);
 
 
 // API route to fetch notifications
