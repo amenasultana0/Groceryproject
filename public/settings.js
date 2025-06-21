@@ -103,7 +103,7 @@ class SettingsManager {
         const backButton = document.querySelector('.back-button');
         if (backButton) {
             backButton.addEventListener('click', () => {
-                window.history.back();
+                 window.location.href = 'dashboard.html';
             });
         }
 
@@ -265,10 +265,10 @@ class SettingsManager {
     handleClickableAction(action) {
         switch (action) {
             case 'Privacy Policy':
-                window.open('/privacy-policy', '_blank');
+                window.open('privacy.html', '_self');
                 break;
             case 'Terms of Service':
-                window.open('/terms-of-service', '_blank');
+                window.open('terms.html', '_self');
                 break;
             case 'Contact Support':
                 window.open('mailto:support@grocerytrack.com', '_blank');
