@@ -22,7 +22,7 @@ router.get('/unread-count', authMiddleware, async (req, res) => {
 });
 
 // Delete all notifications
-router.delete('/', authMiddleware, async (req, res) => {
+router.delete('/clear', authMiddleware, async (req, res) => {
   await Notification.deleteMany({ userId: req.user._id });
   res.json({ success: true });
 });

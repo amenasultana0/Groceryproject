@@ -167,31 +167,6 @@
     flex-grow: 1;           
     max-width:100%;       
     margin-right: 1rem;
-    display: flex;
-    align-items: center;
-
-}
-
-#inventory-search {
-  padding-right: 2em; /* Space for the clear button */
-}
-
-#clear-search-btn {
-  position: absolute;
-  right: 10px;
-  top: 50%;
-  transform: translateY(-50%);
-  background: transparent;
-  border: none;
-  font-size: 1.2em;
-  cursor: pointer;
-  color: #888;
-  display: none;
-  z-index: 2;
-  padding: 0;
-  line-height: 1;
-  height: 1.5em;
-  width: 1.5em;
 }
 
 .search-bar input {
@@ -299,39 +274,7 @@
 .add-item-btn:hover {
     background-color: var(--primary-dark);
 }
-/* Make this rule more specific to override others */
-.dashboard-page .back-home-btn {
-    display: inline-flex !important;
-    align-items: center !important;
-    gap: 0.2rem !important;
-    padding: 0.25rem 0.5rem !important; /* Smaller padding */
-    background-color: #0066ff !important;
-    color: white !important;
-    border: none !important;
-    border-radius: 0.375rem !important;
-    font-weight: 500 !important;
-    font-size: 0.75rem !important; /* Smaller font */
-    transition: all 0.2s ease !important;
-    text-decoration: none !important;
-    position: absolute !important;
-    top: 1rem !important;
-    left: 1rem !important;
-    z-index: 10 !important;
-    height: auto !important; /* Let content determine height */
-    line-height: 1 !important; /* Tighter line spacing */
-    min-height: 24px !important; /* Minimum touch target size */
-}
 
-.dashboard-page .back-home-btn:hover {
-    background-color: #0052cc !important;
-    transform: scale(0.98) !important;
-}
-
-/* Force icon size to match */
-.dashboard-page .back-home-btn i {
-    font-size: 0.7rem !important;
-    margin: 0 !important;
-}
 /* Dashboard Content */
 .stats-grid {
     display: grid;
@@ -1222,94 +1165,6 @@ textarea:focus {
 .main-content {
   margin-left: 260px;
   transition: margin-left 0.3s ease;
-  width: calc(100% - 260px);
-}
-
-.main-content.sidebar-collapsed {
-  margin-left: 0;
-  width: 100%;
-}
-.dashboard-content {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 1rem;
-  transition: all 0.3s ease;
-}
-/* When sidebar is collapsed, center everything */
-.main-content.sidebar-collapsed .dashboard-content {
-  max-width: 1400px;
-  margin: 0 auto;
-}
-
-
-/* Mobile specific adjustments */
-@media (max-width: 768px) {
-  .sidebar {
-    transform: translateX(-100%); /* Start hidden on mobile */
-  }
-  
-  .sidebar.open {
-    transform: translateX(0);
-  }
-  
-  .main-content {
-    margin-left: 0; /* No margin on mobile */
-  }
-}
-
-/* Mobile responsive adjustments */
-@media (max-width: 768px) {
-  .sidebar {
-    transform: translateX(-100%);
-  }
-  
-  .sidebar.open {
-    transform: translateX(0);
-  }
-  
-  .main-content {
-    margin-left: 0;
-  }
-}
-/* Sidebar Toggle Styles */
-.sidebar {
-  position: fixed;
-  left: 0;
-  top: 0;
-  width: 260px;
-  height: 100vh;
-  background: #fff;
-  box-shadow: 2px 0 10px rgba(0,0,0,0.1);
-  transform: translateX(0);
-  transition: transform 0.3s ease;
-  z-index: 1000;
-}
-
-.sidebar.collapsed {
-  transform: translateX(-100%);
-}
-
-.sidebar-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(0,0,0,0.5);
-  opacity: 0;
-  visibility: hidden;
-  transition: all 0.3s ease;
-  z-index: 999;
-}
-
-.sidebar-overlay.active {
-  opacity: 1;
-  visibility: visible;
-}
-
-.main-content {
-  margin-left: 260px;
-  transition: margin-left 0.3s ease;
 }
 
 .main-content.sidebar-collapsed {
@@ -1343,31 +1198,5 @@ textarea:focus {
   
   .main-content {
     margin-left: 0;
-  }
-}
-
-/* ADD THIS CSS BLOCK HERE - Toggle Button Styles */
-.sidebar-toggle {
-  background: none;
-  border: none;
-  color: var(--text-color, #374151);
-  font-size: 1.2rem;
-  padding: 0.5rem;
-  border-radius: 0.375rem;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: background-color 0.2s;
-}
-
-.sidebar-toggle:hover {
-  background-color: var(--hover-color, #f3f4f6);
-}
-
-/* Ensure toggle is visible on all screen sizes */
-@media (min-width: 768px) {
-  .sidebar-toggle {
-    display: flex;
   }
 }
