@@ -10,7 +10,7 @@
 </head>
 <body class="dashboard-page">
   <div class="sidebar-overlay" id="sidebarOverlay"></div>
-  <a href="index.html" class="add-item-btn">
+  <a href="index.html" class="back-home-btn">
     <i class="fas fa-arrow-left"></i> Back to Home
   </a>
 
@@ -81,15 +81,13 @@
 
   <main class="main-content">
     <header class="top-bar">
-      <button class="sidebar-toggle">
+      <button class="mobile-menu">
         <i class="fas fa-bars"></i>
       </button>
 
       <div class="search-bar">
         <i class="fas fa-search"></i>
         <input type="text" placeholder="Search items..."/>
-      </div>
-      <button id="clear-search-btn" type="button" title="Clear search" style="display:none;">×</button>
       </div>
 
       <div class="top-actions">
@@ -106,7 +104,6 @@
         </button>
       </div>
       <div id="notificationsPanel">
-        
       </div>
     </header>
 
@@ -228,6 +225,28 @@
           <div class="form-group">
             <label for="expiryDate">Expiry Date</label>
             <input type="date" id="expiryDate" required/>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label for="unitOfMeasurement">Unit</label>
+            <select id="unitOfMeasurement" required>
+              <option value="">Select unit</option>
+              <option value="kg">Kilogram (kg)</option>
+              <option value="g">Gram (g)</option>
+              <option value="litre">Litre (L)</option>
+              <option value="ml">Millilitre (ml)</option>
+              <option value="pcs">Pieces (pcs)</option>
+              <!-- Add more as needed -->
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="costPrice">Cost Price</label>
+            <input type="number" id="costPrice" required min="0" placeholder="e.g. 30" />
+          </div>
+          <div class="form-group">
+            <label for="sellingPrice">Selling Price</label>
+            <input type="number" id="sellingPrice" required min="0" placeholder="e.g. 40" />
           </div>
         </div>
 

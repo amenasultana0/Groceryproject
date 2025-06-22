@@ -13,9 +13,9 @@ const productSchema = new mongoose.Schema({
     sparse: true // Allows multiple null values
   },
   category: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'Category',
+    type: String,
     required: true,
+    trim: true,
   },
   quantity: {
     type: Number,

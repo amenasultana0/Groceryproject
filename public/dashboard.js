@@ -45,6 +45,9 @@ const notificationBtn = document.querySelector('.notification-btn');
 const notificationsPanel = document.getElementById('notificationsPanel');
 const notificationBadge = document.querySelector('.notification-btn .badge') || document.querySelector('.badge');
 const micButton = document.getElementById('micButton');
+const unitOfMeasurement = document.getElementById('unitOfMeasurement').value;
+const costPrice = parseFloat(document.getElementById('costPrice').value);
+const sellingPrice = parseFloat(document.getElementById('sellingPrice').value);
 
 
 // --- State ---
@@ -382,6 +385,9 @@ function editItem(id) {
   document.getElementById('quantity').value = item.quantity;
   document.getElementById('purchaseDate').value = item.purchaseDate;
   document.getElementById('expiryDate').value = item.expiryDate;
+  document.getElementById('costPrice').value = item.costDate;
+  document.getElementById('sellingPrice').value = item.sellingPrice;
+  document.getElementById('unitOfMeasurement').value = item.unitOfMeasurement;
   document.getElementById('notes').value = item.notes;
   openModal();
   addItemForm.onsubmit = async (e) => {
@@ -411,6 +417,10 @@ function getItemFormData() {
     quantity: document.getElementById('quantity').value,
     purchaseDate: document.getElementById('purchaseDate').value,
     expiryDate: document.getElementById('expiryDate').value,
+    purchaseDate: document.getElementById('purchaseDate').value,
+    unitOfMeasurement: document.getElementById('unitOfMeasurement').value,
+    costPrice: parseFloat(document.getElementById('costPrice').value),
+    sellingPrice: parseFloat(document.getElementById('sellingPrice').value),
     notes: document.getElementById('notes').value,
     createdAt: new Date().toISOString()
   };
@@ -457,34 +467,53 @@ async function markAllNotificationsAsRead() {
 }
 function renderNotificationsPanel() {
   if (!notificationsPanel) return;
+
   const backendNotifications = notifications.filter(n => n._id);
   if (!backendNotifications.length) {
     notificationsPanel.innerHTML = `<div class="notification-item">No notifications yet.</div>`;
     return;
   }
-  notificationsPanel.innerHTML = backendNotifications
-    .map(n => `
-    <div class="notification-item${n.read ? '' : ' unread'}" data-id="${n._id}">
-      <span class="icon"><i class="fas fa-bell"></i></span>
-      <div class="content">
-        <div>${n.message}</div>
-        <div class="time">${new Date(n.createdAt).toLocaleString()}</div>
-      </div>
-      <button class="delete-notification-btn" title="Delete"><i class="fas fa-trash"></i></button>
-    </div>
-    <div>
-    <button id="clearNotificationsBtn" class="btn-secondary" style="margin-top: 10px;">
-      Clear All
-    </button>
-  </div>
-  `).join('');
-  // Show or hide the Clear All button based on notifications
-if (notifications.length > 0) {
-  clearNotificationsBtn.style.display = 'block';
-} else {
-  clearNotificationsBtn.style.display = 'none';
-}
 
+  notificationsPanel.innerHTML = `
+    ${backendNotifications.map(n => `
+      <div class="notification-item${n.read ? '' : ' unread'}" data-id="${n._id}">
+        <span class="icon"><i class="fas fa-bell"></i></span>
+        <div class="content">
+          <div>${n.message}</div>
+          <div class="time">${new Date(n.createdAt).toLocaleString()}</div>
+        </div>
+        <button class="delete-notification-btn" title="Delete"><i class="fas fa-trash"></i></button>
+      </div>
+    `).join('')}
+    <div>
+      <button id="clearNotificationsBtn" class="btn-secondary" style="margin-top: 10px;">
+        Clear All
+      </button>
+    </div>
+  `;
+
+  const clearBtn = document.getElementById('clearNotificationsBtn');
+  if (clearBtn) {
+    clearBtn.style.display = notifications.length > 0 ? 'block' : 'none';
+
+    clearBtn.addEventListener('click', async () => {
+      if (!confirm("Are you sure you want to clear all notifications?")) return;
+
+      try {
+        await fetch('http://localhost:3000/api/notifications/clear', {
+          method: 'DELETE',
+          headers: { Authorization: `Bearer ${getToken()}` }
+        });
+
+        notifications = [];
+        updateUnreadCount(0);
+        renderNotificationsPanel();
+        showNotification("All notifications cleared!", "success");
+      } catch (err) {
+        showNotification("Failed to clear notifications", "error");
+      }
+    });
+  }
   notificationsPanel.querySelectorAll('.delete-notification-btn').forEach(btn => {
     btn.addEventListener('click', async (e) => {
       e.stopPropagation();
@@ -616,25 +645,7 @@ document.addEventListener('keydown', (e) => {
     setTimeout(startScanner, 300);
   }
 });
-clearNotificationsBtn?.addEventListener('click', async () => {
-  if (!confirm("Are you sure you want to clear all notifications?")) return;
 
-  try {
-    // Delete from server
-    await fetch('http://localhost:3000/api/notifications/clear', {
-      method: 'DELETE',
-      headers: { Authorization: `Bearer ${getToken()}` }
-    });
-
-    // Clear from local state
-    notifications = [];
-    updateUnreadCount(0);
-    renderNotificationsPanel();
-    showNotification("All notifications cleared!", "success");
-  } catch (err) {
-    showNotification("Failed to clear notifications", "error");
-  }
-});
 micButton?.addEventListener('click', () => {
   const micPanel = document.getElementById('micPanel');
   micPanel.classList.remove('hidden');
