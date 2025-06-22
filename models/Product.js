@@ -6,15 +6,44 @@ const productSchema = new mongoose.Schema({
     required: true,
     trim: true,
   },
-  category: {
-    type: String,  // Add this field
-    required: true,
+  sku: {
+    type: String,
     trim: true,
+    unique: true,
+    sparse: true // Allows multiple null values
+  },
+  category: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Category',
+    required: true,
   },
   quantity: {
     type: Number,
     required: true,
     min: 0,
+  },
+  unitOfMeasurement: {
+    type: String, // e.g., 'kg', 'liter', 'piece'
+    required: true,
+    trim: true,
+  },
+  costPrice: {
+    type: Number,
+    required: true,
+    min: 0
+  },
+  sellingPrice: {
+    type: Number,
+    required: true,
+    min: 0
+  },
+  reorderThreshold: {
+    type: Number,
+    default: 0
+  },
+  supplier: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Supplier'
   },
   expiryDate: {
     type: Date,

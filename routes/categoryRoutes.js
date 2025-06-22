@@ -3,15 +3,17 @@ const router = express.Router();
 const Category = require('../models/Category'); // Your mongoose model
 const authMiddleware = require('../middleware/authMiddleware'); 
 
+// @route   GET api/categories
+// @desc    Get all categories for a user
+// @access  Private
 router.get('/', authMiddleware, async (req, res) => {
-  try {
-    const userId = req.user.id;
-    const categories = await Category.find({ user: userId });
-    res.json(categories);
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: 'Server error' });
-  }
+    try {
+        const categories = await Category.find({ user: req.user.id }).sort({ name: 1 });
+        res.json(categories);
+    } catch (err) {
+        console.error(err.message);
+        res.status(500).send('Server Error');
+    }
 });
 
 // Add a new category

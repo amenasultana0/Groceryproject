@@ -1,0 +1,41 @@
+[
+  {
+    "name": "Mango",
+    "type": "fruits",
+    "regionTags": ["Maharashtra", "Andhra-Telangana", "West Bengal"],
+    "monthAvailable": ["May", "June", "July"],
+    "seasonTags": ["Summer"],
+    "note": "Juicy and sweet king of fruits",
+    "emoji": "🥭",
+    "rating": 5,
+    "benefits": ["Rich in Vitamin C", "Boosts immunity"],
+    "availability": "Locally Available",
+    "tips": "Choose mangoes that yield slightly to pressure."
+  },
+  {
+    "name": "Litchi",
+    "type": "fruits",
+    "regionTags": ["Bihar-Jharkhand", "West Bengal"],
+    "monthAvailable": ["May", "June", "July"],
+    "seasonTags": ["Summer"],
+    "note": "Short seasonal delight",
+    "emoji": "🍈",
+    "rating": 4,
+    "benefits": ["Vitamin C", "Good for skin"],
+    "availability": "Local Markets",
+    "tips": "Pick red-pink ones with no cracks."
+  },
+  {
+    "name": "Sweet Corn",
+    "type": "vegetables",
+    "regionTags": ["Punjab-Haryana", "Uttar Pradesh"],
+    "monthAvailable": ["May", "June", "July"],
+    "seasonTags": ["Summer", "Monsoon"],
+    "note": "Perfect for grilling and boiling",
+    "emoji": "🌽",
+    "rating": 4,
+    "benefits": ["High in fiber", "Good antioxidants"],
+    "availability": "Locally Available",
+    "tips": "Look for plump kernels and green husks."
+  }
+]
