@@ -86,6 +86,35 @@ app.get('/api/notifications/unread-count', authMiddleware, async (req, res) => {
 // Serve frontend static files
 app.use(express.static(path.join(__dirname, 'public')));
 
+// --- What's in Season API ---
+const fs = require('fs');
+const seasonalDataPath = path.join(__dirname, 'data', 'seasonalItems.json');
+
+app.get('/api/produce', (req, res) => {
+  const { state, month } = req.query;
+  if (!state || !month) {
+    return res.status(400).json({ fruits: [], vegetables: [] });
+  }
+
+  fs.readFile(seasonalDataPath, 'utf8', (err, data) => {
+    if (err) {
+      console.error('Error reading seasonalItems.json:', err);
+      return res.status(500).json({ fruits: [], vegetables: [] });
+    }
+    let json;
+    try {
+      json = JSON.parse(data);
+    } catch (e) {
+      return res.status(500).json({ fruits: [], vegetables: [] });
+    }
+    const stateData = json[state];
+    const monthData = stateData ? stateData[month] : null;
+   res.json({
+  fruits: monthData && monthData.fruits ? monthData.fruits : [],
+  vegetables: monthData && monthData.vegetables ? monthData.vegetables : []
+});
+  });
+});
 
 app.get(/^\/(?!api|auth).*/, (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));

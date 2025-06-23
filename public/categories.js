@@ -1,12 +1,52 @@
 let seasonalItems = [];
 
-fetch('/data/seasonalItems.json')
-  .then(res => res.json())
-  .then(data => {
-    seasonalItems = data;
-    renderItems();
-    updateStats();
-  });
+async function fetchSeasonalItems(region, month) {
+  try {
+    const res = await fetch(`http://localhost:3000/api/produce?state=${encodeURIComponent(region)}&month=${encodeURIComponent(month)}`);
+    if (!res.ok) return [];
+    const data = await res.json();
+    const items = [];
+    if (data.fruits) {
+  data.fruits.forEach(fruit => items.push({
+    name: fruit.name,
+    type: 'fruit',
+    regionTags: [region],
+    monthAvailable: [month],
+    emoji: fruit.emoji || '🍎',
+    note: fruit.nutrition || '',
+    benefits: [],
+    rating: Math.floor(Math.random() * 3) + 3, // random 1-5
+    season: month,
+    availability: fruit.localAvailability ? 'Locally Available' : 'Not Local',
+    about: fruit.about || '',
+    tips: fruit.tips || '',
+    price: ''
+  }));
+}
+if (data.vegetables) {
+  data.vegetables.forEach(veg => items.push({
+    name: veg.name,
+    type: 'vegetable',
+    regionTags: [region],
+    monthAvailable: [month],
+    emoji: veg.emoji || '🥦',
+    note: veg.nutrition || '',
+    benefits: [],
+    rating: Math.floor(Math.random() * 3) + 3, // random 1-5
+    season: month,
+    availability: veg.localAvailability ? 'Locally Available' : 'Not Local',
+    about: veg.about || '',
+    tips: veg.tips || '',
+    price: ''
+  }));
+
+    }
+    return items;
+  } catch (err) {
+    console.error('Error fetching seasonal items:', err);
+    return [];
+  }
+}
 
 // Application state
 let shoppingList = [];
@@ -70,59 +110,53 @@ const regionSelect = document.getElementById('region-select');
 const dateSelect = document.getElementById('date-select');
 
 // Initialize the application
-document.addEventListener('DOMContentLoaded', function() {
-    renderItems();
+document.addEventListener('DOMContentLoaded', async function() {
+    await renderItems();
     setupEventListeners();
     updateStats();
     rotateTips();
-    fetchTrendingItems(currentRegion);
     updateSeasonHeader();
 });
 
-// Render items based on current filter and search
-function renderItems() {
-    const filteredItems = getFilteredItems();
-    seasonalList.innerHTML = '';
-    
-    if (filteredItems.length === 0) {
-        seasonalList.innerHTML = `
-            <div class="no-results">
-                <i class="fas fa-search" style="font-size: 3rem; color: #ccc; margin-bottom: 1rem;"></i>
-                <h3>No items found</h3>
-                <p>Try adjusting your search or filter criteria.</p>
-            </div>
-        `;
-        return;
-    }
 
-    filteredItems.forEach((item, index) => {
-        const card = createItemCard(item, index);
-        seasonalList.appendChild(card);
-    });
 
-    // Apply view mode
-    seasonalList.className = `seasonal-grid ${currentView === 'list' ? 'list-view' : ''}`;
-    
-    // Update total items count
-    document.getElementById('total-items').textContent = filteredItems.length;
-}
+// async function fetchTrendingItems(region) {
+//   const season = getSeason(currentMonth); // You already have this function
 
-async function fetchTrendingItems(region) {
-  const season = getSeason(currentMonth); // You already have this function
-
-  try {
-    const res = await fetch(`/api/trending-items?region=${region}&season=${season}`);
-    const trendingItems = await res.json();
-    renderTrendingItems(trendingItems); // Add this display function
-  } catch (err) {
-    console.error('Error fetching trending items:', err);
-  }
-}
+//   try {
+//     const res = await fetch(`/api/trending-items?region=${region}&season=${season}`);
+//     const trendingItems = await res.json();
+//     renderTrendingItems(trendingItems); // Add this display function
+//   } catch (err) {
+//     console.error('Error fetching trending items:', err);
+//   }
+// }
 
 
 async function renderItems() {
-    const items = await fetchSeasonalItems(currentRegion, currentMonth);
-    // ...render as before...
+  seasonalItems = await fetchSeasonalItems(currentRegion, currentMonth);
+  const filteredItems = getFilteredItems();
+  const seasonalList = document.getElementById('seasonal-list');
+  seasonalList.innerHTML = '';
+
+  if (filteredItems.length === 0) {
+    seasonalList.innerHTML = `
+      <div class="no-results">
+        <i class="fas fa-search" style="font-size: 3rem; color: #ccc; margin-bottom: 1rem;"></i>
+        <h3>This basket’s feeling empty...</h3>
+<p>Help us fill it! Select a location and time of year.</p>
+      </div>
+    `;
+    return;
+  }
+
+  filteredItems.forEach((item, index) => {
+    const card = createItemCard(item, index);
+    seasonalList.appendChild(card);
+  });
+
+  seasonalList.className = `seasonal-grid ${currentView === 'list' ? 'list-view' : ''}`;
+  document.getElementById('total-items').textContent = filteredItems.length;
 }
 
 // Create individual item card
@@ -165,61 +199,61 @@ function createItemCard(item, index) {
     return card;
 }
 
-async function fetchTrendingItems(region = 'India') {
-  try {
-    const res = await fetch(`/api/trending-items?region=${encodeURIComponent(region)}`);
-    const data = await res.json();
+// async function fetchTrendingItems(region = 'India') {
+//   try {
+//     const res = await fetch(`/api/trending-items?region=${encodeURIComponent(region)}`);
+//     const data = await res.json();
 
-    if (!data.trending || data.trending.length === 0) {
-      document.getElementById('seasonal-list').innerHTML = `
-        <div class="no-results">
-            <i class="fas fa-seedling" style="font-size: 3rem; color: #ccc; margin-bottom: 1rem;"></i>
-            <h3>No trending items found</h3>
-            <p>Please check again later or try a different region.</p>
-        </div>
-      `;
-      return;
-    }
+//     if (!data.trending || data.trending.length === 0) {
+//       document.getElementById('seasonal-list').innerHTML = `
+//         <div class="no-results">
+//             <i class="fas fa-seedling" style="font-size: 3rem; color: #ccc; margin-bottom: 1rem;"></i>
+//             <h3>No trending items found</h3>
+//             <p>Please check again later or try a different region.</p>
+//         </div>
+//       `;
+//       return;
+//     }
 
-    renderTrendingItems(data.trending);
-  } catch (err) {
-    console.error("Error fetching trending items:", err);
-  }
-}
+//    // renderTrendingItems(data.trending);
+//   } catch (err) {
+//     console.error("Error fetching trending items:", err);
+//   }
+// }
 
-function renderTrendingItems(items) {
-  const container = document.getElementById('seasonal-list');
-  container.innerHTML = '';
+// function renderTrendingItems(items) {
+//   const container = document.getElementById('seasonal-list');
+//   container.innerHTML = '';
 
-  items.forEach((item, index) => {
-    const card = document.createElement('div');
-    card.className = 'item-card';
-    card.innerHTML = `
-      <div class="item-header">
-          <h3>🍃 ${item.name}</h3>
-          <span class="item-badge">Trending</span>
-      </div>
-      <div class="item-content">
-          <p>Calories: ${item.nutritions.calories}</p>
-          <p>Carbs: ${item.nutritions.carbohydrates}g</p>
-          <p>Sugar: ${item.nutritions.sugar}g</p>
-          <div class="item-actions">
-              <button class="add-to-list-btn" onclick="toggleShoppingList('${item.name}', event)">
-                  <i class="fas fa-plus"></i> Add to List
-              </button>
-          </div>
-      </div>
-    `;
-    container.appendChild(card);
-  });
+//   items.forEach((item, index) => {
+//     const card = document.createElement('div');
+//     card.className = 'item-card';
+//     card.innerHTML = `
+//       <div class="item-header">
+//           <h3>🍃 ${item.name}</h3>
+//           <span class="item-badge">Trending</span>
+//       </div>
+//       <div class="item-content">
+//           <p>Calories: ${item.nutritions.calories}</p>
+//           <p>Carbs: ${item.nutritions.carbohydrates}g</p>
+//           <p>Sugar: ${item.nutritions.sugar}g</p>
+//           <div class="item-actions">
+//               <button class="add-to-list-btn" onclick="toggleShoppingList('${item.name}', event)">
+//                   <i class="fas fa-plus"></i> Add to List
+//               </button>
+//           </div>
+//       </div>
+//     `;
+//     container.appendChild(card);
+//   });
 
-  updateStats();
-}
+//   updateStats();
+// }
 
 
 function updateSeasonHeader() {
   const season = getSeason(currentMonth); // you already have getSeason()
-  document.querySelector('.season-indicator span').textContent = `${season} Picks`;
+  document.querySelector('.season-indicator span').textContent = `${season} Harvest`;
 }
 
 
@@ -579,19 +613,18 @@ function getFilteredItems() {
 }
 
 // Listen for region and date changes
-regionSelect.addEventListener('change', () => {
+regionSelect.addEventListener('change', async () => {
     currentRegion = regionSelect.value;
-    fetchTrendingItems(currentRegion);
+    await renderItems();
     updateStats();
 });
-dateSelect.addEventListener('change', () => {
+dateSelect.addEventListener('change', async () => {
     const [year, monthNum] = dateSelect.value.split('-');
     currentYear = year;
     currentMonth = monthNames[parseInt(monthNum, 10) - 1];
     updateSeasonHeader();
-    // Update month display
     document.querySelector('.month-display').textContent = `${currentMonth} ${currentYear}`;
-    renderItems();
+    await renderItems();
     updateStats();
 });
 
