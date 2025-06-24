@@ -1,3 +1,5 @@
+import { populateCategoryDropdown } from '../utils/categoryHelper.js';
+
 function normalizeStatus(status) {
     if (!status) return '-';
     status = status.toLowerCase().replace(/\s+/g, '');
@@ -30,6 +32,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     initializeEventListeners();
     generateReport();
+    populateCategoryDropdown('categoryFilter')
 });
 
 function initializeEventListeners() {

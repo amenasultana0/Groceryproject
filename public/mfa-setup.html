@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Setup MFA</title>
+</head>
+<body>
+  <h2>Enable Multi-Factor Authentication</h2>
+  <div id="qr"></div>
+  <input type="text" id="setup-code" placeholder="Enter 6-digit code" maxlength="6" />
+  <button onclick="verifyMfaSetup()">Verify and Enable</button>
+  <p id="status"></p>
+
+  <script>
+    const userId = localStorage.getItem('userId') || JSON.parse(localStorage.getItem('user')).id;
+
+    // Step 1: Fetch QR code for current user
+    fetch(`/api/auth/setup-mfa?userId=${userId}`)
+      .then(res => res.json())
+      .then(data => {
+        if (data.qrCodeUrl) {
+          const img = document.createElement('img');
+          img.src = data.qrCodeUrl;
+          document.getElementById('qr').appendChild(img);
+        } else {
+          document.getElementById('status').textContent = 'Error fetching QR code.';
+        }
+      });
+
+    // Step 2: Submit code to confirm MFA
+    function verifyMfaSetup() {
+      const token = document.getElementById('setup-code').value;
+
+      fetch('/api/auth/verify-mfa-setup', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId, token })
+      })
+        .then(res => res.json())
+        .then(data => {
+          if (data.message) {
+            document.getElementById('status').textContent = '✅ MFA Enabled!';
+            setTimeout(() => window.location.href = 'dashboard.html', 2000);
+          } else {
+            document.getElementById('status').textContent = data.error || '❌ Invalid code.';
+          }
+        });
+    }
+  </script>
+</body>
+</html>

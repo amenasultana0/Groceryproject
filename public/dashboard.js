@@ -692,7 +692,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   setUserInfo();
   setTimeout(async () => {
     loadItems();
-    fetchUnreadNotificationCount();
+    populateCategoryDropdown('category');
     try {
       const res = await fetch('http://localhost:3000/api/notifications', {
         headers: { Authorization: `Bearer ${getToken()}` }

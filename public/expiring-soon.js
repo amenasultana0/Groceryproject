@@ -1,4 +1,4 @@
-import { populateCategoryDropdown } from './utils/categoryHelper.js'; 
+import { populateCategoryDropdown } from './utils/categoryHelper.js';
 
 const BACKEND_URL = 'http://127.0.0.1:3000';
 let allItems = [];
@@ -23,8 +23,9 @@ sortBy?.addEventListener('change', loadItems);
 
 // Initialize
 document.addEventListener('DOMContentLoaded', async () => {
-    populateCategoryDropdown('categoryFilter'); // For <select id="categoryFilter">
     await loadItems();
+    console.log("populateCategoryDropdown called on Expiring Soon page");
+    populateCategoryDropdown('categoryFilter');
 });
 
 function getToken() {
@@ -44,7 +45,6 @@ function getToken() {
 async function fetchItems() {
    try {
         const token = getToken();
-        console.log("Using token:", token);
         if (!token) throw new Error('No auth token found');
         
         const searchText = document.querySelector('.search-bar input').value.trim();
@@ -70,7 +70,6 @@ async function fetchItems() {
         }
 
         const data = await response.json();
-        console.log("Fetched items from backend:", data);
         return data.items || data; // Adjust based on your API response structure
     } catch (error) {
         console.error(error);
@@ -292,12 +291,6 @@ function applyFilters() {
     
     const activeFilterBtn = document.querySelector('.filter-btn.active');
     const activeFilter = activeFilterBtn ? getFilterName(activeFilterBtn) : 'All Items';
-    
-    console.log("Active Filter (raw):", activeFilter);
-    console.log("Sanitized:", activeFilter.trim().toLowerCase());
-
-    console.log("Active Filter (exact):", JSON.stringify(activeFilter));
-    console.log("Items count before filter:", items.length);
     // Apply search filter
     if (searchTerm) {
         items = items.filter(item => 
@@ -315,7 +308,6 @@ function applyFilters() {
     if (activeFilter.trim().toLowerCase() !== 'all items') {
         const priority = activeFilter.replace(' Priority', '').toLowerCase();
         items = items.filter(item => getPriority(item.expiryDate) === priority);
-        console.log("Items count after priority filter:", items.length);
     }
     
     // Apply sorting
@@ -331,7 +323,6 @@ function applyFilters() {
                 return new Date(a.expiryDate) - new Date(b.expiryDate);
         }
     });
-    console.log("Items after filters:", items.length);
     renderItems(items);
 }
 

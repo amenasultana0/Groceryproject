@@ -3,6 +3,7 @@ const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 const rateLimit = require('express-rate-limit');
 const passport = require('passport');
+const authMiddleware = require('../middleware/authMiddleware');
 
 const router = express.Router();
 
@@ -150,5 +151,31 @@ router.get('/github/callback',
     res.redirect(`http://127.0.0.1:5500/public/dashboard.html?token=${token}&user=${encodedUser}`);
   }
 );
+
+const protect = async (req, res, next) => {
+  const authHeader = req.headers.authorization;
+
+  if (authHeader && authHeader.startsWith('Bearer ')) {
+    const token = authHeader.split(' ')[1];
+
+    try {
+      const decoded = jwt.verify(token, process.env.JWT_SECRET);
+      const user = await User.findById(decoded.id).select('-password');
+      if (!user) return res.status(404).json({ message: 'User not found' });
+
+      req.user = user;
+      next();
+    } catch (err) {
+      return res.status(401).json({ message: 'Invalid token' });
+    }
+  } else {
+    return res.status(401).json({ message: 'No token provided' });
+  }
+};
+
+router.get('/profile', authMiddleware, async (req, res) => {
+  const { name, email } = req.user;
+  res.json({ name, email });
+});
 
 module.exports = router;

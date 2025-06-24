@@ -18,14 +18,17 @@
             <nav class="inventory-nav">
                 <h2>INVENTORY</h2>
                 <ul>
-                    <li class="active"><a href="#" data-target="fruits-vegetables-grid"><i class="fas fa-fw fa-carrot"></i><span>Fruits & Vegetables</span></a></li>
+                    <li class="active"><a href="#" data-target="fruits-grid"><i class="fas fa-fw fa-apple-alt"></i><span>Fruits</span></a></li>
+                    <li><a href="#" data-target="vegetables-grid"><i class="fas fa-fw fa-carrot"></i><span>Vegetables</span></a></li>
+                    <li><a href="#" data-target="dairy-grid"><i class="fas fa-fw fa-cheese"></i><span>Dairy</span></a></li>
                     <li><a href="#" data-target="meats-grid"><i class="fas fa-fw fa-drumstick-bite"></i><span>Meats</span></a></li>
                     <li><a href="#" data-target="bakery-grid"><i class="fas fa-fw fa-bread-slice"></i><span>Bakery</span></a></li>
-                    <li><a href="#" data-target="pantry-grid"><i class="fas fa-fw fa-leaf"></i><span>Pantry</span></a></li>
                     <li><a href="#" data-target="beverages-grid"><i class="fas fa-fw fa-wine-bottle"></i><span>Beverages</span></a></li>
-                    <li><a href="#" data-target="frozen-grid"><i class="fas fa-fw fa-ice-cream"></i><span>Frozen</span></a></li>
+                    <li><a href="#" data-target="pantry-grid"><i class="fas fa-fw fa-leaf"></i><span>Pantry</span></a></li>
                     <li><a href="#" data-target="snacks-grid"><i class="fas fa-fw fa-cookie"></i><span>Snacks</span></a></li>
-                    <li><a href="#" data-target="dairy-grid"><i class="fas fa-fw fa-cheese"></i><span>Dairy</span></a></li>
+                    <li><a href="#" data-target="frozen-grid"><i class="fas fa-fw fa-ice-cream"></i><span>Frozen</span></a></li>
+                    <li><a href="#" data-target="grains-grid"><i class="fas fa-fw fa-bowl-rice"></i><span>Grains</span></a></li>
+                    <li><a href="#" data-target="condiments-grid"><i class="fas fa-fw fa-pepper-hot"></i><span>Condiments</span></a></li>
                 </ul>
             </nav>
         </aside>
@@ -34,10 +37,14 @@
                 <h1>Stock Management</h1>
                 <div class="header-controls">
                     <button id="addCategoryBtn" class="btn-primary"><i class="fas fa-plus"></i> Add Category</button>
-                    <div class="user-profile">
-                        <i class="fas fa-user-circle fa-2x"></i>
-                        <span class="notification-badge">4</span>
+                    <div class="user-profile" id="profileDropdown">
+                        <img id="userAvatar" class="user-avatar" src="" alt="Profile">
+                        <div class="dropdown-menu hidden" id="profileMenu">
+                            <p id="dropdownUsername">Username</p>
+                            <button id="logoutBtn">Logout</button>
+                        </div>
                     </div>
+
                 </div>
             </header>
             <section class="content-area">
@@ -56,278 +63,22 @@
                         </div>
                     </div>
                     <div id="product-display" class="product-grid">
-                        <div id="fruits-vegetables-grid" class="category-grid active">
-                            <div class="product-card">
-                                <img src="https://images.pexels.com/photos/143133/pexels-photo-143133.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1" alt="Organic Carrots">
-                                <div class="card-body">
-                                    <h3>Organic Carrots</h3>
-                                    <p>Fresh from local farms</p>
-                                    <div class="card-footer">
-                                        <div class="stock-info">
-                                            <span class="stock-quantity">120 in stock</span>
-                                            <div class="stock-bar-container">
-                                                <div class="stock-bar stock-high" style="width: 95%;"></div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="product-card">
-                                <img src="https://images.pexels.com/photos/1327838/pexels-photo-1327838.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1" alt="Heirloom Tomatoes">
-                                <div class="card-body">
-                                    <h3>Heirloom Tomatoes</h3>
-                                    <p>Sweet and juicy</p>
-                                    <div class="card-footer">
-                                        <div class="stock-info">
-                                            <span class="stock-quantity">85 in stock</span>
-                                            <div class="stock-bar-container">
-                                                <div class="stock-bar stock-medium" style="width: 70%;"></div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="product-card">
-                                <img src="https://images.pexels.com/photos/1359326/pexels-photo-1359326.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1" alt="Broccoli Florets">
-                                <div class="card-body">
-                                    <h3>Broccoli Florets</h3>
-                                    <p>Organic and fresh</p>
-                                    <div class="card-footer">
-                                        <div class="stock-info">
-                                            <span class="stock-quantity">50 in stock</span>
-                                            <div class="stock-bar-container">
-                                                <div class="stock-bar stock-medium" style="width: 50%;"></div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="product-card">
-                                <img src="https://images.pexels.com/photos/2329440/pexels-photo-2329440.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1" alt="Cucumbers">
-                                <div class="card-body">
-                                    <h3>Cucumbers</h3>
-                                    <p>Crisp and refreshing</p>
-                                    <div class="card-footer">
-                                        <div class="stock-info">
-                                            <span class="stock-quantity">90 in stock</span>
-                                            <div class="stock-bar-container">
-                                                <div class="stock-bar stock-medium" style="width: 75%;"></div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div id="meats-grid" class="category-grid">
-                            <div class="product-card">
-                                <img src="https://images.pexels.com/photos/616354/pexels-photo-616354.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1" alt="Free-Range Chicken">
-                                <div class="card-body">
-                                    <h3>Free-Range Chicken</h3>
-                                    <p>Whole chicken</p>
-                                    <div class="card-footer">
-                                        <div class="stock-info">
-                                            <span class="stock-quantity">40 in stock</span>
-                                            <div class="stock-bar-container">
-                                                <div class="stock-bar stock-low" style="width: 40%;"></div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="product-card">
-                                <img src="https://images.pexels.com/photos/3997573/pexels-photo-3997573.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1" alt="Ribeye Steak">
-                                <div class="card-body">
-                                    <h3>Ribeye Steak</h3>
-                                    <p>Grass-fed, aged 28 days</p>
-                                    <div class="card-footer">
-                                        <div class="stock-info">
-                                            <span class="stock-quantity">30 in stock</span>
-                                            <div class="stock-bar-container">
-                                                <div class="stock-bar stock-low" style="width: 30%;"></div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div id="bakery-grid" class="category-grid">
-                            <div class="product-card">
-                                <img src="https://images.pexels.com/photos/1775043/pexels-photo-1775043.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1" alt="Sourdough Bread">
-                                <div class="card-body">
-                                    <h3>Sourdough Bread</h3>
-                                    <p>Freshly baked</p>
-                                    <div class="card-footer">
-                                        <div class="stock-info">
-                                            <span class="stock-quantity">25 in stock</span>
-                                            <div class="stock-bar-container">
-                                                <div class="stock-bar stock-low" style="width: 25%;"></div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div id="pantry-grid" class="category-grid">
-                            <div class="product-card">
-                                <img src="https://images.pexels.com/photos/1435903/pexels-photo-1435903.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1" alt="Canned Tomatoes">
-                                <div class="card-body">
-                                    <h3>Canned Tomatoes</h3>
-                                    <p>Organic, peeled</p>
-                                    <div class="card-footer">
-                                        <div class="stock-info">
-                                            <span class="stock-quantity">200 in stock</span>
-                                            <div class="stock-bar-container">
-                                                <div class="stock-bar stock-high" style="width: 100%;"></div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="product-card">
-                                <img src="https://images.pexels.com/photos/1487511/pexels-photo-1487511.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1" alt="Pasta">
-                                <div class="card-body">
-                                    <h3>Pasta</h3>
-                                    <p>Italian spaghetti</p>
-                                    <div class="card-footer">
-                                        <div class="stock-info">
-                                            <span class="stock-quantity">150 in stock</span>
-                                            <div class="stock-bar-container">
-                                                <div class="stock-bar stock-high" style="width: 80%;"></div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        <div id="beverages-grid" class="category-grid">
-                            <div class="product-card">
-                                <img src="https://images.pexels.com/photos/338713/pexels-photo-338713.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1" alt="Orange Juice">
-                                <div class="card-body">
-                                    <h3>Orange Juice</h3>
-                                    <p>100% pure squeezed</p>
-                                    <div class="card-footer">
-                                        <div class="stock-info">
-                                            <span class="stock-quantity">75 in stock</span>
-                                            <div class="stock-bar-container">
-                                                <div class="stock-bar stock-medium" style="width: 65%;"></div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        <div id="frozen-grid" class="category-grid">
-                             <div class="product-card">
-                                <img src="https://images.pexels.com/photos/825661/pexels-photo-825661.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1" alt="Frozen Pizza">
-                                <div class="card-body">
-                                    <h3>Frozen Pizza</h3>
-                                    <p>Pepperoni, 12-inch</p>
-                                    <div class="card-footer">
-                                        <div class="stock-info">
-                                            <span class="stock-quantity">60 in stock</span>
-                                            <div class="stock-bar-container">
-                                                <div class="stock-bar stock-medium" style="width: 55%;"></div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div id="snacks-grid" class="category-grid">
-                            <div class="product-card">
-                                <img src="https://images.pexels.com/photos/1583891/pexels-photo-1583891.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1" alt="Kettle-Cooked Chips">
-                                <div class="card-body">
-                                    <h3>Kettle-Cooked Chips</h3>
-                                    <p>Sea salt and vinegar</p>
-                                    <div class="card-footer">
-                                        <div class="stock-info">
-                                            <span class="stock-quantity">150 in stock</span>
-                                            <div class="stock-bar-container">
-                                                <div class="stock-bar stock-high" style="width: 100%;"></div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        <div id="dairy-grid" class="category-grid">
-                            <div class="product-card">
-                                <img src="https://images.pexels.com/photos/248412/pexels-photo-248412.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1" alt="Milk">
-                                <div class="card-body">
-                                    <h3>Whole Milk</h3>
-                                    <p>1 gallon, organic</p>
-                                    <div class="card-footer">
-                                        <div class="stock-info">
-                                            <span class="stock-quantity">50 in stock</span>
-                                            <div class="stock-bar-container">
-                                                <div class="stock-bar stock-medium" style="width: 50%;"></div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                             <div class="product-card">
-                                <img src="https://images.pexels.com/photos/821365/pexels-photo-821365.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1" alt="Cheddar Cheese">
-                                <div class="card-body">
-                                    <h3>Cheddar Cheese</h3>
-                                    <p>Aged, sharp block</p>
-                                    <div class="card-footer">
-                                        <div class="stock-info">
-                                            <span class="stock-quantity">80 in stock</span>
-                                            <div class="stock-bar-container">
-                                                <div class="stock-bar stock-medium" style="width: 70%;"></div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
+                    <div id="fruits-grid" class="category-grid active"></div>
+                    <div id="vegetables-grid" class="category-grid"></div>
+                    <div id="meats-grid" class="category-grid"></div>
+                    <div id="bakery-grid" class="category-grid"></div>
+                    <div id="pantry-grid" class="category-grid"></div>
+                    <div id="beverages-grid" class="category-grid"></div>
+                    <div id="frozen-grid" class="category-grid"></div>
+                    <div id="snacks-grid" class="category-grid"></div>
+                    <div id="dairy-grid" class="category-grid"></div>
                     </div>
+
                 </div>
                 <aside class="right-panel">
                     <h3>Stock Alerts</h3>
                     <p class="subtitle">Items running low</p>
-                    <ul class="watchlist">
-                        <li class="active">
-                            <div class="item-info">
-                                <i class="fas fa-exclamation-triangle" style="color: #e67e22;"></i>
-                                <span>Free-Range Chicken</span>
-                            </div>
-                            <span class="quantity">40 left</span>
-                        </li>
-                        <li>
-                            <div class="item-info">
-                                <i class="fas fa-exclamation-triangle" style="color: #f1c40f;"></i>
-                                <span>Broccoli Florets</span>
-                            </div>
-                            <span class="quantity">50 left</span>
-                        </li>
-                        <li>
-                            <div class="item-info">
-                                <i class="fas fa-info-circle" style="color: #3498db;"></i>
-                                <span>Heirloom Tomatoes</span>
-                            </div>
-                            <span class="quantity">85 left</span>
-                        </li>
-                        <li>
-                            <div class="item-info">
-                                <i class="fas fa-info-circle" style="color: #3498db;"></i>
-                                <span>Cucumbers</span>
-                            </div>
-                            <span class="quantity">90 left</span>
-                        </li>
-                        <li>
-                            <div class="item-info">
-                                <i class="fas fa-info-circle" style="color: #3498db;"></i>
-                                <span>Organic Carrots</span>
-                            </div>
-                            <span class="quantity">120 left</span>
-                        </li>
-                    </ul>
+                    <ul class="watchlist"></ul>
                 </aside>
             </section>
         </main>
@@ -354,6 +105,6 @@
         </div>
     </div>
 
-    <script src="inventory.js"></script>
+    <script type="module" src="inventory.js"></script>
 </body>
 </html>

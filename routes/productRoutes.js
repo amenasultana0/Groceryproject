@@ -267,6 +267,17 @@ router.get('/ingredients', authMiddleware, async (req, res) => {
   }
 });
 
+// Example route for low stock products
+router.get('/low-stock', authMiddleware, async (req, res) => {
+  try {
+    const threshold = 30; // You can change this limit anytime
+    const lowStockItems = await Product.find({ quantity: { $lt: threshold } });
+    res.json(lowStockItems);
+  } catch (err) {
+    console.error('Error fetching low stock items:', err);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
 
 router.get('/:id', authMiddleware, async (req, res) => {
   try {

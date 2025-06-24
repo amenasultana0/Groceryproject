@@ -21,6 +21,16 @@ router.post('/', authMiddleware, async (req, res) => {
   try {
     const { name, icon } = req.body;
 
+    // Check if category already exists for this user (case-insensitive)
+    const existingCategory = await Category.findOne({
+      user: req.user.id,
+      name: { $regex: new RegExp(`^${name}$`, 'i') }
+    });
+
+    if (existingCategory) {
+      return res.status(400).json({ error: 'Category already exists' });
+    }
+
     const newCategory = new Category({
       name,
       icon,
@@ -31,19 +41,27 @@ router.post('/', authMiddleware, async (req, res) => {
     await newCategory.save();
     res.status(201).json(newCategory);
   } catch (err) {
-    console.error(err);
-    res.status(400).json({ error: 'Invalid data' });
+    console.error('Error adding category:', err);
+    res.status(500).json({ error: 'Server error' });
   }
 });
 
+
 // Delete a category by id
-router.delete('/:id', async (req, res) => {
-  try {
-    await Category.findByIdAndDelete(req.params.id);
-    res.json({ message: 'Category deleted' });
-  } catch (err) {
-    res.status(400).json({ error: 'Invalid category id' });
-  }
+router.delete('/:id', authMiddleware, async (req, res) => {
+    try {
+        const category = await Category.findByIdAndDelete(req.params.id);
+        if (!category) {
+            return res.status(404).json({ message: 'Category not found' });
+        }
+
+        // Optional: Also delete associated products if needed
+        // await Product.deleteMany({ category: category.name });
+
+        res.json({ message: 'Category deleted successfully' });
+    } catch (err) {
+        res.status(500).json({ message: 'Error deleting category' });
+    }
 });
 
 module.exports = router;

@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>MFA Verification</title>
+</head>
+<body>
+  <h2>Enter 6-digit MFA Code</h2>
+  <input type="text" id="mfa-code" maxlength="6" />
+  <button onclick="verifyMfa()">Verify</button>
+  <p id="result"></p>
+
+  <script>
+    const userId = localStorage.getItem('pendingMfaUserId');
+    if (!userId) {
+      document.getElementById('result').textContent = "MFA session expired.";
+    }
+
+    function verifyMfa() {
+      const token = document.getElementById('mfa-code').value;
+
+      fetch('/api/mfa/verify-mfa-login', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({ userId, token })
+      })
+      .then(res => res.json())
+      .then(data => {
+        if (data.success) {
+          // Save token and user to localStorage
+          localStorage.setItem('token', data.token);
+          localStorage.setItem('user', JSON.stringify(data.user));
+          localStorage.removeItem('pendingMfaUserId');
+          window.location.href = '/public/dashboard.html';
+        } else {
+          document.getElementById('result').textContent = data.error || 'Invalid code';
+        }
+      });
+    }
+  </script>
+</body>
+</html>

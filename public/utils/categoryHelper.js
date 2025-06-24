@@ -1,4 +1,4 @@
-const BACKEND_URL = 'http://localhost:3000'; // Use your actual backend URL
+const BACKEND_URL = 'http://localhost:3000';
 
 function getToken() {
   const userStr = localStorage.getItem("user") || sessionStorage.getItem("user");
@@ -11,33 +11,57 @@ function getToken() {
   }
 }
 
-export async function populateCategoryDropdown(dropdownId) {
-  const token = getToken();
-  if (!token) return;
+
+export async function populateCategoryDropdown(selectId) {
+  const select = document.getElementById(selectId);
+  if (!select) {
+    console.error('❌ Select element not found:', selectId);
+    return;
+  }
+  select.innerHTML = '';
+
+  const allOption = document.createElement('option');
+  allOption.value = '';
+  allOption.textContent = 'All Categories';
+  select.appendChild(allOption);
+
+  const defaultCategories = [
+    "fruits", "vegetables", "dairy", "meat", "bakery",
+    "beverages", "snacks", "frozen", "grains", "condiments"
+  ];
+
+  defaultCategories.forEach(name => {
+    const option = document.createElement('option');
+    option.value = name;
+    option.textContent = name.charAt(0).toUpperCase() + name.slice(1);
+    select.appendChild(option);
+  });
 
   try {
-    const res = await fetch(`${BACKEND_URL}/api/categories`, {
+    const res = await fetch('http://localhost:3000/api/categories', {
       headers: {
-        Authorization: `Bearer ${token}`,
-      },
+        Authorization: `Bearer ${getToken()}`
+      }
     });
 
-    if (!res.ok) throw new Error('Failed to fetch categories');
+    if (!res.ok) throw new Error(`Fetch failed: ${res.status}`);
 
-    const data = await res.json();
-    const dropdown = document.getElementById(dropdownId);
-    if (!dropdown) return;
+    const categories = await res.json();
 
-    // Keep the first static option (like "Select Category" or "All Categories")
-    dropdown.length = 1;
+    const defaultSet = new Set(defaultCategories.map(c => c.toLowerCase()));
 
-    data.forEach(cat => {
-      const option = document.createElement('option');
-      option.value = cat.name.toLowerCase();
-      option.textContent = cat.name;
-      dropdown.appendChild(option);
+    categories.forEach(cat => {
+      const name = cat.name.trim();
+      if (!defaultSet.has(name.toLowerCase())) {
+        const option = document.createElement('option');
+        option.value = name;
+        option.textContent = name;
+        select.appendChild(option);
+      }
     });
+
   } catch (err) {
-    console.error('Error populating category dropdown:', err);
+    console.error('🚨 Error populating categories:', err);
   }
 }
+
