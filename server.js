@@ -16,6 +16,7 @@ const Product = require('./models/Product');
 const authMiddleware = require('./middleware/authMiddleware');
 const notificationsRoute = require('./routes/notifications');
 const userRoutes = require('./routes/userRoutes');
+const shoppingListRoutes = require('./routes/shoppingList');
 
 
 
@@ -67,6 +68,7 @@ app.use('/api/reports', reportRoutes);
 app.use('/api', suggestionsRouter);
 app.use('/api/notifications', notificationsRoute);
 app.use('/api/auth/users', userRoutes);
+app.use('/api/shopping-list', shoppingListRoutes);
 
 
 // API route to fetch notifications
