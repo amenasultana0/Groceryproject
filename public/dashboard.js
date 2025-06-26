@@ -303,6 +303,7 @@ async function loadItems() {
       .filter(item => item.createdAt)
       .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
     renderItems(recentItemsList, sortedItems.slice(0, 3));
+    renderOutOfStockList(items);
   } catch (err) {
     showNotification('Failed to load items from server', 'error');
   }
@@ -352,10 +353,12 @@ function updateStats(items) {
   const expiringSoon = items.filter(item => isExpiringSoon(item.expiryDate)).length;
   const expired = items.filter(item => isExpired(item.expiryDate)).length;
   const lowStock = items.filter(item => item.quantity <= 2).length;
+  const outOfStock = items.filter(item => item.quantity === 0).length;
   document.querySelector('.stat-card:nth-child(1) .stat-number').textContent = expiringSoon;
   document.querySelector('.stat-card:nth-child(2) .stat-number').textContent = items.length;
   document.querySelector('.stat-card:nth-child(3) .stat-number').textContent = expired;
   document.querySelector('.stat-card:nth-child(4) .stat-number').textContent = lowStock;
+  document.getElementById('outOfStockCount').textContent = outOfStock;
 }
 function handleSearch(e) {
   const term = e.target.value.toLowerCase();
@@ -684,9 +687,6 @@ micButton?.addEventListener('click', () => {
   };
 });
 
-
-
-
 // --- Initial Load ---
 window.addEventListener('DOMContentLoaded', async () => {
   setUserInfo();
@@ -736,4 +736,36 @@ function handleLogout() {
   localStorage.removeItem('user');
   sessionStorage.removeItem('user');
   location.href = 'login.html';
+}
+
+function renderOutOfStockList(items) {
+  const outofstockList = document.querySelector('.outofstock-list');
+  if (!outofstockList) return;
+  const outOfStockItems = items.filter(item => item.quantity === 0);
+  if (outOfStockItems.length === 0) {
+    outofstockList.innerHTML = '<li><span class="item-info"><i class="fas fa-cart-arrow-down"></i> No out of stock items</span></li>';
+    return;
+  }
+  outofstockList.innerHTML = outOfStockItems.map(item => `
+    <li>
+      <span class="item-info"><i class="fas fa-cart-arrow-down"></i> ${item.name}</span>
+      <span class="quantity">${item.quantity}</span>
+    </li>
+  `).join('');
+}
+
+// Out of Stock Sidebar Toggle
+const outOfStockCard = document.getElementById('outOfStockCard');
+const outOfStockSidebar = document.getElementById('outOfStockSidebar');
+const closeOutOfStockSidebar = document.getElementById('closeOutOfStockSidebar');
+
+if (outOfStockCard && outOfStockSidebar && closeOutOfStockSidebar) {
+  outOfStockCard.addEventListener('click', () => {
+    outOfStockSidebar.classList.add('open');
+    outOfStockSidebar.classList.remove('hidden');
+  });
+  closeOutOfStockSidebar.addEventListener('click', () => {
+    outOfStockSidebar.classList.remove('open');
+    outOfStockSidebar.classList.add('hidden');
+  });
 }
