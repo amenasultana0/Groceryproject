@@ -271,7 +271,10 @@ router.get('/ingredients', authMiddleware, async (req, res) => {
 router.get('/low-stock', authMiddleware, async (req, res) => {
   try {
     const threshold = 30; // You can change this limit anytime
-    const lowStockItems = await Product.find({ quantity: { $lt: threshold } });
+    const lowStockItems = await Product.find({
+      userId: req.user._id,
+      quantity: { $lt: threshold } 
+    });
     res.json(lowStockItems);
   } catch (err) {
     console.error('Error fetching low stock items:', err);
