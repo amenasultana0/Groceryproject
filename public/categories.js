@@ -1,5 +1,31 @@
 let seasonalItems = [];
 
+// Add a seasonal item to the backend shopping list
+async function addToShoppingListFromSeasonal(item) {
+  const token = JSON.parse(localStorage.getItem('user'))?.token; // or sessionStorage if you use that
+  await fetch('http://localhost:3000/api/shopping-list', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': 'Bearer ' + token
+    },
+    body: JSON.stringify({
+      name: item.name,
+      category: item.type === 'fruit' ? 'fruits' : 'vegetables',
+      quantity: 1,
+      price: item.price || 0,
+      priority: 'medium',
+      notes: 'Seasonal item',
+      purchased: false,
+      availability: item.availability || 'seasonal',
+      source: 'seasonal'
+    })
+  });
+  await refreshShoppingListFromBackend();
+updateShoppingListDisplay();
+showNotification(`${item.name} added to your shopping list!`, 'success');
+}
+
 async function fetchSeasonalItems(region, month) {
   try {
     const res = await fetch(`http://localhost:3000/api/produce?state=${encodeURIComponent(region)}&month=${encodeURIComponent(month)}`);
@@ -111,14 +137,14 @@ const dateSelect = document.getElementById('date-select');
 
 // Initialize the application
 document.addEventListener('DOMContentLoaded', async function() {
+    await refreshShoppingListFromBackend();
+    updateShoppingListDisplay(); // <--- ADD THIS LINE
     await renderItems();
     setupEventListeners();
     updateStats();
     rotateTips();
     updateSeasonHeader();
 });
-
-
 
 // async function fetchTrendingItems(region) {
 //   const season = getSeason(currentMonth); // You already have this function
@@ -197,6 +223,19 @@ function createItemCard(item, index) {
     });
     
     return card;
+}
+
+async function refreshShoppingListFromBackend() {
+    const token = JSON.parse(localStorage.getItem('user'))?.token;
+    const res = await fetch('http://localhost:3000/api/shopping-list', {
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer ' + token
+        }
+    });
+    let items = await res.json();
+    // Only keep items added from "What's in Season"
+    shoppingList = Array.isArray(items) ? items.filter(i => i.source === 'seasonal') : [];
 }
 
 // async function fetchTrendingItems(region = 'India') {
@@ -281,26 +320,40 @@ function getFilteredItems() {
 }
 
 // Toggle item in shopping list
-function toggleShoppingList(itemName, event) {
+async function toggleShoppingList(itemName, event) {
     event.stopPropagation();
     const item = seasonalItems.find(i => i.name === itemName);
-    const existingIndex = shoppingList.findIndex(i => i.name === itemName);
-    
-    if (existingIndex > -1) {
-        shoppingList.splice(existingIndex, 1);
-        showNotification(`${itemName} removed from shopping list`, 'removed');
-    } else {
-        shoppingList.push({
-            ...item,
-            addedAt: new Date().toISOString()
+    const token = JSON.parse(localStorage.getItem('user'))?.token;
+    const isInList = shoppingList.some(i => i.name === itemName);
+
+    if (isInList) {
+        // Remove from backend shopping list
+        // Find the backend item by name (you may want to fetch the list and match by name)
+        const res = await fetch('http://localhost:3000/api/shopping-list', {
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': 'Bearer ' + token
+            }
         });
-        showNotification(`${itemName} added to shopping list`, 'added');
-        
-        // Add bounce animation to FAB
-        shoppingListFab.classList.add('bounce');
-        setTimeout(() => shoppingListFab.classList.remove('bounce'), 600);
+        const backendList = await res.json();
+        const backendItem = backendList.find(i => i.name === itemName);
+        if (backendItem) {
+            await fetch(`http://localhost:3000/api/shopping-list/${backendItem._id}`, {
+                method: 'DELETE',
+                headers: {
+                    'Authorization': 'Bearer ' + token
+                }
+            });
+            await refreshShoppingListFromBackend();
+            updateShoppingListDisplay();
+            showNotification(`${itemName} removed from shopping list`, 'removed');
+        }
+    } else {
+        await addToShoppingListFromSeasonal(item);
     }
-    
+
+    // Refresh local shoppingList from backend
+    await refreshShoppingListFromBackend();
     updateShoppingListDisplay();
     renderItems();
 }
@@ -381,17 +434,19 @@ function updateShoppingListDisplay() {
         return;
     }
     
-    shoppingListItems.innerHTML = shoppingList.map(item => `
-        <div class="shopping-list-item">
-            <div>
-                <strong>${item.emoji} ${item.name}</strong>
-                <div style="font-size: 0.9rem; color: #666;">${item.price} • ${item.availability}</div>
-            </div>
-            <button class="remove-item" onclick="toggleShoppingList('${item.name}', event)">
-                <i class="fas fa-trash"></i>
-            </button>
-        </div>
-    `).join('');
+shoppingListItems.innerHTML = shoppingList.map(item => `
+  <div class="shopping-list-item">
+    <div>
+      <strong>${item.emoji || ''} ${item.name}</strong>
+      <div style="font-size: 0.9rem; color: #666;">
+        $${item.price !== undefined ? item.price : 0} • ${item.availability || 'seasonal'}
+      </div>
+    </div>
+    <button class="remove-item" onclick="toggleShoppingList('${item.name}', event)">
+      <i class="fas fa-trash"></i>
+    </button>
+  </div>
+`).join('');
 }
 
 // Setup event listeners

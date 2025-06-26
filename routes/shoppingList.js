@@ -11,7 +11,7 @@ router.get('/', auth, async (req, res) => {
 
 // Add an item
 router.post('/', auth, async (req, res) => {
-  const { name, category, quantity, price, priority, notes, purchased } = req.body;
+  const { name, category, quantity, price, priority, notes, purchased, availability, emoji, source } = req.body;
   const item = await ShoppingList.create({
     name,
     category,
@@ -20,6 +20,9 @@ router.post('/', auth, async (req, res) => {
     priority,
     notes,
     purchased,
+    availability,
+    emoji,
+    source,
     userId: req.user?._id
   });
   res.status(201).json(item);

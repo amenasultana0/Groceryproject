@@ -8,6 +8,7 @@ const shoppingListSchema = new mongoose.Schema({
   priority: { type: String, default: 'medium' },
   notes: { type: String, default: '' },
   purchased: { type: Boolean, default: false },
+  source: { type: String, default: '' },
   userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null },
   addedAt: { type: Date, default: Date.now }
 });
