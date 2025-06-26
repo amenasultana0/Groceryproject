@@ -177,66 +177,6 @@ body {
     box-shadow: 0 0 0 2px rgba(76, 81, 191, 0.2);
 }
 
-.mic-btn {
-    position: relative;
-    width: 40px;
-    height: 40px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: none;
-    border: none;
-    color: var(--text-secondary);
-    border-radius: 0.5rem;
-    transition: all 0.2s ease;
-    font-size: 1.45rem;
-    cursor: pointer;
-}
-
-.mic-btn:hover {
-    background-color: var(--bg-secondary);
-    color: var(--primary);
-}
-/* Mic Panel Styles */
-.mic-panel {
-  position: fixed;
-  top: 50%;
-  left: 50%;
-  width: 220px;
-  height: 220px;
-  transform: translate(-50%, -50%);
-  background: white;
-  border-radius: 16px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
-  z-index: 9999;
-  text-align: center;
-  padding: 20px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.mic-panel.hidden {
-  display: none;
-}
-
-.mic-content {
-  position: relative;
-}
-
-.mic-content i {
-  font-size: 48px;
-  color: #e91e63;
-  position: relative;
-  z-index: 2;
-}
-
-.mic-content p {
-  margin-top: 10px;
-  font-size: 16px;
-  color: #444;
-}
-
 .user-profile {
     position: relative;
     display: flex;
@@ -896,4 +836,25 @@ body {
 
 .delete-category-btn:hover {
   color: red;
+}
+
+.restock-btn {
+  padding: 6px 12px;
+  background-color:  #607d8b;/* Fresh green */
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s ease, transform 0.1s ease;
+  margin-top: 8px;
+}
+
+.restock-btn:hover {
+  background-color: #26a69a;
+  transform: scale(1.03);
+}
+
+.restock-btn:active {
+  transform: scale(0.98);
 }

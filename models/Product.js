@@ -23,19 +23,16 @@ const productSchema = new mongoose.Schema({
     min: 0,
   },
   unitOfMeasurement: {
-    type: String, // e.g., 'kg', 'liter', 'piece'
-    required: true,
-    trim: true,
+    type: String,
+    default: 'pcs'
   },
   costPrice: {
     type: Number,
-    required: true,
-    min: 0
+    default: 0
   },
   sellingPrice: {
     type: Number,
-    required: true,
-    min: 0
+    default: 0
   },
   reorderThreshold: {
     type: Number,

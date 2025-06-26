@@ -2,6 +2,7 @@ import { populateCategoryDropdown } from './utils/categoryHelper.js';
 
 const BACKEND_URL = 'http://127.0.0.1:3000';
 let allItems = [];
+let showExpiredOnly = false;
 // DOM Elements
 const backButton = document.getElementById('backButton');
 const filterButtons = document.querySelectorAll('.filter-btn');
@@ -11,6 +12,8 @@ const categoryFilter = document.querySelector('.category-filter');
 const sortBy = document.querySelector('.sort-by');
 const expiringList = document.querySelector('.expiring-list');
 const emptyState = document.querySelector('.empty-state');
+const clearExpiredBtn = document.querySelector('.clear-expired-btn');
+const sortDropdown = document.querySelector('.sort-by');
 
 // Event Listeners
 backButton?.addEventListener('click', () => window.history.back());
@@ -19,6 +22,11 @@ viewButtons.forEach(btn => btn.addEventListener('click', handleViewChange));
 searchInput?.addEventListener('input', debounce(loadItems, 300));
 categoryFilter?.addEventListener('change', loadItems);
 sortBy?.addEventListener('change', loadItems);
+sortDropdown?.addEventListener('change', (e) => {
+  showExpiredOnly = e.target.value === 'show-expired';
+  loadItems();
+});
+clearExpiredBtn?.addEventListener('click', clearAllExpiredItems);
 
 
 // Initialize
@@ -89,6 +97,14 @@ function debounce(func, delay) {
 async function loadItems() {
     allItems = await fetchItems();
 
+    if (showExpiredOnly) {
+        allItems = allItems.filter(item => getDaysUntilExpiry(item.expiryDate) < 0);
+        clearExpiredBtn.style.display = 'inline-block';
+    } else {
+        clearExpiredBtn.style.display = 'none';
+    }
+
+
     if (allItems.length === 0) {
         showEmptyState();
         return;
@@ -108,6 +124,33 @@ async function loadItems() {
     
     renderItems(allItems);
     updateStats(allItems); // pass items so updateStats can use it
+}
+
+async function clearAllExpiredItems() {
+  try {
+    const token = getToken();
+    if (!token) throw new Error('No auth token found');
+
+    const expiredItems = allItems.filter(item => getDaysUntilExpiry(item.expiryDate) < 0);
+    const expiredIds = expiredItems.map(item => item.id);
+
+    const response = await fetch(`${BACKEND_URL}/api/items/expired/clear`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+      body: JSON.stringify({ ids: expiredIds })
+    });
+
+    if (!response.ok) throw new Error('Failed to clear expired items');
+
+    showNotification('Expired items cleared successfully!', 'success');
+    await loadItems();
+  } catch (error) {
+    console.error(error);
+    showNotification('Failed to clear expired items', 'error');
+  }
 }
 
 function updatePriorityCounts(items) {
@@ -368,15 +411,20 @@ function getPriorityValue(expiryDate) {
 function getDaysUntilExpiry(expiryDate) {
     const today = new Date();
     const expiry = new Date(expiryDate);
-    const diffTime = expiry - today;
-    return Math.floor(diffTime / (1000 * 60 * 60 * 24));
+
+    // Reset both to midnight (local time) to avoid hour-based errors
+    today.setHours(0, 0, 0, 0);
+    expiry.setHours(0, 0, 0, 0);
+
+    const diffTime = expiry.getTime() - today.getTime();
+    return Math.round(diffTime / (1000 * 60 * 60 * 24)); // round avoids fractional issues
 }
+
 
 function isExpiringWithin24Hours(expiryDate) {
     const now = new Date();
     const expiry = new Date(expiryDate);
-    const diffMs = expiry - now;
-    return diffMs > 0 && diffMs <= 24 * 60 * 60 * 1000; // between now and 24 hours
+    return expiry.setHours(23, 59, 59, 999) >= now;
 }
 
 function getExpiryProgress(expiryDate) {
@@ -403,6 +451,25 @@ function isExpiringToday(date) {
 function isExpiringBefore(date, beforeDate) {
     return new Date(date) <= beforeDate;
 }
+
+function isExpiringSoon(date) {
+  const expiryDate = new Date(date);
+  const today = new Date();
+  const diffTime = expiryDate - today;
+  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+  return diffDays > 0 && diffDays <= 7;
+}
+
+function isExpired(date) {
+    const expiryDate = new Date(date);
+    const today = new Date();
+
+    expiryDate.setHours(0, 0, 0, 0);
+    today.setHours(0, 0, 0, 0);
+
+    return expiryDate < today;
+}
+
 
 function showEmptyState() {
     expiringList.style.display = 'none';

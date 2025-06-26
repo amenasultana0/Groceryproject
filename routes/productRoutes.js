@@ -270,17 +270,24 @@ router.get('/ingredients', authMiddleware, async (req, res) => {
 // Example route for low stock products
 router.get('/low-stock', authMiddleware, async (req, res) => {
   try {
-    const threshold = 30; // You can change this limit anytime
+    const threshold = 30; // Change this limit as needed
+    const today = new Date();
+    today.setHours(0, 0, 0, 0); // Normalize to midnight
+
     const lowStockItems = await Product.find({
       userId: req.user._id,
-      quantity: { $lt: threshold } 
+      quantity: { $lt: threshold },
+      expiryDate: { $gt: today.setHours(23, 59, 59, 999) }  // Only show non-expired items
     });
+
     res.json(lowStockItems);
   } catch (err) {
     console.error('Error fetching low stock items:', err);
     res.status(500).json({ message: 'Server error' });
   }
 });
+
+
 
 router.get('/:id', authMiddleware, async (req, res) => {
   try {

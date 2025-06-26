@@ -85,7 +85,7 @@ function isExpired(date) {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
   expiryDate.setHours(0, 0, 0, 0);
-  return expiryDate < today;
+  return expiryDate <= today;
 }
 function formatDate(date) {
   return new Date(date).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
