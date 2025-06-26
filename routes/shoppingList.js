@@ -27,18 +27,18 @@ router.post('/', auth, async (req, res) => {
   });
   res.status(201).json(item);
 });
-
+// Clear all purchased items for the user
+router.delete('/clear-purchased', auth, async (req, res) => {
+  await ShoppingList.deleteMany({ userId: req.user?._id, purchased: true });
+  res.json({ success: true });
+});
 // Remove item by ID
 router.delete('/:id', auth, async (req, res) => {
   await ShoppingList.deleteOne({ _id: req.params.id, userId: req.user?._id });
   res.json({ success: true });
 });
 
-// Clear all items for the user
-router.delete('/', auth, async (req, res) => {
-  await ShoppingList.deleteMany({ userId: req.user?._id });
-  res.json({ success: true });
-});
+
 
 // PATCH (update item)
 router.patch('/:id', auth, async (req, res) => {
