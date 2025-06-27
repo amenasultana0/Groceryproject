@@ -100,16 +100,28 @@ router.post('/add', authMiddleware, async (req, res) => {
 
 
 router.get('/inventory', authMiddleware, async (req, res) => {
-    try {
-        const products = await Product.find({ userId: req.user.id })
-            .populate('category', 'name')
-            .populate('supplier', 'name')
-            .sort({ createdAt: -1 });
-        res.json(products);
-    } catch (err) {
-        console.error(err.message);
-        res.status(500).send('Server Error');
+  try {
+    const allProducts = await Product.find({
+      userId: req.user.id,
+      quantity: { $gt: 0 }
+    })
+      .populate('category', 'name')
+      .populate('supplier', 'name')
+      .sort({ expiryDate: 1 }); // oldest batch first
+
+    const grouped = {};
+    for (const p of allProducts) {
+      if (!grouped[p.name]) {
+        grouped[p.name] = p;
+      }
     }
+
+    const filteredProducts = Object.values(grouped);
+    res.json(filteredProducts);
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).send('Server Error');
+  }
 });
 
 
@@ -143,38 +155,48 @@ function getPriority(expiryDate) {
   return 'low';
 }
 
-
 router.get('/expiring-soon', authMiddleware, async (req, res) => {
   try {
     const priority = req.query.priority || 'all';  // all, high, medium, low
     const expiryFilter = req.query.expiry; // 24h, 1w, 1m
 
-    const today = new Date();
-    let query = { userId: req.user._id };
-
-    if (expiryFilter) {
-    let expiryEnd = new Date(today);
-
-    // Set expiryEnd based on expiryFilter
-    if (expiryFilter === '24h') {
-      expiryEnd.setHours(today.getHours() + 24);
-    } else if (expiryFilter === '1w') {
-      expiryEnd.setDate(today.getDate() + 7);
-    } else if (expiryFilter === '1m') {
-      expiryEnd.setMonth(today.getMonth() + 1);
-    } else {
-      expiryEnd.setDate(today.getDate() + 7); // default 1 week
+    const now = new Date();
+    let expiryEnd = new Date(now);
+    switch (expiryFilter) {
+      case '24h':
+        expiryEnd.setHours(now.getHours() + 24);
+        break;
+      case '1w':
+        expiryEnd.setDate(now.getDate() + 7);
+        break;
+      case '1m':
+        expiryEnd.setMonth(now.getMonth() + 1);
+        break;
+      default:
+        expiryEnd.setDate(now.getDate() + 30); // Default: 30 days
     }
 
-    query.expiryDate = { $gte: today, $lte: expiryEnd };
+    // Get all products with quantity > 0 and within expiry range
+    const all = await Product.find({
+      userId: req.user._id,
+      quantity: { $gt: 0 },
+      expiryDate: { $gte: now, $lte: expiryEnd }
+    }).sort({ expiryDate: 1 });
+
+    // Keep only the latest batch per product name
+    const uniqueMap = new Map();
+    for (const product of all) {
+      const key = product.name.toLowerCase();
+      if (!uniqueMap.has(key)) {
+        uniqueMap.set(key, product);
+      }
     }
 
-    const products = await Product.find(query).sort({ expiryDate: 1 });
+    let filteredProducts = Array.from(uniqueMap.values());
 
-    // If priority filter is applied, filter here
-    let filteredProducts = products;
+    // Apply priority filter if needed
     if (priority !== 'all') {
-      filteredProducts = products.filter(p => getPriority(p.expiryDate) === priority);
+      filteredProducts = filteredProducts.filter(p => getPriority(p.expiryDate) === priority);
     }
 
     res.json({ items: filteredProducts });
@@ -287,7 +309,55 @@ router.get('/low-stock', authMiddleware, async (req, res) => {
   }
 });
 
+// router.post('/scan-barcode', authMiddleware, async (req, res) => {
+//   console.log('Received scan barcode request:', req.body);
+//   const { barcode } = req.body;
 
+//   if (!barcode) {
+//     return res.status(400).json({ message: 'Barcode is required.' });
+//   }
+
+//   const product = await Product.findOne({ barcode: barcode, userId: req.user.id });
+
+//   if (!product) {
+//     return res.status(404).json({ message: 'No product found with this barcode.' });
+//   }
+
+//   if (product.quantity === 0) {
+//     return res.status(400).json({ message: 'Product already out of stock.' });
+//   }
+
+//   product.quantity -= 1;
+//   await product.save();
+
+//   res.status(200).json({ message: `${product.name} quantity reduced by 1.` });
+// });
+
+router.post('/scan-barcode', authMiddleware, async (req, res) => {
+  try {
+    const { barcode } = req.body;
+    const userId = req.user.id;
+
+    if (!barcode) {
+      return res.status(400).json({ message: 'Barcode is required' });
+    }
+
+    const product = await Product.findOne({ barcode, userId });
+
+    if (!product) {
+      return res.status(404).json({ message: 'Product not found for this barcode.' });
+    }
+
+    // Reduce quantity by 1
+    product.quantity = Math.max(0, product.quantity - 1);
+    await product.save();
+
+    res.json({ message: `1 unit of "${product.name}" deducted.`, product });
+  } catch (err) {
+    console.error('Error in scan-barcode:', err);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
 
 router.get('/:id', authMiddleware, async (req, res) => {
   try {

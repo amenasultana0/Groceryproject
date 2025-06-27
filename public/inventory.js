@@ -1,7 +1,12 @@
 import { getToken } from './utils/authHelper.js';
+let scannedOnce = false;
+const barcodeModal = document.getElementById('barcodeScannerModal');
+const scanBtn = document.getElementById('startScanBtn');
+const closeBarcodeModal = document.getElementById('closeBarcodeModal');
 
 document.addEventListener('DOMContentLoaded', () => {
     const token = getToken();
+
     if (token) {
         fetch(`http://localhost:3000/api/auth/profile`, {
             headers: { Authorization: `Bearer ${token}` }
@@ -16,52 +21,42 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    fetchAndRenderCategories()
-        .then(() => {
-            fetchAndRenderProducts();
-            fetchAndRenderLowStock();
-        });
+    fetchAndRenderCategories().then(() => {
+        fetchAndRenderProducts();
+        fetchAndRenderLowStock();
+    });
 
+    // Search
     const searchInput = document.getElementById('searchInput');
     if (searchInput) {
         searchInput.addEventListener('input', (e) => {
-        const searchTerm = e.target.value.toLowerCase();
-        const allGrids = document.querySelectorAll('.category-grid');
+            const searchTerm = e.target.value.toLowerCase();
+            const allGrids = document.querySelectorAll('.category-grid');
+            allGrids.forEach(grid => grid.classList.add('active'));
 
-        // Show all grids for searching
-        allGrids.forEach(grid => grid.classList.add('active'));
-
-        let foundMatch = false;
-
-        allGrids.forEach(grid => {
-            let hasVisibleProduct = false;
-            const cards = grid.querySelectorAll('.product-card');
-
-            cards.forEach(card => {
-                const productName = card.querySelector('h3').textContent.toLowerCase();
-                const match = productName.includes(searchTerm);
-                card.style.display = match ? '' : 'none';
-                if (match) hasVisibleProduct = true;
+            let foundMatch = false;
+            allGrids.forEach(grid => {
+                let hasVisibleProduct = false;
+                const cards = grid.querySelectorAll('.product-card');
+                cards.forEach(card => {
+                    const productName = card.querySelector('h3').textContent.toLowerCase();
+                    const match = productName.includes(searchTerm);
+                    card.style.display = match ? '' : 'none';
+                    if (match) hasVisibleProduct = true;
+                });
+                grid.style.display = hasVisibleProduct || searchTerm === '' ? '' : 'none';
+                if (hasVisibleProduct) foundMatch = true;
             });
 
-            // Show or hide entire category section depending on if any match found
-            grid.style.display = hasVisibleProduct || searchTerm === '' ? '' : 'none';
-
-            if (hasVisibleProduct) foundMatch = true;
+            if (!foundMatch && searchTerm !== '') {
+                document.getElementById('product-display').innerHTML = `<p style="margin: 2rem; font-size: 1.2rem;">No products found for "<strong>${searchTerm}</strong>" 😕</p>`;
+            } else if (searchTerm === '') {
+                document.querySelectorAll('.category-grid').forEach(grid => grid.style.display = '');
+            }
         });
-
-        // Optional: Show a message if no match is found
-        if (!foundMatch && searchTerm !== '') {
-            document.getElementById('product-display').innerHTML = `<p style="margin: 2rem; font-size: 1.2rem;">No products found for "<strong>${searchTerm}</strong>" 😕</p>`;
-        } else if (searchTerm === '') {
-            // Restore default view
-            document.querySelectorAll('.category-grid').forEach((grid, i) => {
-                grid.style.display = '';
-            });
-        }
-    });
     }
 
+    // Grid/List View
     document.getElementById('gridViewBtn')?.addEventListener('click', () => {
         document.getElementById('gridViewBtn').classList.add('active');
         document.getElementById('listViewBtn').classList.remove('active');
@@ -76,13 +71,14 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('product-display').classList.add('product-list');
     });
 
+    // Category modal
     const addCategoryBtn = document.getElementById('addCategoryBtn');
     const categoryModal = document.getElementById('categoryModal');
     const categoryForm = document.getElementById('categoryForm');
 
     addCategoryBtn?.addEventListener('click', () => categoryModal.classList.add('show'));
     document.getElementById('cancelCategoryBtn')?.addEventListener('click', closeModal);
-    document.querySelector('.close-btn')?.addEventListener('click', closeModal);
+    document.querySelector('#categoryModal .close-btn')?.addEventListener('click', closeModal);
 
     function closeModal() {
         categoryModal.classList.remove('show');
@@ -152,7 +148,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     document.getElementById('cancelRestock')?.addEventListener('click', () => {
-    document.getElementById('restockModal').classList.remove('show');
+        document.getElementById('restockModal').classList.remove('show');
     });
     document.getElementById('closeRestockModal')?.addEventListener('click', () => {
         document.getElementById('restockModal').classList.remove('show');
@@ -184,7 +180,80 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
+    scanBtn?.addEventListener('click', () => {
+        barcodeModal.classList.add('show');
+        startScanner();
+    });
+
+    closeBarcodeModal?.addEventListener('click', () => {
+        barcodeModal.classList.remove('show');
+        Quagga.stop();
+    });
+
+    function startScanner() {
+        scannedOnce = false;
+        Quagga.init({
+            inputStream: {
+                type: "LiveStream",
+                target: document.querySelector("#scanner-container"),
+                constraints: { facingMode: "environment" }
+            },
+            decoder: {
+                readers: [
+                    "code_128_reader",
+                    "ean_reader",
+                    "ean_8_reader",
+                    "upc_reader",
+                    "upc_e_reader"
+                ]
+            },
+            debug: {
+            drawBoundingBox: true,
+            showFrequency: true,
+            drawScanline: true,
+            showPattern: true
+            }
+            }, function (err) {
+                if (err) return console.error("Scanner init error:", err);
+                Quagga.start();
+        });
+
+        Quagga.onDetected(result => {
+            if (scannedOnce) return;
+            scannedOnce = true;
+            const barcode = result.codeResult.code;
+            Quagga.stop();
+            barcodeModal.classList.remove('show');
+
+            fetch('http://localhost:3000/api/products/scan-barcode', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    Authorization: `Bearer ${getToken()}`
+                },
+                body: JSON.stringify({ barcode })
+            })
+            .then(async res => {
+            const data = await res.json();
+            if (!res.ok) {
+                throw new Error(data.message || 'Unknown error');
+            }
+            return data;
+        })
+
+            .then(data => {
+                alert(data.message || "Inventory updated.");
+                fetchAndRenderProducts();
+                fetchAndRenderLowStock();
+            })
+            .catch(err => {
+                console.error('Barcode scan error:', err);
+                alert("Error processing scanned receipt.");
+            });
+        });
+    }
 });
+
 
 function handleCategoryNavClick(e) {
     e.preventDefault();
@@ -293,7 +362,11 @@ async function renderProducts(products) {
                 <div class="card-body">
                     <h3>${name}</h3>
                     <p>₹${costPrice} • ${quantity} in stock</p>
+                    <small class="added-date">Added on: ${new Date(product.createdAt).toLocaleDateString()}</small>
                     <button class="restock-btn" data-product='${JSON.stringify(product)}'>Restock</button>
+                    <button class="delete-btn" data-id="${product._id}" title="Delete">
+                        <i class="fas fa-trash"></i>
+                    </button>
                     <div class="stock-bar-container">
                         <div class="stock-bar" style="width:${progress}%; background:${progress < 40 ? 'orange' : 'green'};"></div>
                     </div>
@@ -306,6 +379,36 @@ async function renderProducts(products) {
 
         }
     }
+
+    document.addEventListener('click', async (e) => {
+    if (e.target.classList.contains('delete-btn')) {
+        const id = e.target.dataset.id;
+        const confirmDelete = confirm('Are you sure you want to delete this product?');
+        if (!confirmDelete) return;
+
+        try {
+        const token = getToken(); // Make sure this function exists and works
+        const res = await fetch(`http://localhost:3000/api/products/${id}`, {
+            method: 'DELETE',
+            headers: {
+            Authorization: `Bearer ${token}`
+            }
+        });
+
+        if (res.status === 204) {
+            const card = e.target.closest('.product-card');
+            if (card) card.remove();
+        } else {
+            const data = await res.json();
+            alert(data.error || 'Failed to delete product.');
+        }
+        } catch (err) {
+        console.error('Delete error:', err);
+        alert('Error deleting product.');
+        }
+    }
+    });
+
 }
 
 async function fetchAndRenderLowStock() {
@@ -367,4 +470,3 @@ function isExpired(date) {
   expiry.setHours(0, 0, 0, 0);
   return expiry <= today;
 }
-
