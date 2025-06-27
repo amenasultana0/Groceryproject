@@ -30,10 +30,6 @@ const productSchema = new mongoose.Schema({
     type: Number,
     default: 0
   },
-  sellingPrice: {
-    type: Number,
-    default: 0
-  },
   reorderThreshold: {
     type: Number,
     default: 0

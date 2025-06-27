@@ -47,7 +47,6 @@ const notificationBadge = document.querySelector('.notification-btn .badge') || 
 const micButton = document.getElementById('micButton');
 const unitOfMeasurement = document.getElementById('unitOfMeasurement').value;
 const costPrice = parseFloat(document.getElementById('costPrice').value);
-const sellingPrice = parseFloat(document.getElementById('sellingPrice').value);
 
 
 // --- State ---
@@ -389,7 +388,6 @@ function editItem(id) {
   document.getElementById('purchaseDate').value = item.purchaseDate;
   document.getElementById('expiryDate').value = item.expiryDate;
   document.getElementById('costPrice').value = item.costDate;
-  document.getElementById('sellingPrice').value = item.sellingPrice;
   document.getElementById('unitOfMeasurement').value = item.unitOfMeasurement;
   document.getElementById('notes').value = item.notes;
   openModal();
@@ -423,7 +421,6 @@ function getItemFormData() {
     purchaseDate: document.getElementById('purchaseDate').value,
     unitOfMeasurement: document.getElementById('unitOfMeasurement').value,
     costPrice: parseFloat(document.getElementById('costPrice').value),
-    sellingPrice: parseFloat(document.getElementById('sellingPrice').value),
     notes: document.getElementById('notes').value,
     createdAt: new Date().toISOString()
   };

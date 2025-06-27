@@ -62,7 +62,7 @@ router.get('/expiring', authMiddleware, async (req, res) => {
 
 
 router.post('/add', authMiddleware, async (req, res) => {
-  const { name, category, quantity, expiryDate, unitOfMeasurement, costPrice, sellingPrice } = req.body;
+  const { name, category, quantity, expiryDate, unitOfMeasurement, costPrice } = req.body;
 
   if (!name || quantity == null || !expiryDate) {
     return res.status(400).json({ error: 'Please provide all required fields: name, quantity, expiryDate' });
@@ -81,7 +81,6 @@ router.post('/add', authMiddleware, async (req, res) => {
       userId: req.user._id,
       unitOfMeasurement,
       costPrice,
-      sellingPrice
     });
     await product.save();
 
@@ -373,12 +372,12 @@ router.get('/:id', authMiddleware, async (req, res) => {
 
 // PUT /api/products/:id - Update product
 router.put('/:id', authMiddleware, async (req, res) => {
-  const { name, sku, category, quantity, unitOfMeasurement, costPrice, sellingPrice, reorderThreshold, supplier, expiryDate } = req.body;
+  const { name, sku, category, quantity, unitOfMeasurement, costPrice, reorderThreshold, supplier, expiryDate } = req.body;
 
   try {
     const updatedProduct = await Product.findOneAndUpdate(
       { _id: req.params.id, userId: req.user.id },
-      { name, sku, category, quantity, unitOfMeasurement, costPrice, sellingPrice, reorderThreshold, supplier, expiryDate },
+      { name, sku, category, quantity, unitOfMeasurement, costPrice, reorderThreshold, supplier, expiryDate },
       { new: true, runValidators: true }
     ).populate('category', 'name').populate('supplier', 'name');
 

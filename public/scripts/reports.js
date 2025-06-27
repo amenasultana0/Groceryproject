@@ -20,16 +20,18 @@ let allItems = [];
 // Initialize date picker and event listeners
 document.addEventListener('DOMContentLoaded', function() {
     flatpickr("#dateRange", {
-        mode: "range",
-        dateFormat: "Y-m-d",
-        defaultDate: [new Date(), new Date(new Date().setDate(new Date().getDate() + 30))],
-        onChange: function(selectedDates) {
-            if (selectedDates.length === 2) {
-                generateReport();
-            }
+    mode: "range",
+    dateFormat: "Y-m-d",
+    defaultDate: [
+        new Date(new Date().setDate(new Date().getDate() - 30)),
+        new Date()
+    ],
+    onChange: function(selectedDates) {
+        if (selectedDates.length === 2) {
+            generateReport(); // Regenerate when user changes
         }
+    }
     });
-
     initializeEventListeners();
     generateReport();
     populateCategoryDropdown('categoryFilter')
@@ -195,7 +197,7 @@ function calculateMetrics(items) {
         } else if (expiry > in7Days) {
             fresh++;
         }
-        totalValue += (item.price || 0) * (item.quantity || 0);
+        totalValue += (item.costPrice || 0) * (item.quantity || 0);
     });
 
     return { expired, expiringSoon, fresh, totalValue };
@@ -336,7 +338,7 @@ function updateTable(items) {
     items.forEach(item => {
         const name = item.name || '-';
         const category = item.category || '-';
-        const price = item.price || 0;
+        const price = item.costPrice || 0;
         const quantity = item.quantity || 0;
         const value = price * quantity;
         const expiryDate = item.expiryDate ? formatDate(item.expiryDate) : '-';
@@ -566,7 +568,7 @@ function exportToCSV() {
             return {
                 name: cells[0].textContent.trim(),
                 category: cells[1].textContent.trim(),
-                price: cells[2].textContent.trim(),
+                costPrice: cells[2].textContent.trim(),
                 quantity: cells[3].textContent.trim(),
                 value: cells[4].textContent.trim(),
                 expiryDate: cells[5].textContent.trim(),
@@ -574,7 +576,7 @@ function exportToCSV() {
                 status: cells[7].textContent.trim()
             };
         });
-    const headers = ['Name', 'Category', 'Price', 'Quantity', 'Value', 'Expiry Date', 'Days Left', 'Status'];
+    const headers = ['Name', 'Category', 'Cost Price', 'Quantity', 'Value', 'Expiry Date', 'Days Left', 'Status'];
     const csv = [
         headers.join(','),
         ...items.map(item => Object.values(item).join(','))
