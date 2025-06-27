@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Grocery Tracker</title>
+    <link rel="stylesheet" href="temp.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <div class="logo">
+                <span class="leaf-icon">🍃</span>
+                <h1>GROCERY TRACKER</h1>
+            </div>
+            <div class="header-icons">
+                <span class="icon">🔔</span>
+                <span class="icon">👤</span>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <!-- Sidebar -->
+            <nav class="sidebar">
+                <ul class="nav-menu">
+                    <li><a href="#" data-page="home" class="nav-item active">HOME</a></li>
+                    <li><a href="#" data-page="inventory" class="nav-item">INV</a></li>
+                    <li><a href="#" data-page="expiring" class="nav-item">E.S</a></li>
+                    <li><a href="#" data-page="suggestions" class="nav-item">SUG</a></li>
+                    <li><a href="#" data-page="wishlist" class="nav-item">WIS</a></li>
+                    <li><a href="#" data-page="shopping" class="nav-item">S.LIST</a></li>
+                    <li><a href="#" data-page="reports" class="nav-item">REP</a></li>
+                    <li><a href="#" data-page="settings" class="nav-item">SETTING</a></li>
+                </ul>
+                <div class="logout">
+                    <a href="#" class="nav-item">🚪 LOGOUT</a>
+                </div>
+            </nav>
+
+            <!-- Content Area -->
+            <div class="content">
+                <!-- Search Bar -->
+                <div class="search-container">
+                    <input type="text" id="searchInput" placeholder="Search" class="search-input">
+                    <button class="search-btn">🔍</button>
+                    <div class="content-actions">
+                        <button class="action-btn">📷</button>
+                        <button class="action-btn">VIEW</button>
+                    </div>
+                </div>
+
+                <!-- Stats Cards -->
+                <div class="stats-grid">
+                    <div class="stat-card expiring-soon" data-filter="expiring">
+                        <div class="stat-icon">⚠️</div>
+                        <div class="stat-content">
+                            <h3>ES</h3>
+                            <p>Expiring Soon</p>
+                            <span class="stat-count" id="expiringCount">0</span>
+                        </div>
+                    </div>
+                    <div class="stat-card total-items" data-filter="total">
+                        <div class="stat-icon">📦</div>
+                        <div class="stat-content">
+                            <h3>TI</h3>
+                            <p>Total Items</p>
+                            <span class="stat-count" id="totalCount">0</span>
+                        </div>
+                    </div>
+                    <div class="stat-card expired" data-filter="expired">
+                        <div class="stat-icon">❌</div>
+                        <div class="stat-content">
+                            <h3>E</h3>
+                            <p>Expired</p>
+                            <span class="stat-count" id="expiredCount">0</span>
+                        </div>
+                    </div>
+                    <div class="stat-card low-stock" data-filter="lowstock">
+                        <div class="stat-icon">📉</div>
+                        <div class="stat-content">
+                            <h3>LS</h3>
+                            <p>Low Stock</p>
+                            <span class="stat-count" id="lowStockCount">0</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Main Content Sections -->
+                <div class="content-sections">
+                    <!-- Recent Items -->
+                    <div class="section recent-section">
+                        <div class="section-header">
+                            <h3>RECENT</h3>
+                            <span class="view-all">VIEW</span>
+                        </div>
+                        <div class="recent-items" id="recentItems">
+                            <p class="empty-state">No recent items</p>
+                        </div>
+                    </div>
+
+                    <!-- Out of Stock -->
+                    <div class="section stock-section">
+                        <div class="stock-alert" id="outOfStockBtn">
+                            <h3>OUT OF STOCK</h3>
+                            <div class="stock-count">
+                                <span class="stock-number" id="outOfStockCount">0</span>
+                                <span class="stock-text">ITEMS</span>
+                            </div>
+                        </div>
+                        <div class="out-of-stock-list" id="outOfStockList" style="display: none;">
+                            <p class="empty-state">No items out of stock</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Filter Results (Hidden by default) -->
+                <div class="filter-results" id="filterResults" style="display: none;">
+                    <div class="filter-header">
+                        <h3 id="filterTitle">Filter Results</h3>
+                        <button class="close-filter" id="closeFilter">✕</button>
+                    </div>
+                    <div class="filter-content" id="filterContent">
+                        <p class="empty-state">No items found</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Item Modal (for demonstration) -->
+    <div class="modal" id="addItemModal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Add Item</h3>
+                <button class="close-modal" id="closeModal">✕</button>
+            </div>
+            <div class="modal-body">
+                <form id="addItemForm">
+                    <input type="text" id="itemName" placeholder="Item Name" required>
+                    <input type="date" id="expiryDate" required>
+                    <input type="number" id="quantity" placeholder="Quantity" min="0" required>
+                    <select id="category">
+                        <option value="food">Food</option>
+                        <option value="beverages">Beverages</option>
+                        <option value="household">Household</option>
+                        <option value="personal">Personal Care</option>
+                    </select>
+                    <button type="submit">Add Item</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script src="temp.js"></script>
+</body>
+</html>

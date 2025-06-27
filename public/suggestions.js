@@ -1,802 +1,626 @@
-//const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
+// Global Variables
+let chatHistory = [];
+let suggestionHistory = [];
+let bookmarkedSuggestions = [];
+let isListening = false;
+let recognition = null;
 
-// Use GEMINI_API_KEY in your API requests
+// Auto-suggestions data
+const autoSuggestionsData = [
+    "How can I improve my store's performance?",
+    "Show me optimization strategies",
+    "What are the best selling categories?",
+    "How to increase customer satisfaction?",
+    "Seasonal inventory planning tips",
+    "Cost reduction strategies",
+    "Staff productivity improvements",
+    "Marketing suggestions for groceries",
+    "Layout optimization ideas",
+    "Customer retention strategies"
+];
 
+// Sample responses for realistic chatbot behavior
+const botResponses = {
+    'top-performers': {
+        title: "Top Performing Categories Analysis",
+        content: "Based on your store's performance data, here are your top performing categories:\n\n🥇 **Fresh Produce** - 23% of total revenue\n• High turnover rate with 95% customer satisfaction\n• Recommendation: Expand organic selection\n\n🥈 **Dairy Products** - 18% of total revenue\n• Consistent daily demand\n• Recommendation: Consider premium brand partnerships\n\n🥉 **Bakery Items** - 15% of total revenue\n• Peak sales during morning hours\n• Recommendation: Introduce fresh evening baking cycles\n\nWould you like detailed strategies for any specific category?"
+    },
+    'optimization': {
+        title: "Store Optimization Recommendations",
+        content: "Here are key optimization strategies for your grocery store:\n\n📊 **Layout Optimization**\n• Place high-margin items at eye level\n• Create clear pathways with strategic product placement\n• Use end-cap displays for promotional items\n\n💰 **Cost Management**\n• Implement dynamic pricing for perishables\n• Optimize inventory turnover ratios\n• Negotiate better supplier terms for bulk purchases\n\n👥 **Staff Efficiency**\n• Cross-train employees for flexibility\n• Implement task scheduling systems\n• Regular customer service training\n\nImplementing these strategies could increase profitability by 12-18%."
+    },
+    'strategy': {
+        title: "Strategic Business Suggestions",
+        content: "Strategic recommendations for long-term growth:\n\n🎯 **Customer Experience**\n• Implement loyalty program with personalized offers\n• Add self-checkout options for convenience\n• Create mobile app for online ordering\n\n📈 **Revenue Growth**\n• Expand private label products (higher margins)\n• Add complementary services (pharmacy, food court)\n• Implement seasonal promotional campaigns\n\n🔍 **Market Analysis**\n• Monitor competitor pricing weekly\n• Track customer demographic shifts\n• Analyze seasonal purchasing patterns\n\nThese strategies can drive 20-25% revenue growth over 12 months."
+    },
+    'performance': {
+        title: "Performance Analysis Template",
+        content: "Complete performance analysis for your grocery store:\n\n📊 **Key Metrics Overview**\n• Sales per square foot: Above industry average\n• Customer retention rate: 78% (Target: 85%)\n• Average transaction value: $42.50\n• Inventory turnover: 12x annually\n\n⚡ **Areas for Improvement**\n• Reduce checkout wait times\n• Improve product availability (reduce stockouts)\n• Enhance cross-selling opportunities\n\n✅ **Quick Wins**\n• Optimize staff scheduling during peak hours\n• Implement dynamic pricing for slow-moving items\n• Create targeted promotional campaigns"
+    },
+    'customer': {
+        title: "Customer Insights Template",
+        content: "Deep dive into customer behavior and preferences:\n\n👥 **Customer Demographics**\n• Primary: Families (35-50 years) - 45%\n• Secondary: Young professionals (25-35) - 30%\n• Seniors (55+) - 25%\n\n🛒 **Shopping Patterns**\n• Peak hours: 6-8 PM weekdays, 10 AM-2 PM weekends\n• Average visit frequency: 2.3 times per week\n• Basket composition: 60% essentials, 40% impulse purchases\n\n💡 **Actionable Insights**\n• Introduce express lanes for quick shopping\n• Develop senior-friendly shopping hours\n• Create family-oriented promotional bundles"
+    },
+    'seasonal': {
+        title: "Seasonal Planning Template",
+        content: "Strategic seasonal planning for optimal inventory management:\n\n🌸 **Spring Planning (Mar-May)**\n• Increase fresh produce variety\n• Easter/holiday promotional items\n• Spring cleaning products surge\n\n☀️ **Summer Strategy (Jun-Aug)**\n• BBQ and outdoor dining supplies\n• Frozen foods and beverages peak\n• Fresh fruit and ice cream focus\n\n🍂 **Fall Preparation (Sep-Nov)**\n• Back-to-school lunch items\n• Halloween seasonal products\n• Comfort food ingredients\n\n❄️ **Winter Focus (Dec-Feb)**\n• Holiday party supplies and ingredients\n• Warm beverages and comfort foods\n• New Year health-focused products"
+    },
+    'default': [
+        "I'd be happy to help you analyze that aspect of your business. Could you provide more specific details about what you'd like to explore?",
+        "That's an interesting question! Based on typical grocery store performance patterns, I can suggest several strategies. What's your primary concern?",
+        "Great question! Let me provide some insights that could help improve your store's performance in that area.",
+        "I understand you're looking for suggestions in this area. Here are some proven strategies that work well for grocery stores.",
+        "That's definitely something worth exploring. Based on industry best practices, here are my recommendations."
+    ]
+};
 
-// Global variables
-let ingredients = [];
+// DOM Elements
+const chatMessages = document.getElementById('chatMessages');
+const chatInput = document.getElementById('chatInput');
+const sendBtn = document.getElementById('sendBtn');
+const typingIndicator = document.getElementById('typingIndicator');
+const autoSuggestions = document.getElementById('autoSuggestions');
+const voiceBtn = document.getElementById('voiceBtn');
+const voiceIndicator = document.getElementById('voiceIndicator');
+const fullscreenBtn = document.getElementById('fullscreenBtn');
+const exportBtn = document.getElementById('exportBtn');
+const clearChatBtn = document.getElementById('clearChatBtn');
+const printChatBtn = document.getElementById('printChatBtn');
 
-// Initialize the page
+// Initialize the application
 document.addEventListener('DOMContentLoaded', function() {
-    fetchInventoryIngredients().then(() => {
-    showIngredientModal(window.inventoryIngredients || []);
-  });
-
-    const ingredientInput = document.getElementById('ingredientInput');
-    const addIngredientsBtn = document.getElementById('addIngredientsBtn');  // your button
-    const inventoryContainer = document.getElementById('inventoryContainer'); // container to show inventory list
-
-    loadIngredients();
-
-    if (addIngredientsBtn) {
-        addIngredientsBtn.addEventListener('click', async () => {
-            try {
-                const response = await fetch('${BACKEND_URL}/api/products', {
-                    method: 'GET',
-                    headers: {
-                        'Authorization': `Bearer ${getToken()}`
-                    },
-            });
-            if (!response.ok) throw new Error('Failed to fetch inventory ingredients');
-
-            const products = await response.json();
-
-            if (products.length === 0) {
-                inventoryContainer.innerHTML = '<p>No ingredients in inventory.</p>';
-                return;
-            }
-
-            // Display products as a list (or your preferred UI)
-            const listHTML = products.map(p => `
-                <div class="inventory-item">
-                    <strong>${p.name}</strong> - ${p.category || 'No category'} - Qty: ${p.quantity}
-                </div>
-            `).join('');
-
-            inventoryContainer.innerHTML = listHTML;
-        } catch (error) {
-            if (inventoryContainer) {
-                inventoryContainer.innerHTML = `<p>Error loading inventory: ${error.message}</p>`;
-            }
-        }
-    });
-}
-if (ingredientInput) {
-    ingredientInput.addEventListener('keydown', function(e) {
-        if (e.key === 'Enter') {
-            if (typeof addIngredient === 'function') {
-                addIngredient();
-            } else {
-                console.warn('addIngredient() function is not defined.');
-            }
-        }
-    });
-}
-
-if (typeof loadSavedIngredients === 'function') {
-    loadSavedIngredients();
-}
-
-// if (typeof GEMINI_API_KEY !== 'undefined') {
-//     if (GEMINI_API_KEY === 'YOUR_ACTUAL_API_KEY_HERE') {
-//         console.warn('⚠️ WARNING: Please set your actual Gemini API key in script.js');
-//         if (typeof showApiKeyWarning === 'function') showApiKeyWarning();
-//     }
-//     else {
-//         console.log('✅ API Key configured');
-//     }
-// } else {
-//         console.warn('⚠️ GEMINI_API_KEY is not defined.');
-// }
-
-    if (typeof initializeSearch === 'function') {
-    
-    // Add search functionality
-    initializeSearch();
-    }
+    initializeChat();
+    setupEventListeners();
+    initializeSpeechRecognition();
+    updateBookmarkDisplay();
 });
 
-function getToken() {
-  const userData = localStorage.getItem('user') || sessionStorage.getItem('user');
-  if (!userData) return undefined;
-
-  try {
-    const user = JSON.parse(userData);
-    return user.token || null;
-  } catch (err) {
-    console.error('Failed to parse user data:', err);
-    return undefined;
-  }
-}
-
-// Fetch inventory ingredients from backend
-async function fetchInventoryIngredients() {
-    const token = getToken();
-  try {
-    const response = await fetch(`${BACKEND_URL}/api/products/ingredients`, {
-      headers: {
-        'Authorization': `Bearer ${getToken()}`,
-        'Content-Type': 'application/json'
-      }
+// Initialize chat functionality
+function initializeChat() {
+    // Add welcome message to history
+    chatHistory.push({
+        type: 'bot',
+        message: "Hello! I'm your GroceryTrack AI Assistant. I'm here to help you analyze your store's performance and provide actionable suggestions to improve your business. What would you like to explore today?",
+        timestamp: new Date()
     });
-    if (!response.ok) throw new Error('Failed to fetch inventory ingredients');
-
-    const data = await response.json();
-    return data; 
-  } catch (error) {
-    console.error('Inventory fetch error:', error);
-    return [];
-  }
 }
 
-// Show API key warning
-function showApiKeyWarning() {
-    const container = document.getElementById('recipesContainer');
-    if (container) {
-        container.innerHTML = `
-            <div class="error-container">
-                <i class="fas fa-key"></i>
-                <h3>API Key Required</h3>
-                <p>Please set your Gemini API key in the script.js file to use recipe generation.</p>
-                <div class="troubleshooting api-key">
-                    <strong>Steps to fix:</strong>
-                    <ul>
-                        <li>Get your API key from <a href="https://aistudio.google.com/app/apikey" target="_blank">Google AI Studio</a></li>
-                        <li>Replace 'YOUR_ACTUAL_API_KEY_HERE' with your actual key in script.js</li>
-                        <li>Refresh the page</li>
-                    </ul>
-                </div>
-                <div class="error-actions">
-                    <button onclick="displayRecipes(getMockRecipes())" class="mock-btn">
-                        Use Sample Recipes Instead
+// Setup all event listeners
+function setupEventListeners() {
+    // Chat input events
+    chatInput.addEventListener('keypress', handleKeyPress);
+    chatInput.addEventListener('input', handleAutoSuggestions);
+    sendBtn.addEventListener('click', sendMessage);
+
+    // Quick action buttons
+    document.querySelectorAll('.quick-action-btn').forEach(btn => {
+        btn.addEventListener('click', handleQuickAction);
+    });
+
+    // Template buttons
+    document.querySelectorAll('.template-item').forEach(item => {
+        item.addEventListener('click', handleTemplateSelect);
+    });
+
+    // Header action buttons
+    voiceBtn.addEventListener('click', toggleVoiceInput);
+    fullscreenBtn.addEventListener('click', toggleFullscreen);
+    exportBtn.addEventListener('click', showExportModal);
+    clearChatBtn.addEventListener('click', clearChat);
+    printChatBtn.addEventListener('click', printChat);
+
+    // Modal events
+    setupModalEvents();
+
+    // Auto-suggestion events
+    document.addEventListener('click', hideAutoSuggestions);
+}
+
+// Handle keypress events
+function handleKeyPress(e) {
+    if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        sendMessage();
+    }
+}
+
+// Handle auto-suggestions
+function handleAutoSuggestions() {
+    const value = chatInput.value.toLowerCase();
+    
+    if (value.length < 2) {
+        hideAutoSuggestions();
+        return;
+    }
+
+    const matches = autoSuggestionsData.filter(suggestion => 
+        suggestion.toLowerCase().includes(value)
+    ).slice(0, 5);
+
+    if (matches.length > 0) {
+        showAutoSuggestions(matches);
+    } else {
+        hideAutoSuggestions();
+    }
+}
+
+// Show auto-suggestions
+function showAutoSuggestions(suggestions) {
+    autoSuggestions.innerHTML = suggestions.map(suggestion => 
+        `<div class="suggestion-item" onclick="selectSuggestion('${suggestion}')">${suggestion}</div>`
+    ).join('');
+    autoSuggestions.classList.add('show');
+}
+
+// Hide auto-suggestions
+function hideAutoSuggestions() {
+    autoSuggestions.classList.remove('show');
+}
+
+// Select auto-suggestion
+function selectSuggestion(suggestion) {
+    chatInput.value = suggestion;
+    hideAutoSuggestions();
+    chatInput.focus();
+}
+
+// Send message
+function sendMessage() {
+    const message = chatInput.value.trim();
+    if (!message) return;
+
+    // Add user message
+    addMessage('user', message);
+    chatInput.value = '';
+    hideAutoSuggestions();
+
+    // Show typing indicator
+    showTypingIndicator();
+
+    // Simulate bot response delay
+    setTimeout(() => {
+        const response = generateBotResponse(message);
+        hideTypingIndicator();
+        addMessage('bot', response.content, response.title);
+        
+        // Add to suggestion history
+        suggestionHistory.push({
+            query: message,
+            response: response.content,
+            timestamp: new Date()
+        });
+    }, 1500 + Math.random() * 1000); // Random delay between 1.5-2.5 seconds
+}
+
+// Add message to chat
+function addMessage(type, content, title = '') {
+    const messageDiv = document.createElement('div');
+    messageDiv.className = `message ${type}-message`;
+    
+    const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    const avatar = type === 'user' ? '<i class="fas fa-user"></i>' : '<i class="fas fa-robot"></i>';
+    
+    let messageContent = content;
+    if (title && type === 'bot') {
+        messageContent = `<strong>${title}</strong>\n\n${content}`;
+    }
+
+    messageDiv.innerHTML = `
+        <div class="message-avatar">${avatar}</div>
+        <div class="message-content">
+            <div class="message-text">${messageContent.replace(/\n/g, '<br>')}</div>
+            <div class="message-time">${time}</div>
+            ${type === 'bot' ? `
+                <div class="message-reactions">
+                    <button class="reaction-btn" onclick="reactToMessage(this, 'helpful')" title="Helpful">
+                        <i class="fas fa-thumbs-up"></i>
+                    </button>
+                    <button class="reaction-btn" onclick="reactToMessage(this, 'not-helpful')" title="Not Helpful">
+                        <i class="fas fa-thumbs-down"></i>
+                    </button>
+                    <button class="reaction-btn" onclick="bookmarkMessage(this)" title="Bookmark">
+                        <i class="fas fa-bookmark"></i>
                     </button>
                 </div>
-            </div>
-        `;
-    }
-}
-
-// Add ingredient function
-async function addIngredient() {
-    const token = getToken();
-    const input = document.getElementById('ingredientInput');
-    if (!input) return;
-    
-    const ingredient = input.value.trim();
-    
-    if (!ingredient) return;
-    
-    if (ingredient.length < 2) {
-        alert('Please enter at least 2 characters');
-        return;
-    }
-    
-    // Check for duplicates (case insensitive)
-    if (ingredients.some(item => item.toLowerCase() === ingredient.toLowerCase())) {
-        alert('This ingredient is already added');
-        input.value = '';
-        return;
-    }
-    try {
-    // Call backend to add ingredient
-        const response = await fetch(`${BACKEND_URL}/api/products/add`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json',
-                'Authorization': `Bearer ${token}`
-            },
-            body: JSON.stringify({
-            name: ingredient,
-            category: 'Uncategorized',  // or a default category you want
-            quantity: 1,                // default quantity or get from input if you have
-            expiryDate: new Date().toISOString()  // or get from input if user provides expiry
-        }),
-
-    });
-        if (!response.ok) throw new Error('Failed to add ingredient');
-    
-        // On success, update frontend list
-        ingredients.push(ingredient);
-        updateIngredientTags();
-        input.value = '';
-    
-    } catch (err) {
-        alert('Error adding ingredient: ' + err.message);
-    }
-}
-    
-
-// Remove ingredient function
-// async function removeIngredientFromList(ingredient) {
-//   try {
-//     const response = await fetch(`${BACKEND_URL}/api/products/${productId}`, {
-//       method: 'DELETE',
-//       headers: {
-//         'Authorization': `Bearer {getToken()}`,
-//         'Content-Type': 'application/json',
-//       }
-//     });
-//     if (!response.ok) throw new Error('Failed to remove ingredient');
-    
-//     // Remove from ingredient list if applicable
-//     if (ingredientName) {
-//       ingredients = ingredients.filter(item => item.toLowerCase() !== ingredientName.toLowerCase());
-//       updateIngredientTags();
-//     }
-
-//     console.log('Deleted successfully');
-//     populateInventoryModal(); // Refresh the modal list if needed
-//   } catch (err) {
-//     alert('Error removing ingredient: ' + err.message);
-//   }
-// }
-// Remove ingredient from local list & update UI (no backend call)
-function removeIngredientFromList(ingredient) {
-  ingredients = ingredients.filter(item => item.toLowerCase() !== ingredient.toLowerCase());
-  updateIngredientTags();
-}
-
-// Update ingredient tags display
-function updateIngredientTags() {
-  const container = document.getElementById('ingredientTags');
-  if (!container) return;
-
-  container.innerHTML = '';
-
-  ingredients.forEach(ingredient => {
-    const tag = document.createElement('div');
-    tag.className = 'ingredient-tag';
-
-    const span = document.createElement('span');
-    span.textContent = ingredient;
-
-    const button = document.createElement('button');
-    button.className = 'remove-btn';
-    button.innerHTML = '<i class="fas fa-times"></i>';
-
-    // Only remove from local list and update UI
-    button.addEventListener('click', () => removeIngredientFromList(ingredient));
-
-    tag.appendChild(span);
-    tag.appendChild(button);
-    container.appendChild(tag);
-  });
-}
-
-// Update ingredient tags display
-function updateIngredientTags() {
-    const container = document.getElementById('ingredientTags');
-    if (!container) return;
-    
-    container.innerHTML = '';
-    
-    ingredients.forEach(ingredient => {
-        const tag = document.createElement('div');
-        tag.className = 'ingredient-tag';
-
-        const span = document.createElement('span');
-        span.textContent = ingredient;
-
-        const button = document.createElement('button');
-        button.className = 'remove-btn';
-        button.innerHTML = '<i class="fas fa-times"></i>';
-        button.addEventListener('click', () => removeIngredientFromList(ingredient));
-
-        tag.appendChild(span);
-        tag.appendChild(button);
-        container.appendChild(tag);
-    });
-}
-
-// Save ingredients to memory
-async function saveIngredientToBackend(ingredient) {
-    try {
-        const response = await fetch(`${BACKEND_URL}/api/ingredients`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ name: ingredient })
-        });
-        if (!response.ok) throw new Error('Failed to save ingredient');
-    } catch (error) {
-        console.error('Error saving ingredient:', error.message);
-    }
-}
-
-// Load saved ingredients from memory
-async function loadIngredients() {
-    const token = getToken();
-  try {
-    const response = await fetch(`${BACKEND_URL}/api/products`, {
-      method: 'GET',
-      headers: {
-        'Authorization': `Bearer ${token}`
-      },
-    });
-    if (!response.ok) throw new Error('Failed to load ingredients');
-    
-    const products = await response.json();
-    
-    // Extract just names (or adjust if your backend returns more data)
-    ingredients = products.map(p => p.name);
-    
-    if (typeof updateIngredientTags === 'function') {
-      updateIngredientTags();  // Update tags on the UI
-    } else {
-      console.warn('updateIngredientTags() is not defined.');
-    }
-  } catch (err) {
-    console.error('Error loading ingredients:', err);
-  }
-}
-
-// Modal functions
-async function showIngredientModal() {
-    await populateInventoryModal();
-    const modal = document.getElementById('ingredientModal');
-    if (modal) {
-        modal.style.display = 'block';
-    }
-}
-
-
-
-async function populateInventoryModal() {
-  const container = document.getElementById('inventoryItems');
-  if (!container) return;
-
-  try {
-    const res = await fetch(`${BACKEND_URL}/api/products`, {
-      headers: {
-        'Authorization': `Bearer ${getToken()}`
-      }
-    });
-    if (!res.ok) throw new Error('Failed to fetch inventory');
-
-    const items = await res.json();
-
-    if (items.length === 0) {
-      container.innerHTML = '<p>No inventory ingredients found.</p>';
-      return;
-    }
-
-    container.innerHTML = items.map(item => `
-      <div class="inventory-item" onclick="selectInventoryItem('${item.name.replace(/'/g, "\\'")}')">
-        <i class="fas fa-seedling"></i>
-        <span>${item.name}</span>
-      </div>
-    `).join('');
-
-  } catch (error) {
-    container.innerHTML = `<p>Error loading inventory: ${error.message}</p>`;
-  }
-}
-
-function selectInventoryItem(itemName) {
-  const ingredientInput = document.getElementById('ingredientInput');
-  if (!ingredientInput) return;
-
-  // If input is empty, just set clicked item
-  if (!ingredientInput.value.trim()) {
-    ingredientInput.value = itemName;
-    highlightInventoryItem(itemName);
-    return;
-  }
-
-  // Split current input by commas to get list of ingredients
-  const currentIngredients = ingredientInput.value.split(',').map(i => i.trim()).filter(Boolean);
-
-  // If already added, remove it (toggle off)
-  if (currentIngredients.includes(itemName)) {
-    const index = currentIngredients.indexOf(itemName);
-    currentIngredients.splice(index, 1);
-    ingredientInput.value = currentIngredients.join(', ');
-    highlightInventoryItem(itemName, false);
-  } else {
-    // Add new item
-    currentIngredients.push(itemName);
-    ingredientInput.value = currentIngredients.join(', ');
-    highlightInventoryItem(itemName, true);
-  }
-}
-
-// Optional helper to highlight selected inventory items in UI
-function highlightInventoryItem(itemName, select = true) {
-  const inventoryItems = document.querySelectorAll('.inventory-item');
-  inventoryItems.forEach(item => {
-    if (item.textContent.trim() === itemName) {
-      if (select) {
-        item.classList.add('selected');
-      } else {
-        item.classList.remove('selected');
-      }
-    }
-  });
-}
-
-function closeIngredientModal() {
-    const modal = document.getElementById('ingredientModal');
-    if (modal) {
-        modal.style.display = 'none';
-    }
-}
-
-function confirmIngredientSelection() {
-  closeIngredientModal();
-  // Optional: You could trigger recipe generation or save selected ingredients here
-  console.log('Confirmed selected ingredients:', document.getElementById('ingredientInput').value);
-}
-
-
-
-
-async function showInventoryModal() {
-  try {
-    const inventoryIngredients = await fetchInventoryIngredients();  // fetchInventoryIngredients should return data
-    
-    const modal = document.getElementById('ingredientModal');
-    if (!modal) return;
-
-    const inventoryList = inventoryIngredients.map(p => {
-      const ingredient = p.name || p; // handle object or string
-      const isSelected = ingredients.includes(ingredient);
-      return `
-        <div class="inventory-item ${isSelected ? 'selected' : ''}" onclick="toggleInventoryIngredient(event, '${ingredient.replace(/'/g, "\\'")}')">
-          ${ingredient}
-          <span class="checkmark">${isSelected ? '✔️' : ''}</span>
-        </div>`;
-    }).join('');
-
-    const modalContent = modal.querySelector('.modal-content');
-    if (modalContent) {
-      modalContent.innerHTML = `
-        <h3>Select ingredients from your inventory</h3>
-        <div class="inventory-list">${inventoryList}</div>
-        <button onclick="closeIngredientModal()">Done</button>
-      `;
-    }
-
-    modal.style.display = 'block';
-
-  } catch (error) {
-    console.error('Error showing inventory modal:', error.message);
-  }
-}
-
-
-
-function toggleInventoryIngredient(event, ingredient) {
-    event.stopPropagation();
-    
-    const item = event.target.closest('.inventory-item');
-
-    const index = ingredients.findIndex(i => i.toLowerCase() === ingredient.toLowerCase());
-    if (index !== -1) {
-        // Ingredient already selected, remove it
-        ingredients.splice(index, 1);
-        if (item) item.classList.remove('selected');
-    } else {
-        // Add ingredient
-        ingredients.push(ingredient);
-        if (item) item.classList.add('selected');
-    }
-
-    updateIngredientTags();
-    saveIngredients();
-}
-
-// Main recipe generation function
-async function generateRecipes() {
-    if (ingredients.length === 0) {
-        alert('Please add some ingredients first!');
-        return;
-    }
-    
-    console.log('🚀 Starting recipe generation with ingredients:', ingredients);
-    
-    const generateBtn = document.getElementById('generateBtn');
-    const loadingState = document.getElementById('loadingState');
-    const recipesContainer = document.getElementById('recipesContainer');
-    
-    // Show loading state
-    if (generateBtn) {
-        generateBtn.disabled = true;
-        generateBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Generating...';
-    }
-    if (loadingState) {
-        loadingState.style.display = 'block';
-    }
-    if (recipesContainer) {
-        recipesContainer.innerHTML = '';
-    }
-    
-    try {
-        const recipes = await fetchRecipesFromGemini(ingredients);
-        displayRecipes(recipes);
-        console.log('✅ Recipes generated successfully');
-    } catch (error) {
-        console.error('❌ Error generating recipes:', error);
-        showDetailedError(error);
-    } finally {
-        // Hide loading state
-        if (generateBtn) {
-            generateBtn.disabled = false;
-            generateBtn.innerHTML = '<i class="fas fa-magic"></i> Generate Recipe Suggestions';
-        }
-        if (loadingState) {
-            loadingState.style.display = 'none';
-        }
-    }
-}
-
-// Enhanced Gemini API function (calls your backend instead of Gemini directly)
-async function fetchRecipesFromGemini(ingredients) {
-    try {
-        const response = await fetch('http://localhost:3000/api/gemini-suggestions', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ ingredients })
-        });
-
-        if (!response.ok) {
-            const errorText = await response.text();
-            throw new Error(errorText || 'Failed to fetch recipes from backend');
-        }
-
-        const data = await response.json();
-
-        // Expecting backend to return { recipes: [...] }
-        if (data && Array.isArray(data.recipes)) {
-            return data.recipes;
-        }
-
-        // If backend returns Gemini's raw response, parse as before
-        if (data.candidates && data.candidates.length > 0) {
-            const candidate = data.candidates[0];
-            if (candidate.content && candidate.content.parts && candidate.content.parts.length > 0) {
-                let responseText = candidate.content.parts[0].text.trim();
-                responseText = responseText.replace(/```json\n?/g, '').replace(/```\n?/g, '');
-                const jsonMatch = responseText.match(/\[[\s\S]*\]/);
-                if (jsonMatch) {
-                    return JSON.parse(jsonMatch[0]);
-                }
-            }
-        }
-
-        throw new Error('No valid recipes found in backend response');
-    } catch (error) {
-        console.error('❌ Error fetching recipes from backend:', error);
-        return getMockRecipes();
-    }
-}
-
-// Display recipes function
-// function displayRecipes(recipes) {
-//     const container = document.getElementById('recipesContainer');
-//     if (!container) return;
-    
-//     if (!recipes || recipes.length === 0) {
-//         container.innerHTML = `
-//             <div class="no-recipes">
-//                 <i class="fas fa-utensils"></i>
-//                 <h3>No recipes found</h3>
-//                 <p>Try adding different ingredients or check your API connection.</p>
-//             </div>
-//         `;
-//         return;
-//     }
-    
-//     container.innerHTML = recipes.map(recipe => `
-//         <div class="recipe-card">
-//             <div class="recipe-header">
-//                 <h3 class="recipe-title">${recipe.name}</h3>
-//                 <div class="recipe-meta">
-//                     <span class="difficulty ${recipe.difficulty.toLowerCase()}">${recipe.difficulty}</span>
-//                     <span class="time"><i class="fas fa-clock"></i> ${recipe.cookingTime} min</span>
-//                     <span class="servings"><i class="fas fa-users"></i> ${recipe.servings} servings</span>
-//                 </div>
-//             </div>
-            
-//             <div class="recipe-description">
-//                 <p>${recipe.description}</p>
-//             </div>
-            
-//             <div class="recipe-content">
-//                 <div class="ingredients-section">
-//                     <h4><i class="fas fa-list"></i> Ingredients</h4>
-//                     <ul class="ingredients-list">
-//                         ${recipe.ingredients.map(ingredient => `<li>${ingredient}</li>`).join('')}
-//                     </ul>
-//                 </div>
-                
-//                 <div class="instructions-section">
-//                     <h4><i class="fas fa-clipboard-list"></i> Instructions</h4>
-//                     <ol class="instructions-list">
-//                         ${recipe.instructions.map(instruction => `<li>${instruction}</li>`).join('')}
-//                     </ol>
-//                 </div>
-//             </div>
-//         </div>
-//     `).join('');
-// }
-
-function displayRecipes(recipes) {
-    const container = document.getElementById('recipesContainer');
-    if (!container) return;
-
-    // Handle markdown response (from backend)
-    if (recipes && typeof recipes.markdown === 'string') {
-        container.innerHTML = `<pre style="white-space: pre-wrap;">${recipes.markdown}</pre>`;
-        return;
-    }
-
-    if (!Array.isArray(recipes) || recipes.length === 0) {
-        container.innerHTML = `
-            <div class="no-recipes">
-                <i class="fas fa-utensils"></i>
-                <h3>No recipes found</h3>
-                <p>Try adding different ingredients or check your API connection.</p>
-            </div>
-        `;
-        return;
-    }
-
-    container.innerHTML = recipes.map(recipe => `
-        <div class="recipe-card">
-            <div class="recipe-header">
-                <h3 class="recipe-title">${recipe.name || 'Untitled Recipe'}</h3>
-                <div class="recipe-meta">
-                    <span class="difficulty ${recipe.difficulty ? recipe.difficulty.toLowerCase() : ''}">
-                        ${recipe.difficulty || ''}
-                    </span>
-                    <span class="time"><i class="fas fa-clock"></i> ${recipe.cookingTime || ''} min</span>
-                    <span class="servings"><i class="fas fa-users"></i> ${recipe.servings || ''} servings</span>
-                </div>
-            </div>
-            
-            <div class="recipe-description">
-                <p>${recipe.description || ''}</p>
-            </div>
-            
-            <div class="recipe-content">
-                <div class="ingredients-section">
-                    <h4><i class="fas fa-list"></i> Ingredients</h4>
-                    <ul class="ingredients-list">
-                        ${(Array.isArray(recipe.ingredients) ? recipe.ingredients : []).map(ingredient => `<li>${ingredient}</li>`).join('')}
-                    </ul>
-                </div>
-                
-                <div class="instructions-section">
-                    <h4><i class="fas fa-clipboard-list"></i> Instructions</h4>
-                    <ol class="instructions-list">
-                        ${(Array.isArray(recipe.instructions) ? recipe.instructions : [recipe.instructions]).filter(Boolean).map(instruction => `<li>${instruction}</li>`).join('')}
-                    </ol>
-                </div>
-            </div>
-        </div>
-    `).join('');
-}
-
-// Mock recipes for testing/fallback
-function getMockRecipes() {
-    return [
-        {
-            name: "Quick Vegetable Stir Fry",
-            difficulty: "Easy",
-            cookingTime: 15,
-            servings: 2,
-            description: "A colorful and nutritious stir fry that's ready in minutes.",
-            ingredients: ["Mixed vegetables", "Soy sauce", "Garlic", "Ginger", "Oil"],
-            instructions: [
-                "Heat oil in a large pan or wok over high heat",
-                "Add minced garlic and ginger, stir for 30 seconds",
-                "Add vegetables and stir fry for 5-7 minutes",
-                "Add soy sauce and toss to combine",
-                "Serve immediately over rice"
-            ]
-        },
-        {
-            name: "Simple Pasta Aglio e Olio",
-            difficulty: "Easy",
-            cookingTime: 20,
-            servings: 4,
-            description: "Classic Italian pasta with garlic and olive oil.",
-            ingredients: ["Spaghetti", "Garlic", "Olive oil", "Red pepper flakes", "Parsley"],
-            instructions: [
-                "Cook spaghetti according to package directions",
-                "Heat olive oil in a large pan",
-                "Add sliced garlic and red pepper flakes",
-                "Add cooked pasta and pasta water",
-                "Toss with fresh parsley and serve"
-            ]
-        },
-        {
-            name: "Classic Chicken Sandwich",
-            difficulty: "Medium",
-            cookingTime: 25,
-            servings: 2,
-            description: "Juicy grilled chicken breast served on fresh bread with crisp vegetables.",
-            ingredients: ["Chicken breast", "Bread", "Lettuce", "Tomato", "Mayo", "Salt", "Pepper"],
-            instructions: [
-                "Season chicken breast with salt and pepper",
-                "Grill chicken for 6-7 minutes per side until cooked through",
-                "Toast bread slices until golden",
-                "Spread mayo on bread",
-                "Layer lettuce, tomato, and chicken",
-                "Serve immediately"
-            ]
-        }
-    ];
-}
-
-// Error handling function
-function showDetailedError(error) {
-    const container = document.getElementById('recipesContainer');
-    if (!container) return;
-    
-    container.innerHTML = `
-        <div class="error-container">
-            <i class="fas fa-exclamation-triangle"></i>
-            <h3>Oops! Something went wrong</h3>
-            <p class="error-message">${error.message}</p>
-            <div class="troubleshooting">
-                <strong>Troubleshooting tips:</strong>
-                <ul>
-                    <li>Check your internet connection</li>
-                    <li>Verify your API key is correct</li>
-                    <li>Make sure you have API quota remaining</li>
-                    <li>Try again in a few moments</li>
-                </ul>
-            </div>
-            <div class="error-actions">
-                <button onclick="generateRecipes()" class="retry-btn">
-                    <i class="fas fa-redo"></i> Try Again
-                </button>
-                <button onclick="displayRecipes(getMockRecipes())" class="mock-btn">
-                    Use Sample Recipes
-                </button>
-            </div>
+            ` : ''}
         </div>
     `;
+
+    chatMessages.appendChild(messageDiv);
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+
+    // Add to chat history
+    chatHistory.push({
+        type: type,
+        message: content,
+        title: title,
+        timestamp: new Date()
+    });
 }
 
-// Search functionality
-function initializeSearch() {
-    const searchInput = document.getElementById('searchInput');
-    if (searchInput) {
-        searchInput.addEventListener('input', function() {
-            const searchTerm = this.value.toLowerCase();
-            const recipeCards = document.querySelectorAll('.recipe-card');
-            
-            recipeCards.forEach(card => {
-                const title = card.querySelector('.recipe-title');
-                const description = card.querySelector('.recipe-description');
-                const ingredients = card.querySelector('.ingredients-list');
-                
-                if (title && description && ingredients) {
-                    const titleText = title.textContent.toLowerCase();
-                    const descText = description.textContent.toLowerCase();
-                    const ingText = ingredients.textContent.toLowerCase();
-                    
-                    if (titleText.includes(searchTerm) || descText.includes(searchTerm) || ingText.includes(searchTerm)) {
-                        card.style.display = 'block';
-                    } else {
-                        card.style.display = 'none';
-                    }
-                }
-            });
-        });
+// Generate bot response
+function generateBotResponse(message) {
+    const lowerMessage = message.toLowerCase();
+    
+    // Check for specific keywords
+    if (lowerMessage.includes('top perform') || lowerMessage.includes('best sell') || lowerMessage.includes('popular')) {
+        return botResponses['top-performers'];
+    } else if (lowerMessage.includes('optim') || lowerMessage.includes('improve') || lowerMessage.includes('better')) {
+        return botResponses['optimization'];
+    } else if (lowerMessage.includes('strategy') || lowerMessage.includes('plan') || lowerMessage.includes('growth')) {
+        return botResponses['strategy'];
+    } else if (lowerMessage.includes('performance') || lowerMessage.includes('metric') || lowerMessage.includes('kpi')) {
+        return botResponses['performance'];
+    } else if (lowerMessage.includes('customer') || lowerMessage.includes('client') || lowerMessage.includes('shopper')) {
+        return botResponses['customer'];
+    } else if (lowerMessage.includes('season') || lowerMessage.includes('holiday') || lowerMessage.includes('time')) {
+        return botResponses['seasonal'];
+    } else {
+        // Random default response
+        const defaultResponses = botResponses['default'];
+        const randomResponse = defaultResponses[Math.floor(Math.random() * defaultResponses.length)];
+        return {
+            title: "General Business Insights",
+            content: randomResponse + "\n\nSome specific areas I can help you with:\n• Performance analysis and KPI tracking\n• Customer behavior insights\n• Inventory optimization strategies\n• Seasonal planning and forecasting\n• Staff productivity improvements\n• Marketing and promotional strategies"
+        };
     }
 }
 
-// Clear all ingredients
-function clearAllIngredients() {
-    ingredients = [];
-    updateIngredientTags();
-    saveIngredients();
+// Show typing indicator
+function showTypingIndicator() {
+    typingIndicator.classList.add('show');
+    chatMessages.scrollTop = chatMessages.scrollHeight;
 }
 
-// Export/Print recipe function
-function printRecipe(recipeIndex) {
+// Hide typing indicator
+function hideTypingIndicator() {
+    typingIndicator.classList.remove('show');
+}
+
+// Handle quick actions
+function handleQuickAction(e) {
+    const action = e.target.closest('.quick-action-btn').dataset.action;
+    let message = '';
+    
+    switch(action) {
+        case 'top-performers':
+            message = 'Analyze my top performing product categories';
+            break;
+        case 'optimization':
+            message = 'Give me store optimization recommendations';
+            break;
+        case 'strategy':
+            message = 'Provide strategic business suggestions';
+            break;
+    }
+    
+    if (message) {
+        chatInput.value = message;
+        sendMessage();
+    }
+}
+
+// Handle template selection
+function handleTemplateSelect(e) {
+    const template = e.target.closest('.template-item').dataset.template;
+    let message = '';
+    
+    switch(template) {
+        case 'performance':
+            message = 'Show me a complete performance analysis template';
+            break;
+        case 'customer':
+            message = 'Provide customer insights and behavior analysis';
+            break;
+        case 'seasonal':
+            message = 'Help me with seasonal inventory planning';
+            break;
+    }
+    
+    if (message) {
+        chatInput.value = message;
+        sendMessage();
+    }
+}
+
+// Initialize speech recognition
+function initializeSpeechRecognition() {
+    if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        recognition = new SpeechRecognition();
+        
+        recognition.continuous = false;
+        recognition.interimResults = false;
+        recognition.lang = 'en-US';
+        
+        recognition.onstart = function() {
+            isListening = true;
+            voiceIndicator.classList.add('show');
+            voiceBtn.innerHTML = '<i class="fas fa-stop"></i>';
+        };
+        
+        recognition.onresult = function(event) {
+            const transcript = event.results[0][0].transcript;
+            chatInput.value = transcript;
+            chatInput.focus();
+        };
+        
+        recognition.onend = function() {
+            isListening = false;
+            voiceIndicator.classList.remove('show');
+            voiceBtn.innerHTML = '<i class="fas fa-microphone"></i>';
+        };
+        
+        recognition.onerror = function(event) {
+            console.error('Speech recognition error:', event.error);
+            isListening = false;
+            voiceIndicator.classList.remove('show');
+            voiceBtn.innerHTML = '<i class="fas fa-microphone"></i>';
+        };
+    } else {
+        voiceBtn.style.display = 'none';
+    }
+}
+
+// Toggle voice input
+function toggleVoiceInput() {
+    if (!recognition) return;
+    
+    if (isListening) {
+        recognition.stop();
+    } else {
+        recognition.start();
+    }
+}
+
+// Toggle fullscreen
+function toggleFullscreen() {
+    const chatContainer = document.querySelector('.chat-container');
+    const isFullscreen = chatContainer.classList.contains('fullscreen');
+    
+    if (isFullscreen) {
+        chatContainer.classList.remove('fullscreen');
+        fullscreenBtn.innerHTML = '<i class="fas fa-expand"></i>';
+        fullscreenBtn.title = 'Fullscreen Chat';
+    } else {
+        chatContainer.classList.add('fullscreen');
+        fullscreenBtn.innerHTML = '<i class="fas fa-compress"></i>';
+        fullscreenBtn.title = 'Exit Fullscreen';
+    }
+}
+
+// Clear chat
+function clearChat() {
+    if (confirm('Are you sure you want to clear the chat history?')) {
+        chatMessages.innerHTML = '';
+        chatHistory = [];
+        initializeChat();
+        
+        // Re-add welcome message
+        addMessage('bot', "Hello! I'm your GroceryTrack AI Assistant. I'm here to help you analyze your store's performance and provide actionable suggestions to improve your business. What would you like to explore today?");
+    }
+}
+
+// Print chat
+function printChat() {
     window.print();
 }
 
-// Close modal when clicking outside
-window.onclick = function(event) {
-    const modal = document.getElementById('ingredientModal');
-    if (modal && event.target === modal) {
-        closeIngredientModal();
+// React to message
+function reactToMessage(btn, reaction) {
+    const allReactionBtns = btn.parentElement.querySelectorAll('.reaction-btn');
+    allReactionBtns.forEach(b => b.classList.remove('active'));
+    
+    btn.classList.add('active');
+    
+    // You could send this feedback to your backend when implemented
+    console.log('Message reaction:', reaction);
+}
+
+// Bookmark message
+function bookmarkMessage(btn) {
+    const messageText = btn.closest('.message-content').querySelector('.message-text').textContent;
+    const timestamp = new Date().toISOString();
+    
+    const bookmark = {
+        text: messageText.substring(0, 50) + '...',
+        fullText: messageText,
+        timestamp: timestamp
+    };
+    
+    bookmarkedSuggestions.push(bookmark);
+    updateBookmarkDisplay();
+    
+    btn.innerHTML = '<i class="fas fa-bookmark" style="color: #f39c12;"></i>';
+    btn.disabled = true;
+}
+
+// Update bookmark display
+function updateBookmarkDisplay() {
+    const bookmarkList = document.getElementById('bookmarkList');
+    
+    if (bookmarkedSuggestions.length > 1) { // More than the initial demo bookmark
+        bookmarkList.innerHTML = bookmarkedSuggestions.map((bookmark, index) => `
+            <div class="bookmark-item">
+                <span title="${bookmark.fullText}">${bookmark.text}</span>
+                <button class="bookmark-btn" onclick="removeBookmark(${index})">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+        `).join('');
     }
 }
+
+// Remove bookmark
+function removeBookmark(index) {
+    bookmarkedSuggestions.splice(index, 1);
+    updateBookmarkDisplay();
+}
+
+// Modal functions
+function setupModalEvents() {
+    // Export modal
+    document.getElementById('exportBtn').addEventListener('click', () => {
+        document.getElementById('exportModal').classList.add('show');
+    });
+    
+    document.getElementById('closeExportModal').addEventListener('click', () => {
+        document.getElementById('exportModal').classList.remove('show');
+    });
+    
+    // Export buttons
+    document.querySelectorAll('.export-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            const format = e.target.closest('.export-btn').dataset.format;
+            exportChat(format);
+            document.getElementById('exportModal').classList.remove('show');
+        });
+    });
+    
+    // Close modals when clicking outside
+    document.querySelectorAll('.modal').forEach(modal => {
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) {
+                modal.classList.remove('show');
+            }
+        });
+    });
+}
+
+// Show export modal
+function showExportModal() {
+    document.getElementById('exportModal').classList.add('show');
+}
+
+// Export chat
+function exportChat(format) {
+    const chatData = {
+        timestamp: new Date().toISOString(),
+        messages: chatHistory,
+        suggestions: suggestionHistory,
+        bookmarks: bookmarkedSuggestions
+    };
+    
+    let content = '';
+    let filename = `grocerytrack-chat-${new Date().toISOString().split('T')[0]}`;
+    let mimeType = '';
+    
+    switch(format) {
+        case 'json':
+            content = JSON.stringify(chatData, null, 2);
+            filename += '.json';
+            mimeType = 'application/json';
+            break;
+            
+        case 'txt':
+            content = generateTextExport(chatData);
+            filename += '.txt';
+            mimeType = 'text/plain';
+            break;
+            
+        case 'pdf':
+            // For PDF, we'll generate HTML and let the browser handle PDF conversion
+            content = generateHTMLExport(chatData);
+            filename += '.html';
+            mimeType = 'text/html';
+            break;
+    }
+    
+    downloadFile(content, filename, mimeType);
+}
+
+// Generate text export
+function generateTextExport(data) {
+    let text = 'GroceryTrack AI Assistant - Chat Export\n';
+    text += '=' .repeat(50) + '\n';
+    text += `Export Date: ${new Date().toLocaleString()}\n\n`;
+    
+    text += 'CHAT HISTORY:\n';
+    text += '-'.repeat(20) + '\n';
+    
+    data.messages.forEach(msg => {
+        const time = new Date(msg.timestamp).toLocaleString();
+        const speaker = msg.type === 'user' ? 'You' : 'AI Assistant';
+        text += `[${time}] ${speaker}: ${msg.message}\n\n`;
+    });
+    
+    if (data.bookmarks.length > 0) {
+        text += '\nBOOKMARKED SUGGESTIONS:\n';
+        text += '-'.repeat(25) + '\n';
+        data.bookmarks.forEach(bookmark => {
+            text += `• ${bookmark.fullText}\n\n`;
+        });
+    }
+    
+    return text;
+}
+
+// Generate HTML export
+function generateHTMLExport(data) {
+    let html = `
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <title>GroceryTrack Chat Export</title>
+        <style>
+            body { font-family: Arial, sans-serif; margin: 20px; }
+            .header { border-bottom: 2px solid #3498db; padding-bottom: 10px; margin-bottom: 20px; }
+            .message { margin: 15px 0; padding: 10px; border-radius: 8px; }
+            .user-message { background: #e3f2fd; text-align: right; }
+            .bot-message { background: #f5f5f5; }
+            .timestamp { font-size: 12px; color: #666; }
+            .bookmarks { marginWtop: 30px; }
+        </style>
+    </head>
+    <body>
+        <div class="header">
+            <h1>GroceryTrack AI Assistant - Chat Export</h1>
+            <p>Export Date: ${new Date().toLocaleString()}</p>
+        </div>
+    `;
+    
+    data.messages.forEach(msg => {
+        const time = new Date(msg.timestamp).toLocaleString();
+        const messageClass = msg.type === 'user' ? 'user-message' : 'bot-message';
+        html += `
+            <div class="message ${messageClass}">
+                <div>${msg.message.replace(/\n/g, '<br>')}</div>
+                <div class="timestamp">${time}</div>
+            </div>
+        `;
+    });
+    
+    if (data.bookmarks.length > 0) {
+        html += '<div class="bookmarks"><h2>Bookmarked Suggestions</h2>';
+        data.bookmarks.forEach(bookmark => {
+            html += `<p>• ${bookmark.fullText}</p>`;
+        });
+        html += '</div>';
+    }
+    
+    html += '</body></html>';
+    return html;
+}
+
+// Download file
+function downloadFile(content, filename, mimeType) {
+    const blob = new Blob([content], { type: mimeType });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+}
+
+// Update metrics periodically (simulate real-time updates)
+setInterval(() => {
+    const performanceScore = document.querySelector('.metric-value');
+    if (performanceScore) {
+        const currentScore = parseInt(performanceScore.textContent);
+        const newScore = Math.max(75, Math.min(95, currentScore + (Math.random() - 0.5) * 2));
+        performanceScore.textContent = Math.round(newScore) + '%';
+    }
+}, 30000); // Update every 30 seconds

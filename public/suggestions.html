@@ -3,158 +3,225 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Recipe Suggestions - GroceryTrack</title>
+    <title>GroceryTrack - AI Suggestions</title>
     <link rel="stylesheet" href="suggestions.css">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
 </head>
 <body>
     <div class="container">
-        <!-- Header with Back Button -->
-        <div class="top-header">
-            <div class="header-left">
-                <button onclick="javascript:history.back()" class="back-button">
-                    <i class="fas fa-arrow-left"></i>
-                    <span>Back</span>
-                </button>
-                <div class="logo">
-                    <i class="fas fa-shopping-cart"></i>
-                    <span>GroceryTrack</span>
-                </div>
-            </div>
-            <div class="search-container">
-                <i class="fas fa-search"></i>
-                <input type="text" placeholder="Search recipes..." class="search-input">
-            </div>
-            <button class="add-button" onclick="showIngredientModal()">
-                <i class="fas fa-plus"></i>
-                Add Ingredients
-            </button>
-        </div>
-
-        <!-- Main Content -->
-        <div class="main-content">
-            <!-- Ingredient Input Section -->
-            <div class="ingredient-section">
-                <h2>Your Available Ingredients</h2>
-                <div class="ingredient-tags" id="ingredientTags">
-                    <!-- Dynamic ingredient tags will be added here -->
-                </div>
-                <div class="ingredient-input-container">
-                    <input type="text" id="ingredientInput" placeholder="Type an ingredient and press Enter..." class="ingredient-input">
+        <!-- Header -->
+        <header class="header">
+            <div class="header-content">
+                <h1><i class="fas fa-shopping-cart"></i> GroceryTrack AI Assistant</h1>
+                <div class="header-actions">
+                    <button class="btn-icon" id="voiceBtn" title="Voice Input">
+                        <i class="fas fa-microphone"></i>
+                    </button>
+                    <button class="btn-icon" id="fullscreenBtn" title="Fullscreen Chat">
+                        <i class="fas fa-expand"></i>
+                    </button>
+                    <button class="btn-icon" id="exportBtn" title="Export Chat">
+                        <i class="fas fa-download"></i>
                     </button>
                 </div>
             </div>
+        </header>
 
-            <!-- Generate Recipes Button -->
-            <div class="generate-section">
-                <button onclick="generateRecipes()" class="generate-btn" id="generateBtn">
-                    <i class="fas fa-magic"></i>
-                    Generate Recipe Suggestions
-                </button>
-            </div>
-
-            <!-- Loading State -->
-            <div class="loading" id="loadingState" style="display: none;">
-                <div class="loading-spinner"></div>
-                <p>Finding delicious recipes for you...</p>
-            </div>
-
-            <!-- Recipe Results -->
-            <div class="recipes-container" id="recipesContainer">
-                <!-- Dynamic recipe cards will be added here -->
-            </div>
-        </div>
-    </div>
-
-    <!-- Ingredient Modal -->
-    <div class="modal" id="ingredientModal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3>Add Ingredients from Inventory</h3>
-                <button onclick="closeIngredientModal()" class="close-btn" </button>
-                    <i class="fas fa-times"></i>
-                </button>
-            </div>
-            <div class="modal-body">
-                <p>Select ingredients from your inventory:</p>
-                <div class="inventory-items" id="inventoryItems">
-                    <!-- Mock inventory items - replace with your actual inventory data -->
-                    
+        <!-- Dashboard Overview -->
+        <section class="dashboard-overview">
+            <div class="metric-cards">
+                <div class="metric-card">
+                    <div class="metric-icon">
+                        <i class="fas fa-chart-line"></i>
+                    </div>
+                    <div class="metric-info">
+                        <h3>Performance Score</h3>
+                        <span class="metric-value">87%</span>
+                    </div>
                 </div>
-            <div class="modal-actions">
-                <button class="ok-btn" onclick="confirmIngredientSelection()">
-                    <i class="fas fa-check"></i> OK
-                </button>
-                <button class="cancel-btn" onclick="closeIngredientModal()">
-                    <i class="fas fa-times-circle"></i> Cancel
-                </button>
+                <div class="metric-card">
+                    <div class="metric-icon">
+                        <i class="fas fa-star"></i>
+                    </div>
+                    <div class="metric-info">
+                        <h3>Top Categories</h3>
+                        <span class="metric-value">12</span>
+                    </div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-icon">
+                        <i class="fas fa-lightbulb"></i>
+                    </div>
+                    <div class="metric-info">
+                        <h3>Active Suggestions</h3>
+                        <span class="metric-value">24</span>
+                    </div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-icon">
+                        <i class="fas fa-clock"></i>
+                    </div>
+                    <div class="metric-info">
+                        <h3>Last Analysis</h3>
+                        <span class="metric-value">2m ago</span>
+                    </div>
+                </div>
             </div>
+        </section>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <!-- Sidebar -->
+            <aside class="sidebar">
+                <div class="sidebar-section">
+                    <h3>Quick Actions</h3>
+                    <button class="quick-action-btn" data-action="top-performers">
+                        <i class="fas fa-trophy"></i>
+                        Analyze Top Performers
+                    </button>
+                    <button class="quick-action-btn" data-action="optimization">
+                        <i class="fas fa-cogs"></i>
+                        Optimization Tips
+                    </button>
+                    <button class="quick-action-btn" data-action="strategy">
+                        <i class="fas fa-chess"></i>
+                        Strategy Suggestions
+                    </button>
+                </div>
+
+                <div class="sidebar-section">
+                    <h3>Suggestion Templates</h3>
+                    <div class="template-list">
+                        <div class="template-item" data-template="performance">
+                            <i class="fas fa-chart-bar"></i>
+                            Performance Analysis
+                        </div>
+                        <div class="template-item" data-template="customer">
+                            <i class="fas fa-users"></i>
+                            Customer Insights
+                        </div>
+                        <div class="template-item" data-template="seasonal">
+                            <i class="fas fa-calendar"></i>
+                            Seasonal Planning
+                        </div>
+                    </div>
+                </div>
+
+                <div class="sidebar-section">
+                    <h3>Bookmarked Suggestions</h3>
+                    <div class="bookmark-list" id="bookmarkList">
+                        <div class="bookmark-item">
+                            <span>Increase dairy section visibility</span>
+                            <button class="bookmark-btn" data-bookmark="dairy-visibility">
+                                <i class="fas fa-bookmark"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </aside>
+
+            <!-- Chat Container -->
+            <main class="chat-container">
+                <div class="chat-header">
+                    <div class="ai-status">
+                        <div class="status-indicator online"></div>
+                        <span>AI Assistant Online</span>
+                    </div>
+                    <div class="chat-actions">
+                        <button class="btn-small" id="clearChatBtn">Clear Chat</button>
+                        <button class="btn-small" id="printChatBtn">Print</button>
+                    </div>
+                </div>
+
+                <div class="chat-messages" id="chatMessages">
+                    <div class="message bot-message">
+                        <div class="message-avatar">
+                            <i class="fas fa-robot"></i>
+                        </div>
+                        <div class="message-content">
+                            <div class="message-text">
+                                Hello! I'm your GroceryTrack AI Assistant. I'm here to help you analyze your store's performance and provide actionable suggestions to improve your business. What would you like to explore today?
+                            </div>
+                            <div class="message-time">Just now</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="typing-indicator" id="typingIndicator">
+                    <div class="typing-avatar">
+                        <i class="fas fa-robot"></i>
+                    </div>
+                    <div class="typing-dots">
+                        <span></span>
+                        <span></span>
+                        <span></span>
+                    </div>
+                </div>
+
+                <div class="chat-input-container">
+                    <div class="auto-suggestions" id="autoSuggestions"></div>
+                    <div class="chat-input-wrapper">
+                        <input type="text" id="chatInput" placeholder="Ask me anything about your store's performance..." autocomplete="off">
+                        <button id="sendBtn" class="send-btn">
+                            <i class="fas fa-paper-plane"></i>
+                        </button>
+                    </div>
+                </div>
+            </main>
+        </div>
+
+        <!-- Suggestion History Modal -->
+        <div class="modal" id="historyModal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>Suggestion History</h3>
+                    <button class="modal-close" id="closeHistoryModal">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div class="history-list" id="historyList"></div>
+                </div>
             </div>
+        </div>
+
+        <!-- Export Modal -->
+        <div class="modal" id="exportModal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>Export Conversation</h3>
+                    <button class="modal-close" id="closeExportModal">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div class="export-options">
+                        <button class="export-btn" data-format="pdf">
+                            <i class="fas fa-file-pdf"></i>
+                            Export as PDF
+                        </button>
+                        <button class="export-btn" data-format="txt">
+                            <i class="fas fa-file-alt"></i>
+                            Export as Text
+                        </button>
+                        <button class="export-btn" data-format="json">
+                            <i class="fas fa-file-code"></i>
+                            Export as JSON
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Voice Recording Indicator -->
+        <div class="voice-indicator" id="voiceIndicator">
+            <div class="voice-animation">
+                <div class="voice-circle"></div>
+                <div class="voice-ripple"></div>
+            </div>
+            <p>Listening...</p>
         </div>
     </div>
-    <script>
-  const BACKEND_URL = 'http://localhost:3000'; // or your backend URL
-
-  // Example getToken function if using token auth
-  function getToken() {
-    const userData = localStorage.getItem('user') || sessionStorage.getItem('user');
-    if (!userData) return null;
-    try {
-      const user = JSON.parse(userData);
-      return user.token || null;
-    } catch {
-      return null;
-    }
-  }
-
-  async function populateInventoryModal() {
-    const container = document.getElementById('inventoryItems');
-    if (!container) return;
-
-    try {
-      const res = await fetch(`${BACKEND_URL}/api/products`, {
-        headers: {
-          'Authorization': `Bearer ${getToken()}` // remove if no auth
-        }
-      });
-      if (!res.ok) throw new Error('Failed to fetch inventory');
-
-      const items = await res.json();
-
-      if (items.length === 0) {
-        container.innerHTML = '<p>No inventory ingredients found.</p>';
-        return;
-      }
-
-      container.innerHTML = items.map(item => `
-        <div class="inventory-item" onclick="selectInventoryItem('${item.name.replace(/'/g, "\\'")}')">
-          <i class="fas fa-seedling"></i>
-          <span>${item.name}</span>
-        </div>
-      `).join('');
-    } catch (error) {
-      container.innerHTML = `<p>Error loading inventory: ${error.message}</p>`;
-    }
-  }
-
-  // Call this function to open modal and load data
-  function openIngredientModal() {
-    const modal = document.getElementById('ingredientModal');
-    if (modal.style.display !== 'block') {
-        populateInventoryModal();
-        modal.style.display = 'block';
-    }
-}
-  function closeIngredientModal() {
-    document.getElementById('ingredientModal').style.display = 'none';
-  }
-
-  // Sample placeholder function for item selection
-  function selectInventoryItem(name) {
-    alert(`You selected: ${name}`);
-    // Add your actual logic here
-  }
-</script>
 
     <script src="suggestions.js"></script>
 </body>
