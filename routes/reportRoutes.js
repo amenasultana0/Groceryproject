@@ -106,6 +106,38 @@ router.post('/report', authMiddleware, async (req, res) => {
       ? Math.round((fresh / filteredItems.length) * 100)
       : 0;
 
+    // --- Add this for value-based actions (immediate + short-term)
+    const now = new Date();
+    const in7Days = new Date(now);
+    in7Days.setDate(now.getDate() + 7);
+
+    let immediateItems = [];
+    let shortTermItems = [];
+
+    filteredItems.forEach(item => {
+      const expiry = new Date(item.expiryDate);
+      if (expiry < now) {
+        immediateItems.push(item);
+      } else if (expiry >= now && expiry <= in7Days) {
+        shortTermItems.push(item);
+      }
+    });
+
+    const calcValue = (arr) =>
+      arr.reduce((sum, item) => sum + ((item.costPrice || 0) * (item.quantity || 0)), 0);
+
+    const actions = {
+      immediate: {
+        totalValue: calcValue(immediateItems),
+        items: immediateItems,
+      },
+      shortTerm: {
+        totalValue: calcValue(shortTermItems),
+        items: shortTermItems,
+      }
+    };
+
+
     // Expiry summary for insights
     const expiry = {
       critical: filteredItems.filter(item => item.daysLeft <= 2).length,
@@ -123,7 +155,8 @@ router.post('/report', authMiddleware, async (req, res) => {
         freshnessIndex,
         expiry
       },
-      items: filteredItems
+      items: filteredItems,
+      actions
     });
 
   } catch (error) {

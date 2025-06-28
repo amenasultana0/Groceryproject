@@ -1,4 +1,5 @@
 import { populateCategoryDropdown } from '../utils/categoryHelper.js';
+import { getToken } from '../utils/authHelper.js';
 
 function normalizeStatus(status) {
     if (!status) return '-';
@@ -19,6 +20,7 @@ let allItems = [];
 
 // Initialize date picker and event listeners
 document.addEventListener('DOMContentLoaded', function() {
+    const token = getToken();
     flatpickr("#dateRange", {
     mode: "range",
     dateFormat: "Y-m-d",
@@ -34,7 +36,8 @@ document.addEventListener('DOMContentLoaded', function() {
     });
     initializeEventListeners();
     generateReport();
-    populateCategoryDropdown('categoryFilter')
+    populateCategoryDropdown('categoryFilter');
+    calculateWasteManagement();
 });
 
 function initializeEventListeners() {
@@ -108,7 +111,7 @@ async function generateReport() {
         const response = await fetch(`http://localhost:3000/api/reports/report`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json',
-                'Authorization': `Bearer ${token}`
+                'Authorization': `Bearer ${getToken()}`
              },
             body: JSON.stringify({ startDate, endDate, category, status: 'all' }),
         });
@@ -118,10 +121,12 @@ async function generateReport() {
 
         updateMetrics(calculateMetrics(allItems));
 
-        updateFilteredView();
+        if (data.actions) {
+            document.getElementById('immediateAction').textContent = formatCurrency(data.actions.immediate.totalValue || 0);
+            document.getElementById('shortTermAction').textContent = formatCurrency(data.actions.shortTerm.totalValue || 0);
+        }
 
-        // updateCharts(data);
-        // updateTable(data.items);
+        updateFilteredView();
         updateInsights(data);
 
         hideLoading();
@@ -528,11 +533,7 @@ function generateStatusData(items) {
 
 
 function formatCurrency(value) {
-    return new Intl.NumberFormat('en-IN', {
-        style: 'currency',
-        currency: 'INR',
-        maximumFractionDigits: 0
-    }).format(value);
+    return '₹' + (value || 0).toLocaleString('en-IN', { minimumFractionDigits: 0 });
 }
 
 function formatDate(date) {
@@ -623,3 +624,32 @@ function showError(message) {
     generateReport();
     showNotification('Report updated!', 'success');
 });
+
+async function calculateWasteManagement() {
+  try {
+    const res = await fetch(`http://localhost:3000/api/products`, {
+      headers: {
+        Authorization: `Bearer ${getToken()}`}
+    });
+    const products = await res.json();
+    const today = new Date();
+
+    let totalWasteCount = 0;
+    let totalWasteValue = 0;
+
+    products.forEach(product => {
+      const expiry = new Date(product.expiryDate);
+      if (expiry < today && product.quantity > 0) {
+        totalWasteCount += product.quantity;
+        totalWasteValue += product.quantity * (product.costPrice || 0);
+      }
+    });
+
+    // Inject values into the UI
+    document.getElementById('wasteItemCount').textContent = totalWasteCount;
+    document.getElementById('wasteValue').textContent = `₹${totalWasteValue.toFixed(2)}`;
+
+  } catch (err) {
+    console.error('Error calculating waste management:', err);
+  }
+}

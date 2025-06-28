@@ -73,6 +73,7 @@ document.addEventListener('DOMContentLoaded', function() {
     setupEventListeners();
     initializeSpeechRecognition();
     updateBookmarkDisplay();
+    loadBookmarks()
 });
 
 // Initialize chat functionality
@@ -325,47 +326,31 @@ function handleTemplateSelect(e) {
 
 // Initialize speech recognition
 function initializeSpeechRecognition() {
-    if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
-        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-        recognition = new SpeechRecognition();
-        
-        recognition.continuous = false;
-        recognition.interimResults = false;
-        recognition.lang = 'en-US';
-        
-        recognition.onstart = function() {
-            isListening = true;
-            voiceIndicator.classList.add('show');
-            voiceBtn.innerHTML = '<i class="fas fa-stop"></i>';
-        };
-        
-        recognition.onresult = function(event) {
-            const transcript = event.results[0][0].transcript;
-            chatInput.value = transcript;
-            chatInput.focus();
-        };
-        
-        recognition.onend = function() {
-            isListening = false;
-            voiceIndicator.classList.remove('show');
-            voiceBtn.innerHTML = '<i class="fas fa-microphone"></i>';
-        };
-        
-        recognition.onerror = function(event) {
-            console.error('Speech recognition error:', event.error);
-            isListening = false;
-            voiceIndicator.classList.remove('show');
-            voiceBtn.innerHTML = '<i class="fas fa-microphone"></i>';
-        };
-    } else {
-        voiceBtn.style.display = 'none';
-    }
+    if (!('webkitSpeechRecognition' in window)) return;
+
+    recognition = new webkitSpeechRecognition();
+    recognition.continuous = false;
+    recognition.interimResults = false;
+    recognition.lang = 'en-US';
+
+    recognition.onstart = () => {
+        isListening = true;
+        voiceIndicator.style.display = 'flex';
+    };
+
+    recognition.onend = () => {
+        isListening = false;
+        voiceIndicator.style.display = 'none';
+    };
+
+    recognition.onresult = (event) => {
+        const transcript = event.results[0][0].transcript;
+        chatInput.value = transcript;
+        sendMessage();
+    };
 }
 
-// Toggle voice input
 function toggleVoiceInput() {
-    if (!recognition) return;
-    
     if (isListening) {
         recognition.stop();
     } else {
@@ -373,37 +358,30 @@ function toggleVoiceInput() {
     }
 }
 
-// Toggle fullscreen
 function toggleFullscreen() {
-    const chatContainer = document.querySelector('.chat-container');
-    const isFullscreen = chatContainer.classList.contains('fullscreen');
-    
-    if (isFullscreen) {
-        chatContainer.classList.remove('fullscreen');
-        fullscreenBtn.innerHTML = '<i class="fas fa-expand"></i>';
-        fullscreenBtn.title = 'Fullscreen Chat';
+    if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen();
     } else {
-        chatContainer.classList.add('fullscreen');
-        fullscreenBtn.innerHTML = '<i class="fas fa-compress"></i>';
-        fullscreenBtn.title = 'Exit Fullscreen';
+        document.exitFullscreen();
     }
 }
 
-// Clear chat
 function clearChat() {
-    if (confirm('Are you sure you want to clear the chat history?')) {
-        chatMessages.innerHTML = '';
-        chatHistory = [];
-        initializeChat();
-        
-        // Re-add welcome message
-        addMessage('bot', "Hello! I'm your GroceryTrack AI Assistant. I'm here to help you analyze your store's performance and provide actionable suggestions to improve your business. What would you like to explore today?");
-    }
+    chatMessages.innerHTML = '';
+    chatHistory = [];
 }
 
-// Print chat
 function printChat() {
-    window.print();
+    const printWindow = window.open('', '', 'width=800,height=600');
+    const chatContent = chatMessages.innerHTML;
+    printWindow.document.write(`
+        <html>
+        <head><title>Print Chat</title></head>
+        <body>${chatContent}</body>
+        </html>
+    `);
+    printWindow.document.close();
+    printWindow.print();
 }
 
 // React to message
@@ -417,116 +395,89 @@ function reactToMessage(btn, reaction) {
     console.log('Message reaction:', reaction);
 }
 
-// Bookmark message
 function bookmarkMessage(btn) {
-    const messageText = btn.closest('.message-content').querySelector('.message-text').textContent;
-    const timestamp = new Date().toISOString();
-    
-    const bookmark = {
-        text: messageText.substring(0, 50) + '...',
-        fullText: messageText,
-        timestamp: timestamp
-    };
-    
-    bookmarkedSuggestions.push(bookmark);
+    const messageDiv = btn.closest('.message');
+    const text = messageDiv.querySelector('.message-text').innerText;
+
+    bookmarkedSuggestions.push({
+        text: text,
+        timestamp: new Date()
+    });
+
     updateBookmarkDisplay();
-    
-    btn.innerHTML = '<i class="fas fa-bookmark" style="color: #f39c12;"></i>';
-    btn.disabled = true;
 }
 
-// Update bookmark display
 function updateBookmarkDisplay() {
-    const bookmarkList = document.getElementById('bookmarkList');
-    
-    if (bookmarkedSuggestions.length > 1) { // More than the initial demo bookmark
-        bookmarkList.innerHTML = bookmarkedSuggestions.map((bookmark, index) => `
-            <div class="bookmark-item">
-                <span title="${bookmark.fullText}">${bookmark.text}</span>
-                <button class="bookmark-btn" onclick="removeBookmark(${index})">
-                    <i class="fas fa-times"></i>
-                </button>
-            </div>
-        `).join('');
-    }
+    const list = document.getElementById('bookmarkList');
+    list.innerHTML = bookmarkedSuggestions.map(item => `
+        <div class="bookmark-item">
+            <span>${item.text}</span>
+            <button class="bookmark-btn" onclick="removeBookmark('${item.timestamp}')">
+                <i class="fas fa-bookmark"></i>
+            </button>
+        </div>
+    `).join('');
 }
 
-// Remove bookmark
-function removeBookmark(index) {
-    bookmarkedSuggestions.splice(index, 1);
+function removeBookmark(timestamp) {
+    bookmarkedSuggestions = bookmarkedSuggestions.filter(b => b.timestamp.toString() !== timestamp);
     updateBookmarkDisplay();
 }
 
-// Modal functions
-function setupModalEvents() {
-    // Export modal
-    document.getElementById('exportBtn').addEventListener('click', () => {
-        document.getElementById('exportModal').classList.add('show');
-    });
-    
-    document.getElementById('closeExportModal').addEventListener('click', () => {
-        document.getElementById('exportModal').classList.remove('show');
-    });
-    
-    // Export buttons
-    document.querySelectorAll('.export-btn').forEach(btn => {
-        btn.addEventListener('click', (e) => {
-            const format = e.target.closest('.export-btn').dataset.format;
-            exportChat(format);
-            document.getElementById('exportModal').classList.remove('show');
-        });
-    });
-    
-    // Close modals when clicking outside
-    document.querySelectorAll('.modal').forEach(modal => {
-        modal.addEventListener('click', (e) => {
-            if (e.target === modal) {
-                modal.classList.remove('show');
-            }
-        });
-    });
+
+function saveBookmarks() {
+    localStorage.setItem('groceryBookmarks', JSON.stringify(bookmarkedSuggestions));
 }
 
-// Show export modal
-function showExportModal() {
-    document.getElementById('exportModal').classList.add('show');
-}
 
-// Export chat
-function exportChat(format) {
-    const chatData = {
-        timestamp: new Date().toISOString(),
-        messages: chatHistory,
-        suggestions: suggestionHistory,
-        bookmarks: bookmarkedSuggestions
-    };
-    
-    let content = '';
-    let filename = `grocerytrack-chat-${new Date().toISOString().split('T')[0]}`;
-    let mimeType = '';
-    
-    switch(format) {
-        case 'json':
-            content = JSON.stringify(chatData, null, 2);
-            filename += '.json';
-            mimeType = 'application/json';
-            break;
-            
-        case 'txt':
-            content = generateTextExport(chatData);
-            filename += '.txt';
-            mimeType = 'text/plain';
-            break;
-            
-        case 'pdf':
-            // For PDF, we'll generate HTML and let the browser handle PDF conversion
-            content = generateHTMLExport(chatData);
-            filename += '.html';
-            mimeType = 'text/html';
-            break;
+function loadBookmarks() {
+    const saved = localStorage.getItem('groceryBookmarks');
+    if (saved) {
+        bookmarkedSuggestions = JSON.parse(saved);
+        updateBookmarkDisplay();
     }
-    
-    downloadFile(content, filename, mimeType);
+}
+
+
+function showExportModal() {
+    document.getElementById('exportModal').style.display = 'flex';
+}
+
+function setupModalEvents() {
+    document.getElementById('closeExportModal').addEventListener('click', () => {
+        document.getElementById('exportModal').style.display = 'none';
+    });
+
+    document.querySelectorAll('.export-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const format = btn.dataset.format;
+            exportChat(format);
+        });
+    });
+}
+
+function exportChat(format) {
+    const data = {
+        messages: chatHistory,
+        bookmarks: bookmarkedSuggestions.map(b => ({
+            fullText: b.text,
+            timestamp: b.timestamp
+        }))
+    };
+
+    if (format === 'txt') {
+        const content = generateTextExport(data);
+        downloadFile(content, 'GroceryTrack_ChatExport.txt', 'text/plain');
+    } else if (format === 'json') {
+        const content = JSON.stringify(data, null, 2);
+        downloadFile(content, 'GroceryTrack_ChatExport.json', 'application/json');
+    } else if (format === 'pdf') {
+        alert("PDF export isn't supported in this implementation. Try TXT or JSON instead.");
+    }
+    else if (format === 'html') {
+        const content = generateHTMLExport(data);
+        downloadFile(content, 'GroceryTrack_ChatExport.html', 'text/html');
+    }
 }
 
 // Generate text export
@@ -569,7 +520,7 @@ function generateHTMLExport(data) {
             .user-message { background: #e3f2fd; text-align: right; }
             .bot-message { background: #f5f5f5; }
             .timestamp { font-size: 12px; color: #666; }
-            .bookmarks { marginWtop: 30px; }
+            .bookmarks { margin-top: 30px; }
         </style>
     </head>
     <body>
