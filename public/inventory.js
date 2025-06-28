@@ -1,9 +1,105 @@
 import { getToken } from './utils/authHelper.js';
 let scannedOnce = false;
-const barcodeModal = document.getElementById('barcodeScannerModal');
+let scannedBarcodes = [];
+let html5QrCode = null;
+const barcodeModal = document.getElementById('inventoryScannerModal');
 const scanBtn = document.getElementById('startScanBtn');
-const closeBarcodeModal = document.getElementById('closeBarcodeModal');
+const closeInventoryScanner = document.getElementById('closeInventoryScanner');
 
+document.getElementById("deleteAllBtn").addEventListener("click", async function() {
+  if (scannedBarcodes.length === 0) {
+    alert("No barcodes to delete.");
+    return;
+  }
+  const res = await fetch('http://localhost:3000/api/products/delete-by-barcode', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${getToken()}`
+    },
+    body: JSON.stringify({ barcodes: scannedBarcodes })
+  });
+  const data = await res.json();
+  alert(`${data.deletedCount} item(s) deleted.`);
+  scannedBarcodes = [];
+  document.querySelector("#scannedBarcodesTable tbody").innerHTML = "";
+  // Optionally refresh inventory display here\
+  fetchAndRenderProducts();
+  closeInventoryScannerModal();
+});
+function addBarcodeToTable(barcode) {
+  if (scannedBarcodes.includes(barcode)) return; // Avoid duplicates
+  scannedBarcodes.push(barcode);
+
+  const tbody = document.querySelector("#scannedBarcodesTable tbody");
+  const row = document.createElement("tr");
+  row.innerHTML = `
+    <td>${barcode}</td>
+    <td><button class="remove-barcode-btn" data-barcode="${barcode}">Remove</button></td>
+  `;
+  tbody.appendChild(row);
+}
+
+// Remove barcode from table and array
+document.querySelector("#scannedBarcodesTable tbody").addEventListener("click", function(e) {
+  if (e.target.classList.contains("remove-barcode-btn")) {
+    const barcode = e.target.getAttribute("data-barcode");
+    scannedBarcodes = scannedBarcodes.filter(b => b !== barcode);
+    e.target.closest("tr").remove();
+  }
+});
+
+// In your scan success handler:
+function onInventoryScanSuccess(decodedText, decodedResult) {
+  addBarcodeToTable(decodedText);
+  // Optionally, keep scanner open for more scans, or close if you want single scan
+  // closeInventoryScannerModal();
+}
+function openInventoryScannerModal() {
+  scannedBarcodes = [];
+  document.querySelector("#scannedBarcodesTable tbody").innerHTML = "";
+  document.getElementById('inventoryScannerModal').classList.add('show');
+  setTimeout(startInventoryScanner, 300);
+}
+
+function closeInventoryScannerModal() {
+  document.getElementById('inventoryScannerModal').classList.remove('show');
+  if (html5QrCode) {
+    html5QrCode.stop().then(() => html5QrCode.clear());
+  }
+}
+
+async function startInventoryScanner() {
+  const qrRegion = document.getElementById('inventory-reader');
+  qrRegion.innerHTML = '';
+  html5QrCode = new Html5Qrcode("inventory-reader");
+  try {
+    await html5QrCode.start(
+      { facingMode: "environment" },
+      { fps: 10, qrbox: { width: 250, height: 250 } },
+      onInventoryScanSuccess,
+      onInventoryScanError
+    );
+  } catch (err) {
+    alert("Camera error: " + err);
+  }
+}
+
+// async function onInventoryScanSuccess(decodedText, decodedResult) {
+//   // Example: Add barcode to input or list for deletion
+//   document.getElementById('barcode').value = decodedText;
+//   closeInventoryScannerModal();
+//   // Optionally, trigger your add/delete logic here
+// }
+
+function onInventoryScanError(errorMessage) {
+  // Optionally handle scan errors
+  // console.warn(errorMessage);
+}
+
+// Example: Open scanner when button is clicked
+document.getElementById('startScanBtn').addEventListener('click', openInventoryScannerModal);
+document.getElementById('closeInventoryScanner').addEventListener('click', closeInventoryScannerModal);
 document.addEventListener('DOMContentLoaded', () => {
     const token = getToken();
 
@@ -180,79 +276,37 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    scanBtn?.addEventListener('click', () => {
-        barcodeModal.classList.add('show');
-        startScanner();
-    });
+    scanBtn?.addEventListener('click', openInventoryScannerModal);
 
-    closeBarcodeModal?.addEventListener('click', () => {
-        barcodeModal.classList.remove('show');
-        Quagga.stop();
-    });
-
-    function startScanner() {
-        scannedOnce = false;
-        Quagga.init({
-            inputStream: {
-                type: "LiveStream",
-                target: document.querySelector("#scanner-container"),
-                constraints: { facingMode: "environment" }
-            },
-            decoder: {
-                readers: [
-                    "code_128_reader",
-                    "ean_reader",
-                    "ean_8_reader",
-                    "upc_reader",
-                    "upc_e_reader"
-                ]
-            },
-            debug: {
-            drawBoundingBox: true,
-            showFrequency: true,
-            drawScanline: true,
-            showPattern: true
-            }
-            }, function (err) {
-                if (err) return console.error("Scanner init error:", err);
-                Quagga.start();
-        });
-
-        Quagga.onDetected(result => {
-            if (scannedOnce) return;
-            scannedOnce = true;
-            const barcode = result.codeResult.code;
-            Quagga.stop();
-            barcodeModal.classList.remove('show');
-
-            fetch('http://localhost:3000/api/products/scan-barcode', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    Authorization: `Bearer ${getToken()}`
-                },
-                body: JSON.stringify({ barcode })
-            })
-            .then(async res => {
-            const data = await res.json();
-            if (!res.ok) {
-                throw new Error(data.message || 'Unknown error');
-            }
-            return data;
-        })
-
-            .then(data => {
-                alert(data.message || "Inventory updated.");
-                fetchAndRenderProducts();
-                fetchAndRenderLowStock();
-            })
-            .catch(err => {
-                console.error('Barcode scan error:', err);
-                alert("Error processing scanned receipt.");
-            });
-        });
+    closeInventoryScanner?.addEventListener('click', async () => {
+    barcodeModal.classList.remove('show');
+    if (html5QrCode) {
+        await html5QrCode.stop();
+        html5QrCode.clear();
     }
 });
+});
+
+// document.getElementById('addItemForm').addEventListener('submit', async function(e) {
+//   e.preventDefault();
+//   const name = document.getElementById('itemName').value;
+//   const category = document.getElementById('category').value;
+//   const quantity = document.getElementById('quantity').value;
+//   const expiryDate = document.getElementById('expiryDate').value;
+//   const costPrice = document.getElementById('costPrice').value;
+//   //const sellingPrice = document.getElementById('sellingPrice').value;
+//   const barcode = document.getElementById('barcode').value; // <-- Get barcode
+
+//   await fetch('http://localhost:3000/api/products/add', {
+//     method: 'POST',
+//     headers: {
+//       'Content-Type': 'application/json',
+//       Authorization: `Bearer ${getToken()}`
+//     },
+//     body: JSON.stringify({ name, category, quantity, expiryDate, costPrice, sellingPrice, barcode })
+//   });
+//   // ...refresh UI, close modal, etc.
+// });
 
 
 function handleCategoryNavClick(e) {

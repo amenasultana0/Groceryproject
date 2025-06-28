@@ -1,3 +1,4 @@
+//import { base } from '../models/Product.js';
 import { populateCategoryDropdown } from './utils/categoryHelper.js';
 
 // --- Google Login Redirect Handler ---
@@ -182,6 +183,7 @@ async function onScanSuccess(decodedText, decodedResult) {
   closeScannerModal();
   // Only digits? Assume barcode
   const code = decodedText.replace(/\D/g, '');
+  document.getElementById('barcode').value = decodedText;
   if (!code) {
     showNotification("Invalid code scanned.", "error");
     return;
@@ -421,6 +423,7 @@ function getItemFormData() {
     purchaseDate: document.getElementById('purchaseDate').value,
     unitOfMeasurement: document.getElementById('unitOfMeasurement').value,
     costPrice: parseFloat(document.getElementById('costPrice').value),
+    barcode: document.getElementById('barcode').value,
     notes: document.getElementById('notes').value,
     createdAt: new Date().toISOString()
   };

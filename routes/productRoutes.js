@@ -62,7 +62,7 @@ router.get('/expiring', authMiddleware, async (req, res) => {
 
 
 router.post('/add', authMiddleware, async (req, res) => {
-  const { name, category, quantity, expiryDate, unitOfMeasurement, costPrice } = req.body;
+  const { name, category, quantity, expiryDate, unitOfMeasurement, costPrice, barcode } = req.body;
 
   if (!name || quantity == null || !expiryDate) {
     return res.status(400).json({ error: 'Please provide all required fields: name, quantity, expiryDate' });
@@ -81,6 +81,7 @@ router.post('/add', authMiddleware, async (req, res) => {
       userId: req.user._id,
       unitOfMeasurement,
       costPrice,
+      barcode,
     });
     await product.save();
 
@@ -408,6 +409,19 @@ router.delete('/:id', authMiddleware, async (req, res) => {
   } catch (error) {
     console.error('Delete Product Error:', error);
     res.status(500).json({ error: 'Failed to delete product' });
+  }
+});
+router.post('/delete-by-barcode', authMiddleware, async (req, res) => {
+  const { barcodes } = req.body;
+  const userId = req.user._id;
+  if (!Array.isArray(barcodes) || barcodes.length === 0) {
+    return res.status(400).json({ message: 'Barcodes array is required.' });
+  }
+  try {
+    const result = await Product.deleteMany({ barcode: { $in: barcodes }, userId });
+    res.json({ deletedCount: result.deletedCount });
+  } catch (err) {
+    res.status(500).json({ message: 'Error deleting products.' });
   }
 });
 

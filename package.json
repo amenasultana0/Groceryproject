@@ -4,7 +4,7 @@
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
-    "dev": "nodemon server.js"
+    "dev": "kill-port 3000 && nodemon server.js"
   },
   "keywords": [],
   "author": "",
@@ -26,6 +26,7 @@
     "socket.io": "^4.8.1"
   },
   "devDependencies": {
+    "kill-port": "^2.0.1",
     "nodemon": "^3.1.10"
   },
   "description": ""
