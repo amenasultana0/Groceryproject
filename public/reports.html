@@ -3,9 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Premium Grocery Analytics | Reports</title>
+    <title>Business Analytics Dashboard | Reports</title>
     <link rel="stylesheet" href="styles/reports.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
@@ -14,7 +15,7 @@
 <body>
     <header class="premium-header">
         <div class="header-content">
-            <h1><i class="fas fa-chart-line"></i> Premium Analytics</h1>
+            <h1><i class="fas fa-chart-line"></i> Business Analytics Dashboard</h1>
             <div class="header-actions">
                 <button id="backToDashboard" class="btn-secondary">
                     <i class="fas fa-arrow-left"></i> Back to Dashboard
@@ -36,275 +37,464 @@
             <div class="filter-group">
                 <label>Category</label>
                 <select id="categoryFilter">
+                    <option value="">All Categories</option>
                 </select>
             </div>
-            
+            <div class="filter-group">
+                <label>Region</label>
+                <select id="regionFilter">
+                    <option value="">All Regions</option>
+                    <option value="north">North Region</option>
+                    <option value="south">South Region</option>
+                    <option value="east">East Region</option>
+                    <option value="west">West Region</option>
+                </select>
+            </div>
+            <div class="filter-group">
+                <label>Report Type</label>
+                <select id="reportType">
+                    <option value="sales">Sales Report</option>
+                    <option value="inventory">Inventory Report</option>
+                    <option value="revenue">Revenue Report</option>
+                    <option value="customers">Customer Report</option>
+                    <option value="expenses">Expense Report</option>
+                </select>
+            </div>
             <button id="generateReport" class="btn-primary">
-                <i class="fas fa-sync"></i> Update Report
+                <i class="fas fa-sync"></i> Generate Report
             </button>
         </section>
 
-        <!-- Key Metrics -->
-        <section class="metrics-grid">
-            <div class="metric-card" data-tooltip="Items expiring within 7 days">
-                <div class="metric-icon warning">
-                    <i class="fas fa-exclamation-triangle"></i>
-                </div>
-                <div class="metric-content">
-                    <h3>Expiring Soon</h3>
-                    <p id="expiringSoonCount">0</p>
-                    <span>Items expiring in 7 days</span>
-                </div>
-            </div>
-            <div class="metric-card" data-tooltip="Items that have expired">
-                <div class="metric-icon danger">
-                    <i class="fas fa-times-circle"></i>
-                </div>
-                <div class="metric-content">
-                    <h3>Expired Items</h3>
-                    <p id="expiredItemsCount">0</p>
-                    <span>Items to remove</span>
-                </div>
-            </div>
-            <div class="metric-card" data-tooltip="Items in good condition">
-                <div class="metric-icon success">
-                    <i class="fas fa-check-circle"></i>
-                </div>
-                <div class="metric-content">
-                    <h3>Fresh Items</h3>
-                    <p id="freshItemsCount">0</p>
-                    <span>Items in good condition</span>
-                </div>
-            </div>
-            <div class="metric-card" data-tooltip="Total inventory value">
-                <div class="metric-icon primary">
-                    <i class="fas fa-dollar-sign"></i>
-                </div>
-                <div class="metric-content">
-                    <h3>Total Value</h3>
-                    <p id="totalValue">₹0</p>
-                    <span>Current inventory value</span>
-                </div>
-            </div>
-        </section>
-
-        <!-- Charts Grid -->
-        <section class="charts-grid">
-            <div class="chart-toggle">
-                <label>
-                    <input type="checkbox" id="chartAllToggle" checked>
-                    Show charts for all items
-                </label>
-            </div>
-            <div class="filter-group">
-                <label>Status</label>
-                <select id="statusFilter">
-                    <option value="all">All Status</option>
-                    <option value="expiring">Expiring Soon</option>
-                    <option value="expired">Expired</option>
-                    <option value="fresh">Fresh</option>
-                </select>
-            </div>
-            <div class="chart-card full-width">
-            
-                <div class="chart-header">
-                    <h3>Expiry Timeline</h3>
-                </div>
-                <div class="chart-container">
-                    <canvas id="expiryChart"></canvas>
-                </div>
-            </div>
-
-            <div class="chart-card">
-                <h3>Category Distribution</h3>
-                <div class="chart-container">
-                    <div id="categoryChart"></div>
-                </div>
-            </div>
-            <div class="chart-card">
-                <h3>Status by Category</h3>
-                <div class="chart-container">
-                    <div id="statusChart"></div>
-                </div>
-            </div>
-        
-            <div class="chart-card">
-                <h3>Weekly Trend</h3>
-                <div class="chart-container">
-                    <div id="trendChart"></div>
-                </div>
-            </div>
-        </section>
-
-        <!-- Premium Insights -->
-        <section class="premium-insights">
-            <h2>Premium Insights</h2>
-            <div class="insights-panel">
-                <div class="insight-card">
-                    <div class="insight-header">
-                        <i class="fas fa-clock"></i>
-                        <h3>Expiry Timeline</h3>
+        <!-- KPI Overview -->
+        <section class="kpi-overview">
+            <div class="kpi-grid">
+                <div class="kpi-card primary" data-tooltip="Total revenue generated in the selected period">
+                    <div class="kpi-icon">
+                        <i class="fas fa-dollar-sign"></i>
                     </div>
-                    <div class="timeline-metrics">
-                        <div class="timeline-item critical">
-                            <span class="count" id="criticalCount">0</span>
-                            <span class="label">Critical (0-2 days)</span>
-                        </div>
-                        <div class="timeline-item warning">
-                            <span class="count" id="warningCount">0</span>
-                            <span class="label">Warning (3-5 days)</span>
-                        </div>
-                        <div class="timeline-item attention">
-                            <span class="count" id="attentionCount">0</span>
-                            <span class="label">Attention (6-7 days)</span>
-                        </div>
-                        <div class="timeline-item safe">
-                            <span class="count" id="safeCount">0</span>
-                            <span class="label">Safe (&gt;7 days)</span>
-                        </div>
-                    </div>
-                    <div class="risk-level">
-                        Risk Level: <span id="riskLevel">Low</span>
+                    <div class="kpi-content">
+                        <h3>Total Sales</h3>
+                        <p id="totalSales">₹0</p>
+                        <span id="salesGrowth" class="growth positive">+12.5%</span>
                     </div>
                 </div>
-                <div class="insight-card">
-                    <div class="insight-header">
-                        <i class="fas fa-leaf"></i>
-                        <h3>Freshness Index</h3>
-                    </div>
-                    <div class="freshness-metrics">
-                        <div class="overall-freshness">
-                            <span id="freshnessIndex">0</span>%
-                            <span class="label">Overall Freshness</span>
-                        </div>
-                        <div class="quality-distribution">
-                            <div class="quality-item">
-                                <span class="label">Excellent</span>
-                                <div class="progress-bar">
-                                    <div class="progress" id="excellentQuality"></div>
-                                </div>
-                            </div>
-                            <div class="quality-item">
-                                <span class="label">Good</span>
-                                <div class="progress-bar">
-                                    <div class="progress" id="goodQuality"></div>
-                                </div>
-                            </div>
-                            <div class="quality-item">
-                                <span class="label">Fair</span>
-                                <div class="progress-bar">
-                                    <div class="progress" id="fairQuality"></div>
-                                </div>
-                            </div>
-                            <div class="quality-item">
-                                <span class="label">Poor</span>
-                                <div class="progress-bar">
-                                    <div class="progress" id="poorQuality"></div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="insight-card">
-                    <div class="insight-header">
-                        <i class="fas fa-box"></i>
-                        <h3>Storage Optimization</h3>
-                    </div>
-                    <div class="storage-metrics">
-                        <div class="storage-score">
-                            <span id="storageOptScore">0</span>%
-                            <span class="label">Optimization Score</span>
-                        </div>
-                        <div class="storage-details">
-                            <div class="storage-item">
-                                <span class="label">Space Utilization</span>
-                                <div class="progress-bar">
-                                    <div class="progress" id="spaceUtilization" style="width: 0%"></div>
-                                </div>
-                            </div>
-                            <div class="storage-item">
-                                <span class="label">Temperature Compliance</span>
-                                <div class="progress-bar">
-                                    <div class="progress" id="tempCompliance" style="width: 0%"></div>
-                                </div>
-                            </div>
-                            <div class="storage-item">
-                                <span class="label">Organization</span>
-                                <div class="progress-bar">
-                                    <div class="progress" id="orgScore" style="width: 0%"></div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="insight-card">
-                    <div class="insight-header">
+                <div class="kpi-card success" data-tooltip="Net profit after all expenses">
+                    <div class="kpi-icon">
                         <i class="fas fa-chart-line"></i>
-                        <h3>Value Analysis</h3>
                     </div>
-                    <div class="value-metrics">
-                        <div class="savings-opportunities">
-                            <div class="opportunity-item">
-                                <span class="label">Immediate Action Required</span>
-                                <span class="value" id="immediateAction">₹0</span>
-                            </div>
-                            <div class="opportunity-item">
-                                <span class="label">Short-term Action</span>
-                                <span class="value" id="shortTermAction">₹0</span>
-                            </div>
+                    <div class="kpi-content">
+                        <h3>Net Profit</h3>
+                        <p id="netProfit">₹0</p>
+                        <span id="profitGrowth" class="growth positive">+8.3%</span>
+                    </div>
+                </div>
+                <div class="kpi-card warning" data-tooltip="Total number of orders">
+                    <div class="kpi-icon">
+                        <i class="fas fa-shopping-cart"></i>
+                    </div>
+                    <div class="kpi-content">
+                        <h3>Total Orders</h3>
+                        <p id="totalOrders">0</p>
+                        <span id="ordersGrowth" class="growth positive">+15.2%</span>
+                    </div>
+                </div>
+                <div class="kpi-card info" data-tooltip="Average order value">
+                    <div class="kpi-icon">
+                        <i class="fas fa-tag"></i>
+                    </div>
+                    <div class="kpi-content">
+                        <h3>Avg Order Value</h3>
+                        <p id="avgOrderValue">₹0</p>
+                        <span id="aovGrowth" class="growth negative">-2.1%</span>
+                    </div>
+                </div>
+                <div class="kpi-card danger" data-tooltip="Items running low on stock">
+                    <div class="kpi-icon">
+                        <i class="fas fa-exclamation-triangle"></i>
+                    </div>
+                    <div class="kpi-content">
+                        <h3>Low Stock Items</h3>
+                        <p id="lowStockCount">0</p>
+                        <span class="alert">Requires Attention</span>
+                    </div>
+                </div>
+                <div class="kpi-card secondary" data-tooltip="Customer retention rate">
+                    <div class="kpi-icon">
+                        <i class="fas fa-users"></i>
+                    </div>
+                    <div class="kpi-content">
+                        <h3>Customer Retention</h3>
+                        <p id="retentionRate">0%</p>
+                        <span id="retentionGrowth" class="growth positive">+5.7%</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Sales Data Overview -->
+        <section class="sales-overview">
+            <h2><i class="fas fa-chart-bar"></i> Sales Data Overview</h2>
+            <div class="sales-grid">
+                <div class="chart-card full-width">
+                    <div class="chart-header">
+                        <h3>Sales Trend</h3>
+                        <div class="chart-controls">
+                            <button class="active" data-period="daily">Daily</button>
+                            <button data-period="weekly">Weekly</button>
+                            <button data-period="monthly">Monthly</button>
+                            <button data-period="yearly">Yearly</button>
                         </div>
-                        <div class="preventive-measures" id="preventiveMeasures">
-                            <!-- Populated by JavaScript -->
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="salesTrendChart"></canvas>
+                    </div>
+                </div>
+
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <h3>Sales by Category</h3>
+                    </div>
+                    <div class="chart-container">
+                        <div id="categorySalesChart"></div>
+                    </div>
+                </div>
+
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <h3>Top Products</h3>
+                    </div>
+                    <div class="chart-container">
+                        <div id="topProductsChart"></div>
+                    </div>
+                </div>
+
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <h3>Regional Performance</h3>
+                    </div>
+                    <div class="chart-container">
+                        <div id="regionalChart"></div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Inventory Management -->
+        <section class="inventory-section">
+            <h2><i class="fas fa-boxes"></i> Inventory Management</h2>
+            <div class="inventory-grid">
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <h3>Stock Levels</h3>
+                    </div>
+                    <div class="chart-container">
+                        <div id="stockLevelsChart"></div>
+                    </div>
+                </div>
+
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <h3>Stock Turnover</h3>
+                    </div>
+                    <div class="chart-container">
+                        <div id="turnoverChart"></div>
+                    </div>
+                </div>
+
+                <div class="alert-card danger">
+                    <div class="alert-header">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <h3>Low Stock Alerts</h3>
+                    </div>
+                    <div class="alert-list" id="lowStockList">
+                        <!-- Populated by JavaScript -->
+                    </div>
+                </div>
+
+                <div class="alert-card warning">
+                    <div class="alert-header">
+                        <i class="fas fa-clock"></i>
+                        <h3>Restocking Due</h3>
+                    </div>
+                    <div class="alert-list" id="restockList">
+                        <!-- Populated by JavaScript -->
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Revenue & Profit Metrics -->
+        <section class="revenue-section">
+            <h2><i class="fas fa-coins"></i> Revenue & Profit Metrics</h2>
+            <div class="revenue-grid">
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <h3>Revenue Breakdown</h3>
+                    </div>
+                    <div class="chart-container">
+                        <div id="revenueBreakdownChart"></div>
+                    </div>
+                </div>
+
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <h3>Profit Margins</h3>
+                    </div>
+                    <div class="chart-container">
+                        <div id="profitMarginsChart"></div>
+                    </div>
+                </div>
+
+                <div class="metrics-card">
+                    <div class="metrics-header">
+                        <h3>Cost Analysis</h3>
+                    </div>
+                    <div class="metrics-content">
+                        <div class="metric-item">
+                            <span class="label">Cost of Goods Sold</span>
+                            <span class="value" id="cogsValue">₹0</span>
+                        </div>
+                        <div class="metric-item">
+                            <span class="label">Gross Profit</span>
+                            <span class="value" id="grossProfit">₹0</span>
+                        </div>
+                        <div class="metric-item">
+                            <span class="label">Operating Expenses</span>
+                            <span class="value" id="operatingExpenses">₹0</span>
+                        </div>
+                        <div class="metric-item">
+                            <span class="label">Net Profit Margin</span>
+                            <span class="value" id="netProfitMargin">0%</span>
                         </div>
                     </div>
                 </div>
             </div>
         </section>
 
-        <!-- Waste Management -->
-        <section class="waste-management">
-            <h2><i class="fas fa-trash-alt"></i> Waste Management</h2>
-            <div class="waste-panel">
-                <div class="waste-card">
-                    <h3>Expired & Unsold Items</h3>
-                    <p id="wasteItemCount">0</p>
-                    <span>Total quantity of expired items not sold</span>
+        <!-- Customer Insights -->
+        <section class="customer-section">
+            <h2><i class="fas fa-users"></i> Customer Insights</h2>
+            <div class="customer-grid">
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <h3>Customer Demographics</h3>
+                    </div>
+                    <div class="chart-container">
+                        <div id="demographicsChart"></div>
+                    </div>
                 </div>
-                <div class="waste-card">
-                    <h3>Estimated Waste Value</h3>
-                    <p id="wasteValue">₹0</p>
-                    <span>Loss due to unsold expired items</span>
+
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <h3>Top Customers</h3>
+                    </div>
+                    <div class="chart-container">
+                        <div id="topCustomersChart"></div>
+                    </div>
+                </div>
+
+                <div class="metrics-card">
+                    <div class="metrics-header">
+                        <h3>Customer Metrics</h3>
+                    </div>
+                    <div class="metrics-content">
+                        <div class="metric-item">
+                            <span class="label">Total Customers</span>
+                            <span class="value" id="totalCustomers">0</span>
+                        </div>
+                        <div class="metric-item">
+                            <span class="label">New Customers</span>
+                            <span class="value" id="newCustomers">0</span>
+                        </div>
+                        <div class="metric-item">
+                            <span class="label">Repeat Customers</span>
+                            <span class="value" id="repeatCustomers">0</span>
+                        </div>
+                        <div class="metric-item">
+                            <span class="label">Customer Lifetime Value</span>
+                            <span class="value" id="customerLTV">₹0</span>
+                        </div>
+                    </div>
                 </div>
             </div>
         </section>
 
-        <!-- Detailed Items Table -->
-        <section class="items-table">
+        <!-- Expense Tracking -->
+        <section class="expense-section">
+            <h2><i class="fas fa-receipt"></i> Expense Tracking</h2>
+            <div class="expense-grid">
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <h3>Expense Breakdown</h3>
+                    </div>
+                    <div class="chart-container">
+                        <div id="expenseBreakdownChart"></div>
+                    </div>
+                </div>
+
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <h3>Supplier Payments</h3>
+                    </div>
+                    <div class="chart-container">
+                        <div id="supplierPaymentsChart"></div>
+                    </div>
+                </div>
+
+                <div class="alert-card info">
+                    <div class="alert-header">
+                        <i class="fas fa-calendar"></i>
+                        <h3>Upcoming Payments</h3>
+                    </div>
+                    <div class="alert-list" id="upcomingPayments">
+                        <!-- Populated by JavaScript -->
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Promotions & Discounts -->
+        <section class="promotions-section">
+            <h2><i class="fas fa-percentage"></i> Promotions & Discounts</h2>
+            <div class="promotions-grid">
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <h3>Promotion Effectiveness</h3>
+                    </div>
+                    <div class="chart-container">
+                        <div id="promotionEffectivenessChart"></div>
+                    </div>
+                </div>
+
+                <div class="metrics-card">
+                    <div class="metrics-header">
+                        <h3>Discount Summary</h3>
+                    </div>
+                    <div class="metrics-content">
+                        <div class="metric-item">
+                            <span class="label">Total Discounts Given</span>
+                            <span class="value" id="totalDiscounts">₹0</span>
+                        </div>
+                        <div class="metric-item">
+                            <span class="label">Discount Impact on Revenue</span>
+                            <span class="value" id="discountImpact">0%</span>
+                        </div>
+                        <div class="metric-item">
+                            <span class="label">Most Effective Promotion</span>
+                            <span class="value" id="bestPromotion">-</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Returns & Refunds -->
+        <section class="returns-section">
+            <h2><i class="fas fa-undo"></i> Returns & Refunds</h2>
+            <div class="returns-grid">
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <h3>Return Trends</h3>
+                    </div>
+                    <div class="chart-container">
+                        <div id="returnTrendsChart"></div>
+                    </div>
+                </div>
+
+                <div class="metrics-card">
+                    <div class="metrics-header">
+                        <h3>Return Metrics</h3>
+                    </div>
+                    <div class="metrics-content">
+                        <div class="metric-item">
+                            <span class="label">Return Rate</span>
+                            <span class="value" id="returnRate">0%</span>
+                        </div>
+                        <div class="metric-item">
+                            <span class="label">Total Refunds</span>
+                            <span class="value" id="totalRefunds">₹0</span>
+                        </div>
+                        <div class="metric-item">
+                            <span class="label">Most Returned Product</span>
+                            <span class="value" id="mostReturned">-</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Tax & Compliance -->
+        <section class="tax-section">
+            <h2><i class="fas fa-file-invoice-dollar"></i> Tax & Compliance</h2>
+            <div class="tax-grid">
+                <div class="metrics-card">
+                    <div class="metrics-header">
+                        <h3>Tax Summary</h3>
+                    </div>
+                    <div class="metrics-content">
+                        <div class="metric-item">
+                            <span class="label">Total Tax Collected</span>
+                            <span class="value" id="totalTaxCollected">₹0</span>
+                        </div>
+                        <div class="metric-item">
+                            <span class="label">Tax Rate</span>
+                            <span class="value" id="taxRate">18%</span>
+                        </div>
+                        <div class="metric-item">
+                            <span class="label">Tax Due Date</span>
+                            <span class="value" id="taxDueDate">-</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="alert-card warning">
+                    <div class="alert-header">
+                        <i class="fas fa-exclamation-circle"></i>
+                        <h3>Compliance Alerts</h3>
+                    </div>
+                    <div class="alert-list" id="complianceAlerts">
+                        <!-- Populated by JavaScript -->
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Detailed Data Table -->
+        <section class="data-table-section">
             <div class="table-header">
-                <h2>Detailed Items Report</h2>
+                <h2>Detailed Data</h2>
                 <div class="table-actions">
-                    <input type="text" id="tableSearch" placeholder="Search items...">
+                    <input type="text" id="tableSearch" placeholder="Search data...">
+                    <select id="tableFilter">
+                        <option value="all">All Data</option>
+                        <option value="sales">Sales Data</option>
+                        <option value="inventory">Inventory Data</option>
+                        <option value="customers">Customer Data</option>
+                    </select>
                     <button id="exportCSV" class="btn-secondary">
                         <i class="fas fa-file-csv"></i> Export CSV
+                    </button>
+                    <button id="exportPDF" class="btn-secondary">
+                        <i class="fas fa-file-pdf"></i> Export PDF
                     </button>
                 </div>
             </div>
             <div class="table-container">
-                <table id="expiryTable">
+                <table id="dataTable">
                     <thead>
                         <tr>
-                            <th data-sort="name">Item Name</th>
+                            <th data-sort="date">Date</th>
+                            <th data-sort="product">Product</th>
                             <th data-sort="category">Category</th>
-                            <th data-sort="costPrice">Cost Price</th>
+                            <th data-sort="region">Region</th>
                             <th data-sort="quantity">Quantity</th>
-                            <th data-sort="value">Value</th>
-                            <th data-sort="expiry">Expiry Date</th>
-                            <th data-sort="daysLeft">Days Left</th>
-                            <th data-sort="status">Status</th>
-                            <th>Actions</th>
+                            <th data-sort="revenue">Revenue</th>
+                            <th data-sort="cost">Cost</th>
+                            <th data-sort="profit">Profit</th>
+                            <th data-sort="customer">Customer</th>
                         </tr>
                     </thead>
-                    <tbody id="reportTableBody"></tbody>
+                    <tbody id="dataTableBody"></tbody>
                 </table>
             </div>
             <div class="table-footer">
@@ -318,20 +508,15 @@
                     </button>
                 </div>
                 <div class="items-count">
-                    Total Items: <span id="itemCount">0</span>
+                    Total Records: <span id="recordCount">0</span>
                 </div>
             </div>
         </section>
     </main>
+    
     <footer class="premium-footer">
-        <p>Premium Analytics Dashboard | Grocery Expiry Tracking System</p>
+        <p>Business Analytics Dashboard | Comprehensive Business Intelligence System</p>
     </footer>
-    <script>
-        window.addEventListener('DOMContentLoaded', () => {
-            document.getElementById('excellentQuality').style.width = '70%';
-            document.getElementById('excellentQuality').style.backgroundColor = 'blue';
-    });
-</script>
 
     <script type="module" src="scripts/reports.js"></script>
 </body>

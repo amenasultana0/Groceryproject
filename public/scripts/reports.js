@@ -22,17 +22,17 @@ let allItems = [];
 document.addEventListener('DOMContentLoaded', function() {
     const token = getToken();
     flatpickr("#dateRange", {
-    mode: "range",
-    dateFormat: "Y-m-d",
-    defaultDate: [
-        new Date(new Date().setDate(new Date().getDate() - 30)),
-        new Date()
-    ],
-    onChange: function(selectedDates) {
-        if (selectedDates.length === 2) {
-            generateReport(); // Regenerate when user changes
+        mode: "range",
+        dateFormat: "Y-m-d",
+        defaultDate: [
+            new Date(new Date().setDate(new Date().getDate() - 30)),
+            new Date()
+        ],
+        onChange: function(selectedDates) {
+            if (selectedDates.length === 2) {
+                generateReport(); // Regenerate when user changes
+            }
         }
-    }
     });
     initializeEventListeners();
     generateReport();
@@ -55,7 +55,7 @@ function initializeEventListeners() {
             const chartType = button.dataset.chart;
             document.querySelectorAll('.chart-controls button').forEach(btn => btn.classList.remove('active'));
             button.classList.add('active');
-            updateExpiryChart(chartType);
+            updateExpiryChart(generateExpiryData(allItems), chartType);
         });
     });
 
@@ -110,9 +110,10 @@ async function generateReport() {
 
         const response = await fetch(`http://localhost:3000/api/reports/report`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json',
+            headers: { 
+                'Content-Type': 'application/json',
                 'Authorization': `Bearer ${getToken()}`
-             },
+            },
             body: JSON.stringify({ startDate, endDate, category, status: 'all' }),
         });
 
@@ -143,34 +144,48 @@ function showNotification(message, type = 'info') {
         container = document.createElement('div');
         container.id = 'notificationToastContainer';
         container.style.position = 'fixed';
-        container.style.bottom = '20px'; // Bottom of the page
-        container.style.right = '20px';  // Right side
+        container.style.bottom = '20px';
+        container.style.right = '20px';
         container.style.zIndex = '9999';
         container.style.display = 'flex';
         container.style.flexDirection = 'column';
         container.style.alignItems = 'flex-end';
         document.body.appendChild(container);
     }
+    
     const toast = document.createElement('div');
     toast.className = `notification-toast ${type}`;
     toast.textContent = message;
     toast.style.marginTop = '10px';
     toast.style.minWidth = '180px';
     toast.style.padding = '12px 20px';
-    toast.style.background = type === 'success' ? '#4caf50' : (type === 'error' ? '#f44336' : '#333');
+    toast.style.background = type === 'success' ? '#10b981' : (type === 'error' ? '#ef4444' : '#6366f1');
     toast.style.color = '#fff';
-    toast.style.borderRadius = '6px';
-    toast.style.boxShadow = '0 2px 8px rgba(0,0,0,0.15)';
-    toast.style.fontSize = '15px';
-    toast.style.opacity = '0.95';
-    toast.style.transition = 'opacity 0.3s';
+    toast.style.borderRadius = '8px';
+    toast.style.boxShadow = '0 4px 12px rgba(0,0,0,0.15)';
+    toast.style.fontSize = '14px';
+    toast.style.fontWeight = '500';
+    toast.style.opacity = '0';
+    toast.style.transform = 'translateY(20px)';
+    toast.style.transition = 'all 0.3s ease';
 
     container.appendChild(toast);
-    setTimeout(() => toast.style.opacity = '0', 1800);
-    setTimeout(() => toast.remove(), 2100);
+    
+    // Animate in
+    setTimeout(() => {
+        toast.style.opacity = '1';
+        toast.style.transform = 'translateY(0)';
+    }, 10);
+    
+    // Animate out
+    setTimeout(() => {
+        toast.style.opacity = '0';
+        toast.style.transform = 'translateY(-20px)';
+    }, 3000);
+    
+    setTimeout(() => toast.remove(), 3300);
 }
 
-// This function updates the table and charts based on the selected status
 function updateFilteredView() {
     const status = document.getElementById('statusFilter').value;
     const filteredItems = filterItemsByStatus(allItems, status);
@@ -209,22 +224,15 @@ function calculateMetrics(items) {
 }
 
 function updateCharts(data) {
-    // Check the toggle state
-    const showAll = document.getElementById('chartAllToggle')?.checked;
-    // Use allItems or filtered items based on toggle
-    const chartSourceItems = showAll ? allItems : (data.items || []);
-
+    const chartSourceItems = data.items || allItems;
     addStatusToItems(chartSourceItems);
 
     const categoryData = generateCategoryData(chartSourceItems);
     const statusData = generateStatusData(chartSourceItems);
-    
     const expiryData = generateExpiryData(chartSourceItems);
-
     const weeklyTrendData = generateWeeklyExpiryTrend(chartSourceItems);
-    
 
-    updateExpiryChart(expiryData); // This can stay filtered if you want
+    updateExpiryChart(expiryData);
     updateCategoryChart(categoryData);
     updateStatusChart(statusData);
     updateTrendChart(weeklyTrendData);
@@ -235,8 +243,12 @@ function updateExpiryChart(expiryData, type = 'line') {
     if (charts.expiry) charts.expiry.destroy();
 
     const gradientFill = ctx.createLinearGradient(0, 0, 0, 400);
-    gradientFill.addColorStop(0, 'rgba(99, 102, 241, 0.2)');
-    gradientFill.addColorStop(1, 'rgba(99, 102, 241, 0)');
+    gradientFill.addColorStop(0, 'rgba(99, 102, 241, 0.3)');
+    gradientFill.addColorStop(1, 'rgba(99, 102, 241, 0.05)');
+
+    const gridGradient = ctx.createLinearGradient(0, 0, 0, 400);
+    gridGradient.addColorStop(0, 'rgba(99, 102, 241, 0.1)');
+    gridGradient.addColorStop(1, 'rgba(99, 102, 241, 0.02)');
 
     charts.expiry = new Chart(ctx, {
         type: type,
@@ -249,23 +261,65 @@ function updateExpiryChart(expiryData, type = 'line') {
                 backgroundColor: type === 'line' ? gradientFill : 'rgba(99, 102, 241, 0.2)',
                 borderWidth: 3,
                 tension: 0.4,
-                fill: true,
+                fill: type === 'line',
                 pointBackgroundColor: '#ffffff',
                 pointBorderColor: '#6366f1',
-                pointBorderWidth: 2,
+                pointBorderWidth: 3,
                 pointRadius: 6,
-                pointHoverRadius: 8,
+                pointHoverRadius: 10,
                 pointHoverBackgroundColor: '#6366f1',
                 pointHoverBorderColor: '#ffffff',
-                pointHoverBorderWidth: 2,
+                pointHoverBorderWidth: 3,
             }]
         },
         options: {
             responsive: true,
             maintainAspectRatio: false,
-            plugins: { legend: { display: false } },
+            plugins: { 
+                legend: { display: false },
+                tooltip: {
+                    backgroundColor: 'rgba(30, 41, 59, 0.95)',
+                    titleColor: '#ffffff',
+                    bodyColor: '#ffffff',
+                    borderColor: '#6366f1',
+                    borderWidth: 1,
+                    cornerRadius: 8,
+                    displayColors: false,
+                    titleFont: { size: 14, weight: '600' },
+                    bodyFont: { size: 13 },
+                    padding: 12
+                }
+            },
             scales: {
-                y: { beginAtZero: true }
+                x: {
+                    grid: {
+                        color: 'rgba(226, 232, 240, 0.5)',
+                        drawBorder: false
+                    },
+                    ticks: {
+                        color: '#64748b',
+                        font: { size: 12, weight: '500' }
+                    }
+                },
+                y: { 
+                    beginAtZero: true,
+                    grid: {
+                        color: 'rgba(226, 232, 240, 0.5)',
+                        drawBorder: false
+                    },
+                    ticks: {
+                        color: '#64748b',
+                        font: { size: 12, weight: '500' }
+                    }
+                }
+            },
+            interaction: {
+                intersect: false,
+                mode: 'index'
+            },
+            animation: {
+                duration: 1000,
+                easing: 'easeInOutQuart'
             }
         }
     });
@@ -273,13 +327,68 @@ function updateExpiryChart(expiryData, type = 'line') {
 
 function updateCategoryChart(data) {
     const options = {
-        chart: { type: 'donut', height: '100%' },
+        chart: { 
+            type: 'donut', 
+            height: '100%',
+            fontFamily: 'Inter, sans-serif',
+            animations: {
+                enabled: true,
+                easing: 'easeinout',
+                speed: 800,
+                animateGradually: {
+                    enabled: true,
+                    delay: 150
+                },
+                dynamicAnimation: {
+                    enabled: true,
+                    speed: 350
+                }
+            }
+        },
         series: data.data,
         labels: data.labels,
-        colors: ['#f97316', '#22c55e', '#fbbf24', '#ef4444', '#9f7aea'],
-        plotOptions: { pie: { donut: { size: '70%' } } },
-        legend: { position: 'bottom' }
+        colors: ['#f97316', '#22c55e', '#fbbf24', '#ef4444', '#9f7aea', '#3b82f6', '#ec4899'],
+        plotOptions: { 
+            pie: { 
+                donut: { 
+                    size: '70%',
+                    labels: {
+                        show: true,
+                        name: {
+                            show: true,
+                            fontSize: '14px',
+                            fontFamily: 'Inter, sans-serif',
+                            fontWeight: 600,
+                            color: '#1e293b'
+                        },
+                        value: {
+                            show: true,
+                            fontSize: '16px',
+                            fontFamily: 'Inter, sans-serif',
+                            fontWeight: 700,
+                            color: '#6366f1'
+                        }
+                    }
+                } 
+            } 
+        },
+        legend: { 
+            position: 'bottom',
+            fontFamily: 'Inter, sans-serif',
+            fontSize: '12px',
+            fontWeight: 500,
+            markers: {
+                radius: 6
+            }
+        },
+        tooltip: {
+            theme: 'dark',
+            style: {
+                fontSize: '12px'
+            }
+        }
     };
+    
     if (charts.category) charts.category.destroy();
     charts.category = new ApexCharts(document.querySelector("#categoryChart"), options);
     charts.category.render();
@@ -287,15 +396,68 @@ function updateCategoryChart(data) {
 
 function updateStatusChart(data) {
     const options = {
-        chart: { type: 'bar', height: '100%', stacked: true },
+        chart: { 
+            type: 'bar', 
+            height: '100%', 
+            stacked: true,
+            fontFamily: 'Inter, sans-serif',
+            animations: {
+                enabled: true,
+                easing: 'easeinout',
+                speed: 800
+            }
+        },
         series: [
             { name: 'Fresh', data: data.data.fresh, color: '#22c55e' },
             { name: 'Expiring Soon', data: data.data.expiring, color: '#f59e0b' },
             { name: 'Expired', data: data.data.expired, color: '#ef4444' }
         ],
-        xaxis: { categories: data.categories },
-        plotOptions: { bar: { horizontal: true, borderRadius: 6 } }
+        xaxis: { 
+            categories: data.categories,
+            labels: {
+                style: {
+                    colors: '#64748b',
+                    fontSize: '12px',
+                    fontWeight: 500
+                }
+            }
+        },
+        yaxis: {
+            labels: {
+                style: {
+                    colors: '#64748b',
+                    fontSize: '12px',
+                    fontWeight: 500
+                }
+            }
+        },
+        plotOptions: { 
+            bar: { 
+                horizontal: true, 
+                borderRadius: 6,
+                dataLabels: {
+                    position: 'center'
+                }
+            } 
+        },
+        legend: {
+            position: 'top',
+            fontFamily: 'Inter, sans-serif',
+            fontSize: '12px',
+            fontWeight: 500
+        },
+        tooltip: {
+            theme: 'dark',
+            style: {
+                fontSize: '12px'
+            }
+        },
+        grid: {
+            borderColor: '#e2e8f0',
+            strokeDashArray: 4
+        }
     };
+    
     if (charts.status) charts.status.destroy();
     charts.status = new ApexCharts(document.querySelector("#statusChart"), options);
     charts.status.render();
@@ -305,6 +467,7 @@ function generateWeeklyExpiryTrend(items) {
     const labels = [];
     const data = [];
     const now = new Date();
+    
     for (let i = 6; i >= 0; i--) {
         const day = new Date(now);
         day.setDate(now.getDate() - i);
@@ -325,13 +488,78 @@ function generateWeeklyExpiryTrend(items) {
 
 function updateTrendChart(trendData) {
     const options = {
-        chart: { type: 'area', height: '100%' },
-        series: [{ name: 'Items', data: trendData.data }],
-        xaxis: { categories: trendData.labels },
-        stroke: { curve: 'smooth', width: 2 },
-        fill: { type: 'gradient', gradient: { shadeIntensity: 1, opacityFrom: 0.7, opacityTo: 0.2, stops: [0, 90, 100] } },
-        colors: ['#6366f1']
+        chart: { 
+            type: 'area', 
+            height: '100%',
+            fontFamily: 'Inter, sans-serif',
+            animations: {
+                enabled: true,
+                easing: 'easeinout',
+                speed: 800,
+                animateGradually: {
+                    enabled: true,
+                    delay: 150
+                },
+                dynamicAnimation: {
+                    enabled: true,
+                    speed: 350
+                }
+            }
+        },
+        series: [{ 
+            name: 'Items', 
+            data: trendData.data 
+        }],
+        xaxis: { 
+            categories: trendData.labels,
+            labels: {
+                style: {
+                    colors: '#64748b',
+                    fontSize: '12px',
+                    fontWeight: 500
+                }
+            }
+        },
+        yaxis: {
+            labels: {
+                style: {
+                    colors: '#64748b',
+                    fontSize: '12px',
+                    fontWeight: 500
+                }
+            }
+        },
+        stroke: { 
+            curve: 'smooth', 
+            width: 3,
+            colors: ['#6366f1']
+        },
+        fill: { 
+            type: 'gradient', 
+            gradient: { 
+                shadeIntensity: 1, 
+                opacityFrom: 0.7, 
+                opacityTo: 0.1, 
+                stops: [0, 90, 100],
+                colorStops: [
+                    { offset: 0, color: '#6366f1', opacity: 0.7 },
+                    { offset: 100, color: '#6366f1', opacity: 0.1 }
+                ]
+            } 
+        },
+        colors: ['#6366f1'],
+        grid: {
+            borderColor: '#e2e8f0',
+            strokeDashArray: 4
+        },
+        tooltip: {
+            theme: 'dark',
+            style: {
+                fontSize: '12px'
+            }
+        }
     };
+    
     if (charts.trend) charts.trend.destroy();
     charts.trend = new ApexCharts(document.querySelector("#trendChart"), options);
     charts.trend.render();
@@ -620,10 +848,7 @@ function showError(message) {
         toast.style.opacity = '0';
         setTimeout(() => toast.remove(), 300);
     }, 3000);
-}document.getElementById('generateReport').addEventListener('click', () => {
-    generateReport();
-    showNotification('Report updated!', 'success');
-});
+}
 
 async function calculateWasteManagement() {
   try {
