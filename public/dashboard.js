@@ -1,4 +1,3 @@
-//import { base } from '../models/Product.js';
 import { populateCategoryDropdown } from './utils/categoryHelper.js';
 
 // --- Google Login Redirect Handler ---
@@ -48,6 +47,7 @@ const notificationBadge = document.querySelector('.notification-btn .badge') || 
 const micButton = document.getElementById('micButton');
 const unitOfMeasurement = document.getElementById('unitOfMeasurement').value;
 const costPrice = parseFloat(document.getElementById('costPrice').value);
+//const sellingPrice = parseFloat(document.getElementById('sellingPrice').value);
 
 
 // --- State ---
@@ -183,7 +183,6 @@ async function onScanSuccess(decodedText, decodedResult) {
   closeScannerModal();
   // Only digits? Assume barcode
   const code = decodedText.replace(/\D/g, '');
-  document.getElementById('barcode').value = decodedText;
   if (!code) {
     showNotification("Invalid code scanned.", "error");
     return;
@@ -304,7 +303,6 @@ async function loadItems() {
       .filter(item => item.createdAt)
       .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
     renderItems(recentItemsList, sortedItems.slice(0, 3));
-    renderOutOfStockList(items);
   } catch (err) {
     showNotification('Failed to load items from server', 'error');
   }
@@ -353,13 +351,13 @@ function renderItems(container, items) {
 function updateStats(items) {
   const expiringSoon = items.filter(item => isExpiringSoon(item.expiryDate)).length;
   const expired = items.filter(item => isExpired(item.expiryDate)).length;
-  const lowStock = items.filter(item => item.quantity <= 2).length;
+  const lowStock = items.filter(item => item.quantity <= 2 && item.quantity > 0).length;
   const outOfStock = items.filter(item => item.quantity === 0).length;
   document.querySelector('.stat-card:nth-child(1) .stat-number').textContent = expiringSoon;
   document.querySelector('.stat-card:nth-child(2) .stat-number').textContent = items.length;
   document.querySelector('.stat-card:nth-child(3) .stat-number').textContent = expired;
   document.querySelector('.stat-card:nth-child(4) .stat-number').textContent = lowStock;
-  document.getElementById('outOfStockCount').textContent = outOfStock;
+  document.querySelector('.stat-card:nth-child(5) .stat-number').textContent = outOfStock;
 }
 function handleSearch(e) {
   const term = e.target.value.toLowerCase();
@@ -390,6 +388,7 @@ function editItem(id) {
   document.getElementById('purchaseDate').value = item.purchaseDate;
   document.getElementById('expiryDate').value = item.expiryDate;
   document.getElementById('costPrice').value = item.costDate;
+  //document.getElementById('sellingPrice').value = item.sellingPrice;
   document.getElementById('unitOfMeasurement').value = item.unitOfMeasurement;
   document.getElementById('notes').value = item.notes;
   openModal();
@@ -423,7 +422,7 @@ function getItemFormData() {
     purchaseDate: document.getElementById('purchaseDate').value,
     unitOfMeasurement: document.getElementById('unitOfMeasurement').value,
     costPrice: parseFloat(document.getElementById('costPrice').value),
-    barcode: document.getElementById('barcode').value,
+    //sellingPrice: parseFloat(document.getElementById('sellingPrice').value),
     notes: document.getElementById('notes').value,
     createdAt: new Date().toISOString()
   };
@@ -673,7 +672,7 @@ micButton?.addEventListener('click', () => {
       searchInput.value = transcript.replace(/\.$/, "");
       searchInput.dispatchEvent(new Event('input')); // This triggers your search/filter logic
     }
-    showNotification('You said:${transcript}', "info");
+    showNotification(`You said: ${transcript}`, "info");
     micPanel.classList.add('hidden');
   };
 
@@ -686,6 +685,40 @@ micButton?.addEventListener('click', () => {
     micPanel.classList.add('hidden');
   };
 });
+
+// --- Out of Stock Sidebar Logic ---
+const outOfStockCard = document.querySelector('.stat-card.stat-out-of-stock');
+const outOfStockSidebar = document.getElementById('outOfStockSidebar');
+const outOfStockSidebarOverlay = document.getElementById('outOfStockSidebarOverlay');
+const outOfStockList = document.getElementById('outOfStockList');
+const closeSidebarBtn = document.querySelector('#outOfStockSidebar .close-sidebar');
+
+function openOutOfStockSidebar(items) {
+  // Populate the sidebar with out of stock items
+  outOfStockList.innerHTML = '';
+  const outOfStockItems = items.filter(item => Number(item.quantity) === 0);
+  if (outOfStockItems.length === 0) {
+    outOfStockList.innerHTML = '<div class="out-of-stock-item">No out of stock items!</div>';
+  } else {
+    outOfStockItems.forEach(item => {
+      outOfStockList.innerHTML += `<div class="out-of-stock-item"><i class='fas fa-ban' style='color:#dc3545;'></i> <span>${item.name}</span></div>`;
+    });
+  }
+  outOfStockSidebar.classList.add('active');
+  outOfStockSidebarOverlay.classList.add('active');
+}
+
+function closeOutOfStockSidebar() {
+  outOfStockSidebar.classList.remove('active');
+  outOfStockSidebarOverlay.classList.remove('active');
+}
+
+if (outOfStockCard) {
+  outOfStockCard.style.cursor = 'pointer';
+  outOfStockCard.addEventListener('click', () => openOutOfStockSidebar(currentItems));
+}
+if (closeSidebarBtn) closeSidebarBtn.addEventListener('click', closeOutOfStockSidebar);
+if (outOfStockSidebarOverlay) outOfStockSidebarOverlay.addEventListener('click', closeOutOfStockSidebar);
 
 // --- Initial Load ---
 window.addEventListener('DOMContentLoaded', async () => {
@@ -738,34 +771,18 @@ function handleLogout() {
   location.href = 'login.html';
 }
 
-function renderOutOfStockList(items) {
-  const outofstockList = document.querySelector('.outofstock-list');
-  if (!outofstockList) return;
-  const outOfStockItems = items.filter(item => item.quantity === 0);
-  if (outOfStockItems.length === 0) {
-    outofstockList.innerHTML = '<li><span class="item-info"><i class="fas fa-cart-arrow-down"></i> No out of stock items</span></li>';
-    return;
-  }
-  outofstockList.innerHTML = outOfStockItems.map(item => `
-    <li>
-      <span class="item-info"><i class="fas fa-cart-arrow-down"></i> ${item.name}</span>
-      <span class="quantity">${item.quantity}</span>
-    </li>
-  `).join('');
-}
-
-// Out of Stock Sidebar Toggle
-const outOfStockCard = document.getElementById('outOfStockCard');
-const outOfStockSidebar = document.getElementById('outOfStockSidebar');
-const closeOutOfStockSidebar = document.getElementById('closeOutOfStockSidebar');
-
-if (outOfStockCard && outOfStockSidebar && closeOutOfStockSidebar) {
-  outOfStockCard.addEventListener('click', () => {
-    outOfStockSidebar.classList.add('open');
-    outOfStockSidebar.classList.remove('hidden');
-  });
-  closeOutOfStockSidebar.addEventListener('click', () => {
-    outOfStockSidebar.classList.remove('open');
-    outOfStockSidebar.classList.add('hidden');
+// --- Navbar Dark Mode Toggle ---
+const darkModeToggle = document.getElementById('darkModeToggle');
+if (darkModeToggle) {
+  darkModeToggle.addEventListener('click', () => {
+    document.body.classList.toggle('dark-mode');
+    const icon = darkModeToggle.querySelector('i');
+    if (document.body.classList.contains('dark-mode')) {
+      icon.classList.remove('fa-moon');
+      icon.classList.add('fa-sun');
+    } else {
+      icon.classList.remove('fa-sun');
+      icon.classList.add('fa-moon');
+    }
   });
 }
