@@ -319,19 +319,35 @@ document.addEventListener('keydown', (e) => {
 async function handleAddItem(e) {
   e.preventDefault();
   const newItem = getItemFormData();
-
-  const exists = currentItems.some(item =>
-  item.name === newItem.name &&
-  item.expiryDate === newItem.expiryDate &&
-  item.purchaseDate === newItem.purchaseDate
-);
-
-if (exists) {
-  showNotification('This item already exists in your inventory.', 'warning');
-  return;
-}
-  
   const token = getToken();
+
+  // Fetch the latest items from the backend before checking for duplicates
+  let items = [];
+  try {
+    const res = await fetch('http://localhost:3000/api/products', {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    if (res.ok) {
+      items = await res.json();
+    }
+  } catch (err) {
+    showNotification('Could not check for duplicates. Please try again.', 'error');
+    return;
+  }
+
+  // Check for duplicates
+  const exists = items.some(item =>
+    item.name === newItem.name &&
+    item.expiryDate === newItem.expiryDate &&
+    item.purchaseDate === newItem.purchaseDate
+  );
+
+  if (exists) {
+    showNotification('This item already exists in your inventory.', 'warning');
+    return;
+  }
+
+  // Add the new item
   try {
     const response = await fetch('http://localhost:3000/api/products/add', {
       method: 'POST',
@@ -340,7 +356,7 @@ if (exists) {
     });
     if (!response.ok) throw new Error('Failed to add item');
     closeModal();
-    loadItems();
+    loadItems(); // or fetchAndRenderProducts(), depending on your codebase
     showNotification('Item added successfully!', 'success');
   } catch (err) {
     showNotification('Error adding item. Please try again.', 'error');

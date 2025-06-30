@@ -457,7 +457,6 @@ async function fetchAndRenderProducts() {
 
 async function renderProducts(products) {
     document.querySelectorAll('.category-grid').forEach(grid => grid.innerHTML = '');
-
     for (const product of products) {
         const { name, quantity, costPrice, category, expiryDate } = product;
 
@@ -489,9 +488,9 @@ async function renderProducts(products) {
                 </div>`;
             categoryContainer.appendChild(card);
             card.querySelector('.restock-btn').addEventListener('click', (e) => {
-            const productData = JSON.parse(e.target.dataset.product);
-            openRestockModal(productData);
-        });
+        const productData = JSON.parse(e.target.dataset.product);
+        openRestockModal(productData);
+    });
 
         }
         if (allCategoriesGrid) {
@@ -521,8 +520,10 @@ async function renderProducts(products) {
 
 }
 document.addEventListener('click', async (e) => {
-  if (e.target.classList.contains('delete-btn')) {
-    const id = e.target.dataset.id;
+  // Always find the closest .delete-btn, even if the icon is clicked
+  const deleteBtn = e.target.closest('.delete-btn');
+  if (deleteBtn) {
+    const id = deleteBtn.dataset.id;
     const confirmDelete = confirm('Are you sure you want to delete this product?');
     if (!confirmDelete) return;
 
@@ -536,8 +537,7 @@ document.addEventListener('click', async (e) => {
       });
 
       if (res.status === 204) {
-        const card = e.target.closest('.product-card');
-        if (card) card.remove();
+        await fetchAndRenderProducts(); // Refresh all grids
       } else {
         const data = await res.json();
         alert(data.error || 'Failed to delete product.');
