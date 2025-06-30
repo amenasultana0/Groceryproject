@@ -519,36 +519,35 @@ async function renderProducts(products) {
     }
   }
 
-    document.addEventListener('click', async (e) => {
-    if (e.target.classList.contains('delete-btn')) {
-        const id = e.target.dataset.id;
-        const confirmDelete = confirm('Are you sure you want to delete this product?');
-        if (!confirmDelete) return;
-
-        try {
-        const token = getToken(); // Make sure this function exists and works
-        const res = await fetch(`http://localhost:3000/api/products/${id}`, {
-            method: 'DELETE',
-            headers: {
-            Authorization: `Bearer ${token}`
-            }
-        });
-
-        if (res.status === 204) {
-            const card = e.target.closest('.product-card');
-            if (card) card.remove();
-        } else {
-            const data = await res.json();
-            alert(data.error || 'Failed to delete product.');
-        }
-        } catch (err) {
-        console.error('Delete error:', err);
-        alert('Error deleting product.');
-        }
-    }
-    });
-
 }
+document.addEventListener('click', async (e) => {
+  if (e.target.classList.contains('delete-btn')) {
+    const id = e.target.dataset.id;
+    const confirmDelete = confirm('Are you sure you want to delete this product?');
+    if (!confirmDelete) return;
+
+    try {
+      const token = getToken();
+      const res = await fetch(`http://localhost:3000/api/products/${id}`, {
+        method: 'DELETE',
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
+
+      if (res.status === 204) {
+        const card = e.target.closest('.product-card');
+        if (card) card.remove();
+      } else {
+        const data = await res.json();
+        alert(data.error || 'Failed to delete product.');
+      }
+    } catch (err) {
+      console.error('Delete error:', err);
+      alert('Error deleting product.');
+    }
+  }
+});
 
 async function fetchAndRenderLowStock() {
     const token = getToken();
