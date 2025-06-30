@@ -66,6 +66,12 @@ body {
     display: flex;
     flex-direction: column;
     box-shadow: 2px 0 5px rgba(0,0,0,0.1);
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 100vh;
+    overflow-y: auto; /* This makes the sidebar scrollable */
+    z-index: 1000;
 }
 
 .sidebar .logo {
@@ -125,6 +131,8 @@ body {
     flex-grow: 1;
     padding: 20px 30px;
     background-color: #fff;
+    margin-left: 260px; /* Same as sidebar width */
+    min-height: 100vh;
 }
 
 .main-header {

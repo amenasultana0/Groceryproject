@@ -466,6 +466,7 @@ async function renderProducts(products) {
 
         const categoryId = sanitizeCategory(category);
         const categoryContainer = document.getElementById(categoryId);
+        const allCategoriesGrid = document.getElementById('categories-grid');
         const imageUrl = await fetchImageURL(name);
 
         if (categoryContainer) {
@@ -493,7 +494,30 @@ async function renderProducts(products) {
         });
 
         }
+        if (allCategoriesGrid) {
+    const cardAll = document.createElement('div');
+    cardAll.className = 'product-card';
+    cardAll.innerHTML = `
+        <img src="${imageUrl}" alt="${name}" />
+        <div class="card-body">
+            <h3>${name}</h3>
+            <p>₹${costPrice} • ${quantity} in stock</p>
+            <small class="added-date">Added on: ${new Date(product.createdAt).toLocaleDateString()}</small>
+            <button class="restock-btn" data-product='${JSON.stringify(product)}'>Restock</button>
+            <button class="delete-btn" data-id="${product._id}" title="Delete">
+                <i class="fas fa-trash"></i>
+            </button>
+            <div class="stock-bar-container">
+                <div class="stock-bar" style="width:${Math.min(100, (quantity / 150) * 100)}%; background:${quantity < 40 ? 'orange' : 'green'};"></div>
+            </div>
+        </div>`;
+    allCategoriesGrid.appendChild(cardAll);
+    cardAll.querySelector('.restock-btn').addEventListener('click', (e) => {
+        const productData = JSON.parse(e.target.dataset.product);
+        openRestockModal(productData);
+    });
     }
+  }
 
     document.addEventListener('click', async (e) => {
     if (e.target.classList.contains('delete-btn')) {
