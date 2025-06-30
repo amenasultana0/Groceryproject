@@ -1,6 +1,24 @@
 //import { base } from '../models/Product.js';
 import { populateCategoryDropdown } from './utils/categoryHelper.js';
 
+const profileBtn = document.getElementById('profileBtn');
+const profilePopup = document.getElementById('profilePopup');
+
+profileBtn.addEventListener('click', () => {
+  profilePopup.classList.toggle('hidden');
+});
+
+// Close when clicking outside
+document.addEventListener('click', (e) => {
+  if (!profileBtn.contains(e.target) && !profilePopup.contains(e.target)) {
+    profilePopup.classList.add('hidden');
+  }
+});
+
+// Example: Set user info dynamically if needed
+document.getElementById('userName').textContent = "John Doe"; // Replace with your user variable
+document.getElementById('userAvatar').src = "https://ui-avatars.com/api/?name=User"; // Replace dynamically
+
 // --- Google Login Redirect Handler ---
 (function handleGoogleRedirect() {
   const urlParams = new URLSearchParams(window.location.search);
@@ -42,7 +60,7 @@ const recentItemsList = document.getElementById('recentItems');
 const logoutBtn = document.querySelector('.user-actions .icon-btn[title="Logout"]');
 const scannerBtn = document.getElementById('scannerBtn') || document.querySelector('.scanner-btn');
 const manualEntryBtn = document.getElementById('manualEntry');
-const notificationBtn = document.querySelector('.notification-btn');
+const notificationBtn = document.querySelector('.navbar-icon[title="Notifications"]');
 const notificationsPanel = document.getElementById('notificationsPanel');
 const notificationBadge = document.querySelector('.notification-btn .badge') || document.querySelector('.badge');
 const micButton = document.getElementById('micButton');
@@ -149,7 +167,8 @@ function closeSidebar() {
   document.getElementById('sidebarOverlay').classList.remove('active');
   document.querySelector('.main-content').classList.add('sidebar-collapsed');
 }
-
+let lastScanErrorTime = 0;
+// --- Scanner Functions ---
 // --- Scanner Functions ---
 async function startScanner() {
   if (isScanning) return;
@@ -169,6 +188,7 @@ async function startScanner() {
     isScanning = false;
   }
 }
+
 function stopScanner() {
   if (html5QrCode) {
     html5QrCode.stop().then(() => {
@@ -179,17 +199,15 @@ function stopScanner() {
     });
   }
 }
+
+// --- Updated Scan Success & Error Handlers ---
 async function onScanSuccess(decodedText, decodedResult) {
   console.log("Scanned: ", decodedText);
   await stopScanner();
+  console.log("Stopping scanner after successful scan");
   closeScannerModal();
 
   const code = decodedText.replace(/\D/g, '');
-  if (!code) {
-    showNotification("Invalid code scanned.", "error");
-    return;
-  }
-
   let productName = '';
   let category = 'others';
   let unitOfMeasurement = 'pcs';
@@ -197,23 +215,37 @@ async function onScanSuccess(decodedText, decodedResult) {
   let expiryDate = new Date();
   expiryDate.setDate(expiryDate.getDate() + 7);
 
+  if (!code) {
+    showNotification("Invalid code scanned.", "error");
+    // Open modal for manual entry
+    console.log("Opening modal for manual entry");
+    openModal();
+    document.getElementById('barcode').value = decodedText;
+    return;
+  }
+
   try {
     const res = await fetch(`https://world.openfoodfacts.org/api/v0/product/${code}.json`);
     const data = await res.json();
     if (data.status === 1) {
       const product = data.product;
       productName = product.product_name || '';
-      // Use first category tag if available, else fallback
+      // Category: use first tag, fallback to 'others'
       if (Array.isArray(product.categories_tags) && product.categories_tags.length > 0) {
         category = product.categories_tags[0].replace('en:', '');
       }
-      // Try to extract unit from quantity string, fallback to 'pcs'
+      // Unit: try to extract from quantity string, fallback to 'pcs'
       if (product.quantity) {
         // e.g. "500 g" or "1 L"
         const match = product.quantity.match(/(\d+)\s*([a-zA-Z]+)/);
-        unitOfMeasurement = match ? match[2] : 'pcs';
+        unitOfMeasurement = match ? match[2].toLowerCase() : 'pcs';
+        // Map common units to your select options
+        if (unitOfMeasurement === 'l') unitOfMeasurement = 'litre';
+        if (unitOfMeasurement === 'ml') unitOfMeasurement = 'ml';
+        if (unitOfMeasurement === 'kg') unitOfMeasurement = 'kg';
+        if (unitOfMeasurement === 'g') unitOfMeasurement = 'g';
+        if (unitOfMeasurement === 'pcs' || unitOfMeasurement === 'piece' || unitOfMeasurement === 'pieces') unitOfMeasurement = 'pcs';
       }
-      // OpenFoodFacts rarely has price, but if present:
       costPrice = product.price || '';
       showNotification(`Scanned: ${productName || code}`, "success");
     } else {
@@ -223,7 +255,8 @@ async function onScanSuccess(decodedText, decodedResult) {
     showNotification("API error. Please try again.", "error");
   }
 
-  // Fill the form fields and open the modal
+  // Fill the form fields and open the modal (only once)
+  console.log("Opening modal with scanned data");
   openModal();
   document.getElementById('barcode').value = decodedText;
   document.getElementById('itemName').value = productName;
@@ -233,10 +266,23 @@ async function onScanSuccess(decodedText, decodedResult) {
   document.getElementById('costPrice').value = costPrice;
   document.getElementById('expiryDate').value = expiryDate.toISOString().split('T')[0];
 }
+
 function onScanError(errorMessage) {
   // Optionally show scan errors in debug
-  // console.warn(errorMessage);
+  console.warn(errorMessage);
 }
+
+// function onScanError(errorMessage) {
+//   const now = Date.now();
+//   if (now - lastScanErrorTime > 3000) { // 3 second cooldown
+//     if (typeof errorMessage === 'string' && errorMessage.includes('No MultiFormat Readers')) {
+//       showNotification("QR code parse error. Please try again or enter details manually.", "error");
+//     } else {
+//       console.warn("Scan error:", errorMessage);
+//     }
+//     lastScanErrorTime = now;
+//   }
+// }
 
 // --- Scanner Modal Events ---
 scannerBtn?.addEventListener('click', () => {
@@ -717,6 +763,7 @@ micButton?.addEventListener('click', () => {
 // --- Initial Load ---
 window.addEventListener('DOMContentLoaded', async () => {
   setUserInfo();
+
   setTimeout(async () => {
     loadItems();
     populateCategoryDropdown('category');
@@ -731,6 +778,8 @@ window.addEventListener('DOMContentLoaded', async () => {
       renderNotificationsPanel();
     }
   }, 100);
+ 
+
 });
 
 // --- Notification socket ---

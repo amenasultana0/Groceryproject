@@ -17,9 +17,23 @@
     <div class="navbar-actions">
       <button class="navbar-icon" title="Theme"><i class="fas fa-adjust"></i></button>
       <button class="navbar-icon" title="Notifications"><i class="fas fa-bell"></i></button>
-      <div class="navbar-profile">
+      <div class="navbar-profile-container">
+      <div class="navbar-profile" id="profileBtn">
         <img src="https://ui-avatars.com/api/?name=User" alt="Profile" />
       </div>
+
+        <!-- Profile popup -->
+        <div id="profilePopup" class="profile-popup hidden">
+          <div class="user-info">
+            <img id="userAvatar" src="https://ui-avatars.com/api/?name=User" alt="User Avatar"/>
+            <div>
+              <h4 id="userName">John Doe</h4>
+              <p>Pro Plan</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
     </div>
   </nav>
   <div class="sidebar-overlay" id="sidebarOverlay"></div>
@@ -59,29 +73,29 @@
         <i class="fas fa-tags"></i>
         <span>What's in Season</span>
       </a>
-      <a href="reports.html">
-        <i class="fas fa-chart-bar"></i>
-        <span>Reports</span>
       </a>
         <a href="list.html">
         <i class="fas fa-list"></i>
         <span>Shopping List</span>
       </a>
+      <a href="reports.html">
+        <i class="fas fa-chart-bar"></i>
+        <span>Reports</span>
     </div>
 
     <div class="user-section">
-      <div class="user-info">
+      <!-- <div class="user-info">
         <img id="userAvatar" src="" alt="User Avatar"/>
         <div>
           <h4 id="userName"></h4>
           <p>Pro Plan</p>
         </div>
-      </div>
+      </div> -->
       <div class="user-actions">
-         <button class="icon-btn notification-btn" title="Notifications">
+      <!--   <button class="icon-btn notification-btn" title="Notifications">
     <i class="fas fa-bell"></i>
     <span class="badge">0</span>
-  </button>
+  </button> -->
         <a href="settings.html" class="icon-btn icon-large" title="Settings">
           <i class="fas fa-cog"></i>
         </a>

@@ -9,33 +9,14 @@
   display: flex;
   min-height: 100vh; /* subtract navbar height */
 }
-/* Sidebar Styles */
-.sidebar {
-    width: 280px;
-    background-color: #f8f9fa;
-    margin-top: 120px; /* Adjusted to account for top bar */
-    backdrop-filter: blur(4px);
-    border-right: 1px solid var(--border-light);
-    box-shadow: 2px 0 10px rgba(0, 0, 0, 0.05);
-    border-right: 1px solid rgba(255, 255, 255, 0.2);
-    padding: 1.5rem;
-    padding-bottom: 2rem;
-    display: flex;
-    flex-direction: column;
-    position: relative;
-    top:0;
-    left: 0;
-    height: 100vh;
-    transition: transform 0.3s ease;
-    justify-content: space-between;
-    overflow-y: auto;
-}
+
 
 .sidebar-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
     margin-bottom: 2rem;
+    margin-top: 120px;
 }
 
 .mobile-close {
@@ -95,7 +76,7 @@
 
 .user-info {
     display: flex;
-    align-items: center;
+    align-items: 10px;
     gap: 1rem;
     margin-bottom: 1rem;
 }
@@ -104,6 +85,7 @@
     width: 40px;
     height: 40px;
     border-radius: 50%;
+    display: flex;
 }
 
 .user-info h4 {
@@ -119,13 +101,17 @@
 
 .user-actions {
     display: flex;
-    gap: 0.5rem;
+    flex-direction: row;
+    gap: 1rem;
+    margin-left: 46px;
+    margin-top: -5px;
+    
 }
 
 .icon-btn {
-    width: 48px;
-    height: 48px;
-    font-size: 1.25rem;
+    width: 60px;
+    height: 60px;
+    font-size: 1.65rem;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -142,14 +128,7 @@
     color: var(--text-primary);
 }
 
-/* Main Content */
-.main-content {
-    flex: 1;
-    margin-left: 200px;
-    padding: 2rem;
-    margin-left: 280px;
-    overflow-y: auto;
-}
+
 
 /* Top Bar */
 .top-bar {
@@ -214,7 +193,7 @@
 
 .notification-btn {
     position: relative;
-    width: 40px;
+    width: 300px;
     height: 40px;
     display: flex;
     align-items: center;
@@ -245,8 +224,8 @@
 
 /* Scanner Button */
 .scanner-btn {
-    width: 40px;
-    height: 40px;
+    width: 45px;
+    height: 45px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -254,7 +233,7 @@
     border: 1px solid var(--border-light);
     color: var(--text-secondary);
     border-radius: 0.5rem;
-    font-size: 1.125rem;
+    font-size: 1.4rem;
     transition: all 0.2s ease;
     cursor: pointer;
 }
@@ -274,7 +253,7 @@
     color: var(--text-white);
     border: none;
     border-radius: 0.5rem;
-    font-weight: 500;
+    font-weight: 550;
     transition: all 0.2s ease;
 }
 
@@ -395,7 +374,7 @@
 .dashboard-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
-    gap: 1.5rem;
+    gap: 0rem;
 }
 
 .dashboard-section {
@@ -723,7 +702,7 @@ textarea:focus {
     justify-content: flex-end;
     gap: 1rem;
     padding: 1.5rem;
-    border-top: 1px solid var(--border-light);
+    border-top: 1px solid var(--border);
 }
 
 .btn-secondary {
@@ -744,7 +723,7 @@ textarea:focus {
 
 .btn-primary {
     padding: 0.75rem 1.5rem;
-    background-color: #1d4ed8(--primary);
+    background-color: var(--primary-dark);
     border: none;
     border-radius: 0.5rem;
     font-weight: 500;
@@ -754,7 +733,8 @@ textarea:focus {
 }
 
 .btn-primary:hover {
-    background-color: var(--primary-dark);
+    background-color: #4071f8;
+    color: var(--text-white);
 }
 
 /* Responsive Design */
@@ -911,15 +891,15 @@ textarea:focus {
 /* Notification Dropdown Panel */
 #notificationsPanel {
     position: absolute;
-    top: 60px; /* adjust as needed */
-    right: 2rem;
+    top: 120px; /* adjust as needed */
+    right: 7rem;
     background: #fff;
     border-radius: 0.5rem;
     box-shadow: 0 4px 24px rgba(0,0,0,0.18);
     z-index: 3000;
     display: none;
     padding: 0.5rem 0;
-    min-width: 280px;
+    min-width: 300px;
     max-width: 350px;
 }
 
@@ -1071,7 +1051,7 @@ textarea:focus {
     color: var(--text-secondary);
     border-radius: 0.5rem;
     transition: all 0.2s ease;
-    font-size: 1.45rem;
+    font-size: 1.7rem;
     cursor: pointer;
 }
 
@@ -1146,9 +1126,9 @@ textarea:focus {
 .sidebar {
   position: fixed;
   left: 0;
-  top: 0;
-  width: 260px;
-  height: 100vh;
+  top: 25px;
+  width: 270px;
+  height: 130vh;
   background: #e1e9f6;
   box-shadow: 2px 0 10px rgba(0,0,0,0.1);
   transform: translateX(0);
@@ -1180,7 +1160,8 @@ textarea:focus {
 }
 
 .main-content {
-  margin-left: 260px;
+  margin-left: 210px;
+  margin-top: 25px;
   transition: margin-left 0.3s ease;
 }
 
@@ -1228,10 +1209,11 @@ textarea:focus {
   justify-content: space-between;
   padding: 0 2rem;
   box-shadow: 0 2px 8px rgba(0,0,0,0.04);
-  position: absolute;
+  position: fixed;
   top: 0;
   left: 0;
-  z-index: 0;
+  z-index: 1100;
+  border-bottom: 1px solid #eee;
 }
 
 .navbar-logo {
@@ -1270,7 +1252,7 @@ textarea:focus {
 }
 
 .navbar-icon:hover {
-  color: #256235;
+  color: #327544;
 }
 
 .navbar-profile img {
@@ -1407,7 +1389,7 @@ textarea:focus {
 }
 
 .dashboard-right-panel.recently-added-panel {
-  width: 300px;
+  width: 400px;
   min-height: 260px;
   background: linear-gradient(135deg, #e0f7fa 0%, #fce4ec 100%);
   border-radius: 22px;
@@ -1528,4 +1510,52 @@ textarea:focus {
 }
 .hidden {
   display: none !important;
+}
+.navbar-profile-container {
+  position: relative;
+  display: inline-block;
+}
+
+.profile-popup {
+  position: absolute;
+  top: 70px; /* adjust based on navbar height */
+  right: 0;
+  background:#e1e9f6;
+  border: 1px solid #ccc;
+  padding: 0.75rem 1rem;
+  border-radius: 6px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+  z-index: 1000;
+  width: 270px;
+}
+.navbar-profile {
+  cursor: pointer;
+}
+.profile-popup.hidden {
+  display: none;
+}
+
+.user-info {
+  display: flex;
+  align-items: center;
+}
+
+.user-info img {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  margin-right: 0.75rem;
+  margin-top: 10px;
+}
+
+.user-info h4 {
+  margin-top: 10px;
+  font-size: 1rem;
+}
+
+.user-info p {
+  
+  margin-top: 0px;
+  font-size: 0.85rem;
+  color: #666;
 }
