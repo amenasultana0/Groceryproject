@@ -35,7 +35,8 @@ const authRoutes = require('./routes/authRoutes');
 const productRoutes = require('./routes/productRoutes');
 const reportRoutes = require('./routes/reportRoutes');
 const suggestionsRouter = require('./routes/suggestionRoutes');
-
+const salesRoutes = require('./routes/salesRoutes');
+const expenseRoutes = require('./routes/expenseRoutes');
 
 
 const server = http.createServer(app);
@@ -69,7 +70,8 @@ app.use('/api', suggestionsRouter);
 app.use('/api/notifications', notificationsRoute);
 app.use('/api/auth/users', userRoutes);
 app.use('/api/shopping-list', shoppingListRoutes);
-
+app.use('/api/sales', salesRoutes);
+app.use('/api/expenses', expenseRoutes);
 
 // API route to fetch notifications
 app.get('/api/notifications', async (req, res) => {

@@ -1,4 +1,34 @@
 import { getToken } from './utils/authHelper.js';
+
+async function logSale(quantity) {
+  try {
+    await fetch('http://localhost:3000/api/sales', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${getToken()}`
+      },
+      body: JSON.stringify({ quantity })
+    });
+  } catch (err) {
+    console.error('Error logging sale:', err);
+  }
+}
+
+async function logOrder() {
+  try {
+    await fetch('http://localhost:3000/api/sales/order', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${getToken()}`
+      }
+    });
+  } catch (err) {
+    console.error('Error logging order:', err);
+  }
+}
+
 let scannedOnce = false;
 let scannedBarcodes = [];
 let html5QrCode = null;
@@ -11,7 +41,7 @@ document.getElementById("deleteAllBtn").addEventListener("click", async function
     alert("No barcodes to delete.");
     return;
   }
-  const res = await fetch('http://localhost:3000/api/products/delete-by-barcode', {
+  const res = await fetch('http://localhost:3000/api/products/deduct-by-barcode', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -20,7 +50,15 @@ document.getElementById("deleteAllBtn").addEventListener("click", async function
     body: JSON.stringify({ barcodes: scannedBarcodes })
   });
   const data = await res.json();
-  alert(`${data.deletedCount} item(s) deleted.`);
+  alert(`${data.updated} item(s) deducted, ${data.deleted} product(s) deleted.`);
+  if (data.deletedCount > 0) {
+  await Promise.all([
+    logSale(data.totalQuantityDeducted),
+    logOrder()
+  ]);
+}
+
+
   scannedBarcodes = [];
   document.querySelector("#scannedBarcodesTable tbody").innerHTML = "";
   // Optionally refresh inventory display here\
@@ -49,12 +87,35 @@ document.querySelector("#scannedBarcodesTable tbody").addEventListener("click", 
   }
 });
 
-// In your scan success handler:
-function onInventoryScanSuccess(decodedText, decodedResult) {
+async function onInventoryScanSuccess(decodedText, decodedResult) {
+  if (scannedBarcodes.includes(decodedText)) return; // prevent duplicate
+
   addBarcodeToTable(decodedText);
-  // Optionally, keep scanner open for more scans, or close if you want single scan
-  // closeInventoryScannerModal();
+
+  // 🔻 Reduce product quantity by 1
+  try {
+    const res = await fetch(`http://localhost:3000/api/products/decrease-by-barcode`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${getToken()}`
+      },
+      body: JSON.stringify({ barcode: decodedText, amount: 1 })
+    });
+
+    if (res.ok) {
+      // ✅ Log 1 sale for this scan
+      await logSale(1);
+      fetchAndRenderProducts(); // refresh inventory view if needed
+    } else {
+      const err = await res.json();
+      alert(err.message || "Failed to decrease product quantity.");
+    }
+  } catch (error) {
+    console.error("Error scanning product:", error);
+  }
 }
+
 function openInventoryScannerModal() {
   scannedBarcodes = [];
   document.querySelector("#scannedBarcodesTable tbody").innerHTML = "";
@@ -84,13 +145,6 @@ async function startInventoryScanner() {
     alert("Camera error: " + err);
   }
 }
-
-// async function onInventoryScanSuccess(decodedText, decodedResult) {
-//   // Example: Add barcode to input or list for deletion
-//   document.getElementById('barcode').value = decodedText;
-//   closeInventoryScannerModal();
-//   // Optionally, trigger your add/delete logic here
-// }
 
 function onInventoryScanError(errorMessage) {
   // Optionally handle scan errors
@@ -263,7 +317,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 'Content-Type': 'application/json',
                 Authorization: `Bearer ${getToken()}`
             },
-            body: JSON.stringify({ name, quantity, costPrice, expiryDate, category })
+            body: JSON.stringify({ name, quantity, costPrice, expiryDate, category, isRestock: true})
         });
 
         if (res.ok) {
@@ -286,28 +340,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 });
 });
-
-// document.getElementById('addItemForm').addEventListener('submit', async function(e) {
-//   e.preventDefault();
-//   const name = document.getElementById('itemName').value;
-//   const category = document.getElementById('category').value;
-//   const quantity = document.getElementById('quantity').value;
-//   const expiryDate = document.getElementById('expiryDate').value;
-//   const costPrice = document.getElementById('costPrice').value;
-//   //const sellingPrice = document.getElementById('sellingPrice').value;
-//   const barcode = document.getElementById('barcode').value; // <-- Get barcode
-
-//   await fetch('http://localhost:3000/api/products/add', {
-//     method: 'POST',
-//     headers: {
-//       'Content-Type': 'application/json',
-//       Authorization: `Bearer ${getToken()}`
-//     },
-//     body: JSON.stringify({ name, category, quantity, expiryDate, costPrice, sellingPrice, barcode })
-//   });
-//   // ...refresh UI, close modal, etc.
-// });
-
 
 function handleCategoryNavClick(e) {
     e.preventDefault();

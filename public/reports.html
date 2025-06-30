@@ -17,10 +17,10 @@
         <div class="header-content">
             <h1><i class="fas fa-chart-line"></i> Business Analytics Dashboard</h1>
             <div class="header-actions">
-                <button id="backToDashboard" class="btn-secondary">
-                    <i class="fas fa-arrow-left"></i> Back to Dashboard
-                </button>
-                <button id="exportReport" class="btn-primary">
+                <a href="dashboard.html" class="btn-secondary back-btn" style="display: inline-flex; align-items: center; gap: 8px; font-size: 1rem; text-decoration: none;">
+                        <i class="fas fa-arrow-left"></i> Back To Dashboard
+                </a>
+                <button id="exportBtn" class="btn-primary">
                     <i class="fas fa-download"></i> Export Report
                 </button>
             </div>
@@ -36,7 +36,7 @@
             </div>
             <div class="filter-group">
                 <label>Category</label>
-                <select id="categoryFilter">
+                <select id="categoryFilter" class="category-filter">
                     <option value="">All Categories</option>
                 </select>
             </div>
@@ -133,51 +133,56 @@
 
         <!-- Sales Data Overview -->
         <section class="sales-overview">
-            <h2><i class="fas fa-chart-bar"></i> Sales Data Overview</h2>
-            <div class="sales-grid">
-                <div class="chart-card full-width">
+        <h2><i class="fas fa-chart-bar"></i> Sales Data Overview</h2>
+        <div class="sales-grid">
+            <!-- Full-width Sales Trend chart -->
+            <div class="chart-card full-width">
+            <div class="chart-header">
+                <h3>Sales Trend</h3>
+                <div class="chart-controls">
+                <button class="active" data-period="daily">Daily</button>
+                <button data-period="weekly">Weekly</button>
+                <button data-period="monthly">Monthly</button>
+                <button data-period="yearly">Yearly</button>
+                </div>
+            </div>
+            <div class="chart-container">
+                <canvas id="salesTrendChart"></canvas>
+            </div>
+            </div>
+
+            <!-- Row of three charts in one line -->
+            <div class="chart-row-fixed">
+                <div class="chart-card fixed-width">
                     <div class="chart-header">
-                        <h3>Sales Trend</h3>
-                        <div class="chart-controls">
-                            <button class="active" data-period="daily">Daily</button>
-                            <button data-period="weekly">Weekly</button>
-                            <button data-period="monthly">Monthly</button>
-                            <button data-period="yearly">Yearly</button>
-                        </div>
+                    <h3>Sales by Category</h3>
                     </div>
                     <div class="chart-container">
-                        <canvas id="salesTrendChart"></canvas>
+                    <div id="categorySalesChart"></div>
                     </div>
                 </div>
 
-                <div class="chart-card">
+                <div class="chart-card fixed-width">
                     <div class="chart-header">
-                        <h3>Sales by Category</h3>
+                    <h3>Top Products</h3>
                     </div>
                     <div class="chart-container">
-                        <div id="categorySalesChart"></div>
+                    <div id="topProductsChart"></div>
                     </div>
                 </div>
 
-                <div class="chart-card">
+                <div class="chart-card fixed-width">
                     <div class="chart-header">
-                        <h3>Top Products</h3>
+                    <h3>Regional Performance</h3>
                     </div>
                     <div class="chart-container">
-                        <div id="topProductsChart"></div>
-                    </div>
-                </div>
-
-                <div class="chart-card">
-                    <div class="chart-header">
-                        <h3>Regional Performance</h3>
-                    </div>
-                    <div class="chart-container">
-                        <div id="regionalChart"></div>
+                    <div id="regionalChart"></div>
                     </div>
                 </div>
             </div>
+        </div>
         </section>
+
 
         <!-- Inventory Management -->
         <section class="inventory-section">
@@ -211,65 +216,69 @@
                     </div>
                 </div>
 
-                <div class="alert-card warning">
+                <div class="alert-card info">
                     <div class="alert-header">
-                        <i class="fas fa-clock"></i>
-                        <h3>Restocking Due</h3>
+                        <i class="fas fa-history"></i>
+                        <h3>Last Restocked</h3>
                     </div>
-                    <div class="alert-list" id="restockList">
+                    <div class="alert-list" id="lastRestockedList">
                         <!-- Populated by JavaScript -->
                     </div>
                 </div>
             </div>
         </section>
 
-        <!-- Revenue & Profit Metrics -->
+        <!-- Stock Cost & Movement Metrics -->
         <section class="revenue-section">
-            <h2><i class="fas fa-coins"></i> Revenue & Profit Metrics</h2>
+            <h2><i class="fas fa-coins"></i> Stock Cost & Movement Metrics</h2>
             <div class="revenue-grid">
+                <!-- Inventory Cost Breakdown Chart -->
                 <div class="chart-card">
                     <div class="chart-header">
-                        <h3>Revenue Breakdown</h3>
+                        <h3>Inventory Cost Breakdown</h3>
                     </div>
                     <div class="chart-container">
                         <div id="revenueBreakdownChart"></div>
                     </div>
                 </div>
 
+                <!-- Stock Movement Rate Chart -->
                 <div class="chart-card">
                     <div class="chart-header">
-                        <h3>Profit Margins</h3>
+                        <h3>Stock Movement Rate</h3>
                     </div>
                     <div class="chart-container">
                         <div id="profitMarginsChart"></div>
                     </div>
                 </div>
 
+                <!-- Cost Analysis Metrics -->
                 <div class="metrics-card">
                     <div class="metrics-header">
-                        <h3>Cost Analysis</h3>
+                        <h3>Inventory Cost Analysis</h3>
                     </div>
                     <div class="metrics-content">
                         <div class="metric-item">
-                            <span class="label">Cost of Goods Sold</span>
+                            <span class="label">Total Inventory Cost</span>
                             <span class="value" id="cogsValue">₹0</span>
                         </div>
                         <div class="metric-item">
-                            <span class="label">Gross Profit</span>
+                            <span class="label">Estimated Stock Consumed</span>
                             <span class="value" id="grossProfit">₹0</span>
                         </div>
                         <div class="metric-item">
-                            <span class="label">Operating Expenses</span>
+                            <span class="label">Restocking Cost</span>
                             <span class="value" id="operatingExpenses">₹0</span>
                         </div>
                         <div class="metric-item">
-                            <span class="label">Net Profit Margin</span>
+                            <span class="label">Stock Movement Ratio</span>
                             <span class="value" id="netProfitMargin">0%</span>
                         </div>
                     </div>
                 </div>
             </div>
         </section>
+
 
         <!-- Customer Insights -->
         <section class="customer-section">
@@ -319,34 +328,34 @@
             </div>
         </section>
 
-        <!-- Expense Tracking -->
-        <section class="expense-section">
-            <h2><i class="fas fa-receipt"></i> Expense Tracking</h2>
-            <div class="expense-grid">
+        <!-- Wastage & Losses -->
+        <section class="wastage-section">
+            <h2><i class="fas fa-trash-alt"></i> Wastage & Losses</h2>
+            <div class="wastage-grid">
                 <div class="chart-card">
                     <div class="chart-header">
-                        <h3>Expense Breakdown</h3>
+                        <h3>Wasted Products by Category</h3>
                     </div>
                     <div class="chart-container">
-                        <div id="expenseBreakdownChart"></div>
+                        <div id="wastageCategoryChart"></div>
                     </div>
                 </div>
 
                 <div class="chart-card">
                     <div class="chart-header">
-                        <h3>Supplier Payments</h3>
+                        <h3>Monetary Loss Overview</h3>
                     </div>
                     <div class="chart-container">
-                        <div id="supplierPaymentsChart"></div>
+                        <div id="wastageValueChart"></div>
                     </div>
                 </div>
 
-                <div class="alert-card info">
+                <div class="alert-card warning">
                     <div class="alert-header">
-                        <i class="fas fa-calendar"></i>
-                        <h3>Upcoming Payments</h3>
+                        <i class="fas fa-exclamation-circle"></i>
+                        <h3>Critical Loss Alerts</h3>
                     </div>
-                    <div class="alert-list" id="upcomingPayments">
+                    <div class="alert-list" id="wastageAlerts">
                         <!-- Populated by JavaScript -->
                     </div>
                 </div>
@@ -518,6 +527,7 @@
         <p>Business Analytics Dashboard | Comprehensive Business Intelligence System</p>
     </footer>
 
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script type="module" src="scripts/reports.js"></script>
 </body>
 </html>

@@ -53,6 +53,18 @@ const productSchema = new mongoose.Schema({
   unique: true,
   index: true
 },
+deleted: {
+  type: Boolean,
+  default: false
+},
+lastRestocked: {
+  type: Date,
+  default: Date.now
+},
+isRestock: {
+  type: Boolean,
+  default: false
+}
 }, { timestamps: true });
 
 module.exports = mongoose.model('Product', productSchema);

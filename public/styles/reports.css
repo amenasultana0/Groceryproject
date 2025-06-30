@@ -608,8 +608,18 @@ body {
 }
 
 .chart-container {
-    position: relative;
-    min-height: 300px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 220px; /* slightly less than full card */
+  padding: 0 10px;
+  box-sizing: border-box;
+  overflow: hidden;
+  position: relative;
+}
+
+.chart-card canvas {
+  max-height: 200px;
 }
 
 /* Alert Cards */
@@ -1186,3 +1196,139 @@ tbody tr:hover td {
         gap: var(--spacing-sm);
     }
 } 
+
+.chart-row-fixed {
+  display: flex;
+  gap: var(--spacing-xl); /* or a fixed value like 1.5rem */
+  margin-top: var(--spacing-xl);
+  flex-wrap: wrap;
+}
+
+.chart-card.fixed-width {
+  flex: 1; /* Makes all 3 equal width */
+  min-width: 0;
+  padding: var(--spacing-xl);
+  max-width: calc(33.33% - var(--spacing-xl)); /* optional */
+  height: 280px; /* Optional: adjust height */
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.chart-container canvas,
+.chart-container > div {
+  width: 100% !important;
+  height: 100% !important;
+}
+
+.chart-container canvas {
+  display: block;
+  margin: 0 auto;
+}
+
+@media (max-width: 768px) {
+  .chart-card.fixed-width {
+    max-width: 100%;
+    flex: 1 1 100%;
+  }
+
+  .chart-row-fixed {
+    flex-direction: column;
+  }
+}
+
+canvas {
+  animation: fadeInUp 0.6s ease-out;
+}
+
+.restock-card {
+  background: var(--primary-light);
+  border-left: 4px solid var(--primary-color);
+  padding: 10px 15px;
+  border-radius: 12px;
+  margin-bottom: 10px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.restock-details h4 {
+  margin: 0;
+  font-size: 1rem;
+  color: var(--text-primary);
+}
+
+.restock-details .category {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+}
+
+.restock-date .badge {
+  font-size: 0.8rem;
+  padding: 4px 8px;
+  border-radius: 8px;
+}
+
+.restock-group {
+  margin-bottom: 20px;
+  padding: 10px 15px;
+  background: var(--primary-light);
+  border-radius: 10px;
+}
+
+.restock-group h4 {
+  margin-bottom: 8px;
+  color: var(--text-primary);
+}
+
+.restock-group-list {
+  list-style: none;
+  padding-left: 0;
+}
+
+.restock-group-list li {
+  font-size: 0.9rem;
+  padding: 4px 0;
+  border-bottom: 1px dashed #ddd;
+}
+
+/* Fix chart container sizing */
+.chart-container {
+  width: 100%;
+  height: 300px;           /* Adjust as needed */
+  position: relative;
+}
+
+/* ApexCharts specific fix */
+#wastageCategoryChart,
+#wastageValueChart {
+  width: 100%;
+  height: 100%;           /* Must be 100% to respect .chart-container height */
+  max-width: 100%;
+  overflow: hidden;
+}
+
+/* Optional: Ensure grid doesn't squish on small screens */
+.wastage-grid {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+}
+
+.chart-card {
+  background: #fff;
+  padding: 1rem;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+}
+
+.wastage-section {
+  margin-top: 2rem;
+  margin-bottom: 3rem;
+  padding-top: 1rem;
+}
+
+
+section > h2 {
+  margin-bottom: 1.5rem;
+}

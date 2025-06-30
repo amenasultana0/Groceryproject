@@ -7,31 +7,31 @@
   <link rel="stylesheet" href="style.css"/>
   <link rel="stylesheet" href="dashboard.css"/>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
 </head>
 <body class="dashboard-page">
-  <nav class="top-navbar">
+  <nav class="navbar">
     <div class="navbar-logo">
       <i class="fas fa-leaf"></i>
       <span>GroceryTrack</span>
     </div>
     <div class="navbar-actions">
-      <button class="navbar-btn" id="darkModeToggle" title="Toggle dark mode"><i class="fas fa-moon"></i></button>
-      <button class="navbar-btn" id="navbarNotification" title="Notifications"><i class="fas fa-bell"></i></button>
-      <button class="navbar-btn" id="navbarProfile" title="Profile"><i class="fas fa-user-circle"></i></button>
+      <button class="navbar-icon" title="Theme"><i class="fas fa-adjust"></i></button>
+      <button class="navbar-icon" title="Notifications"><i class="fas fa-bell"></i></button>
+      <div class="navbar-profile">
+        <img src="https://ui-avatars.com/api/?name=User" alt="Profile" />
+      </div>
     </div>
   </nav>
-
   <div class="sidebar-overlay" id="sidebarOverlay"></div>
   <a href="index.html" class="back-home-btn">
     <i class="fas fa-arrow-left"></i> Back to Home
   </a>
-
+  <div class="layout">
   <nav class="sidebar">
     <div class="sidebar-header">
       <a href="dashboard.html" class="logo">
-        <i class="fas fa-leaf"></i>
-        <span>GroceryTrack</span>
+        <!--<i class="fas fa-leaf"></i>-->
+        <!--<span>GroceryTrack</span>-->
       </a>
       <button class="mobile-close">
         <i class="fas fa-times"></i>
@@ -65,12 +65,23 @@
       </a>
         <a href="list.html">
         <i class="fas fa-list"></i>
-        <span>List</span>
+        <span>Shopping List</span>
       </a>
     </div>
 
     <div class="user-section">
+      <div class="user-info">
+        <img id="userAvatar" src="" alt="User Avatar"/>
+        <div>
+          <h4 id="userName"></h4>
+          <p>Pro Plan</p>
+        </div>
+      </div>
       <div class="user-actions">
+         <button class="icon-btn notification-btn" title="Notifications">
+    <i class="fas fa-bell"></i>
+    <span class="badge">0</span>
+  </button>
         <a href="settings.html" class="icon-btn icon-large" title="Settings">
           <i class="fas fa-cog"></i>
         </a>
@@ -94,8 +105,8 @@
 
       <div class="top-actions">
         <button class="mic-btn" id="micButton">
-          <i class="fas fa-microphone"></i>
-        </button>
+  <i class="fas fa-microphone"></i>
+</button>
 
         <button class="scanner-btn" title="Scan Item">
           <i class="fas fa-qrcode"></i>
@@ -110,77 +121,103 @@
     </header>
 
     <div class="dashboard-content">
-      <div class="dashboard-top-row">
-        <div class="stats-grid">
-          <div class="stat-card stat-warning">
-            <div class="stat-icon warning">
-              <i class="fas fa-exclamation-triangle"></i>
+      <div class="dashboard-main-and-side">
+        <div class="dashboard-main">
+          <div class="stats-grid">
+            <div class="stat-card stat-warning">
+              <div class="stat-icon warning">
+                <i class="fas fa-exclamation-triangle"></i>
+              </div>
+              <div class="stat-info">
+                <h3>Expiring Soon</h3>
+                <p class="stat-number">5</p>
+                <span class="stat-detail">Within 7 days</span>
+              </div>
             </div>
-            <div class="stat-info">
-              <h3>Expiring Soon</h3>
-              <p class="stat-number">5</p>
-              <span class="stat-detail">Within 7 days</span>
+
+            <div class="stat-card stat-success">
+              <div class="stat-icon success">
+                <i class="fas fa-box"></i>
+              </div>
+              <div class="stat-info">
+                <h3>Total Items</h3>
+                <p class="stat-number">42</p>
+                <span class="stat-detail">In inventory</span>
+              </div>
+            </div>
+
+            <div class="stat-card stat-danger">
+              <div class="stat-icon danger">
+                <i class="fas fa-times-circle"></i>
+              </div>
+              <div class="stat-info">
+                <h3>Expired</h3>
+                <p class="stat-number">2</p>
+                <span class="stat-detail">Need attention</span>
+              </div>
+            </div>
+
+            <div class="stat-card stat-info">
+              <div class="stat-icon info">
+                <i class="fas fa-shopping-basket"></i>
+              </div>
+              <div class="stat-info">
+                <h3>Low Stock</h3>
+                <p class="stat-number">3</p>
+                <span class="stat-detail">Items to restock</span>
+              </div>
             </div>
           </div>
 
-          <div class="stat-card stat-success">
-            <div class="stat-icon success">
-              <i class="fas fa-box"></i>
-            </div>
-            <div class="stat-info">
-              <h3>Total Items</h3>
-              <p class="stat-number">42</p>
-              <span class="stat-detail">In inventory</span>
-            </div>
+          <div class="dashboard-grid">
+            <section class="dashboard-section expiring-items">
+              <div class="section-header">
+                <h2>Expiring Soon</h2>
+                <a href="expiring.html" class="view-all">View All</a>
+              </div>
+              <div class="items-list" id="expiringItems">
+                <!-- Items will be added dynamically -->
+              </div>
+            </section>
           </div>
+        </div>
+        <div class="dashboard-side-panels">
+          <aside class="dashboard-right-panel recently-added-panel">
+            <h3>Recently Added</h3>
+            <p class="subtitle">Latest items in inventory</p>
+            <a href="inventory.html" class="view-all" style="align-self: flex-end; margin-bottom: 0.7rem;">View All</a>
+            <div class="items-list" id="recentItems">
+              <!-- Items will be added dynamically -->
+            </div>
+          </aside>
+          <aside class="dashboard-right-panel outofstock-panel" style="margin-top: 0;">
+            <div class="stat-card stat-outofstock" style="width: 100%; margin: 0; cursor: pointer;" id="outOfStockCard">
+              <div class="stat-icon outofstock" id="outOfStockIcon">
+                <i class="fas fa-cart-arrow-down"></i>
+              </div>
+              <div class="stat-info">
+                <h3>Out of Stock</h3>
+                <p class="stat-number" id="outOfStockCount">0</p>
+                <span class="stat-detail">No stock left</span>
+              </div>
+            </div>
+          </aside>
 
-          <div class="stat-card stat-danger">
-            <div class="stat-icon danger">
-              <i class="fas fa-times-circle"></i>
+          <!-- Out of Stock Sidebar Drawer -->
+          <div id="outOfStockSidebar" class="outofstock-sidebar hidden">
+            <div class="outofstock-sidebar-header">
+              <h2>Out of Stock Items</h2>
+              <button id="closeOutOfStockSidebar" class="close-sidebar-btn">&times;</button>
             </div>
-            <div class="stat-info">
-              <h3>Expired</h3>
-              <p class="stat-number">2</p>
-              <span class="stat-detail">Need attention</span>
-            </div>
+            <ul class="outofstock-sidebar-list">
+              <!-- Out of stock items will be dynamically inserted here -->
+            </ul>
           </div>
-
-          <div class="stat-card stat-info">
-            <div class="stat-icon info">
-              <i class="fas fa-shopping-basket"></i>
-            </div>
-            <div class="stat-info">
-              <h3>Low Stock</h3>
-              <p class="stat-number">3</p>
-              <span class="stat-detail">Items to restock</span>
-            </div>
-          </div>
-        </div>
-        <div class="right-dashboard-cards">
-          <div class="stat-card stat-out-of-stock" style="margin: 2rem auto 0 auto;">
-            <div class="stat-icon danger">
-              <div class="pulse-badge"></div>
-              <i class="fas fa-ban"></i>
-            </div>
-            <div class="stat-info">
-              <h3>Out of Stock</h3>
-              <p class="stat-number">1</p>
-              <span class="stat-detail">Items unavailable</span>
-            </div>
-          </div>
-        </div>
-      </div>
-      <div class="recently-added-fullwidth">
-        <div class="section-header">
-          <h2>Recently Added</h2>
-          <a href="inventory.html" class="view-all">View All</a>
-        </div>
-        <div class="items-list" id="recentItems">
-          <!-- Items will be added dynamically -->
         </div>
       </div>
     </div>
   </main>
+  </div>
 
   <!-- Add Item Modal -->
   <div class="modal" id="addItemModal">
@@ -233,11 +270,11 @@
             </select>
           </div>
           <div class="form-group">
-            <label for="costPrice">Price</label>
+            <label for="costPrice">Cost Price</label>
             <input type="number" id="costPrice" required min="0" placeholder="e.g. 30" />
           </div>
-          <!-- Removed Selling Price field -->
         </div>
+        <input type="text" id="barcode" placeholder="Barcode">
 
         <div class="form-group">
           <label for="notes">Notes (Optional)</label>
@@ -285,17 +322,5 @@
   <script src="https://unpkg.com/html5-qrcode"></script>
   <script src="https://cdn.socket.io/4.7.5/socket.io.min.js" crossorigin="anonymous"></script>
   <script src="dashboard.js" type="module"></script>
-
-  <!-- Out of Stock Sidebar and Overlay -->
-  <div id="outOfStockSidebarOverlay"></div>
-  <aside id="outOfStockSidebar">
-    <div class="sidebar-header">
-      <h2>Out of Stock</h2>
-      <button class="close-sidebar" title="Close Sidebar"><i class="fas fa-times"></i></button>
-    </div>
-    <div class="out-of-stock-list" id="outOfStockList">
-      <!-- Out of stock items will be populated here -->
-    </div>
-  </aside>
 </body>
 </html>

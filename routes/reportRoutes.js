@@ -2,6 +2,7 @@ const express = require('express');
 const authMiddleware = require('../middleware/authMiddleware');
 const router = express.Router();
 const Product = require('../models/Product');
+const Sale = require('../models/Sales');
 
 // GET: Basic summary (for legacy/simple use)
 router.get('/report', authMiddleware, async (req, res) => {
@@ -162,6 +163,369 @@ router.post('/report', authMiddleware, async (req, res) => {
   } catch (error) {
     console.error("Report Error:", error);
     res.status(500).json({ message: 'Error generating filtered report', error: error.message });
+  }
+});
+
+router.get('/sales-trend', authMiddleware, async (req, res) => {
+  try {
+    const { period } = req.query;
+    const match = { userId: req.user._id };
+
+    let groupByFormat;
+    switch (period) {
+      case 'daily': groupByFormat = '%Y-%m-%d'; break;
+      case 'weekly': groupByFormat = '%Y-%U'; break;
+      case 'monthly': groupByFormat = '%Y-%m'; break;
+      case 'yearly': groupByFormat = '%Y'; break;
+      default: groupByFormat = '%Y-%m-%d'; break;
+    }
+
+    const trend = await Sale.aggregate([
+      { $match: match },
+      {
+        $group: {
+          _id: { $dateToString: { format: groupByFormat, date: "$saleDate" } },
+          totalSales: { $sum: "$salePrice" }
+        }
+      },
+      { $sort: { _id: 1 } }
+    ]);
+
+    res.json({
+      labels: trend.map(item => item._id),
+      values: trend.map(item => item.totalSales)
+    });
+  } catch (err) {
+    console.error('Error in sales-trend route:', err.message);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+
+router.get('/sales-by-category', authMiddleware, async (req, res) => {
+  try {
+    const sales = await Sale.aggregate([
+      { $match: { userId: req.user._id } },
+      {
+        $lookup: {
+          from: 'products',
+          localField: 'productId',
+          foreignField: '_id',
+          as: 'product'
+        }
+      },
+      { $unwind: '$product' },
+      {
+        $group: {
+          _id: '$product.category',
+          total: { $sum: '$salePrice' }
+        }
+      },
+      { $sort: { total: -1 } }
+    ]);
+
+    res.json({
+      labels: sales.map(item => item._id || 'Uncategorized'),
+      values: sales.map(item => item.total)
+    });
+  } catch (err) {
+    console.error('Error in sales-by-category:', err.message);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+router.get('/top-products', authMiddleware, async (req, res) => {
+  try {
+    const sales = await Sale.aggregate([
+      { $match: { userId: req.user._id } },
+      {
+        $lookup: {
+          from: 'products',
+          localField: 'productId',
+          foreignField: '_id',
+          as: 'product'
+        }
+      },
+      { $unwind: '$product' },
+      {
+        $group: {
+          _id: '$product.name',
+          unitsSold: { $sum: '$quantity' }
+        }
+      },
+      { $sort: { unitsSold: -1 } },
+      { $limit: 7 }
+    ]);
+
+    res.json({
+      labels: sales.map(item => item._id || 'Unnamed Product'),
+      values: sales.map(item => item.unitsSold)
+    });
+  } catch (err) {
+    console.error('Error in top-products route:', err.message);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+router.get('/region-performance', authMiddleware, async (req, res) => {
+  try {
+    const sales = await Sale.aggregate([
+      { $match: { userId: req.user._id } },
+      {
+        $group: {
+          _id: '$region',
+          total: { $sum: '$salePrice' }
+        }
+      },
+      { $sort: { total: -1 } }
+    ]);
+
+    res.json({
+      labels: sales.map(item => item._id || 'Unknown'),
+      values: sales.map(item => item.total)
+    });
+  } catch (err) {
+    console.error('Error in region-performance route:', err.message);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+router.get('/stock-turnover', authMiddleware, async (req, res) => {
+  try {
+    const sales = await Sale.find({ userId: req.user._id }).populate('productId');
+
+    const turnover = {};
+
+    sales.forEach(sale => {
+      if (!sale.productId) return; // skip if product was deleted
+
+      const name = sale.productId.name;
+      turnover[name] = (turnover[name] || 0) + sale.quantity;
+    });
+
+    const labels = Object.keys(turnover);
+    const values = Object.values(turnover);
+
+    res.json({ labels, values });
+  } catch (err) {
+    console.error('Turnover error:', err);
+    res.status(500).json({ error: 'Failed to fetch turnover' });
+  }
+});
+
+router.get('/stock-cost-summary', authMiddleware, async (req, res) => {
+  try {
+    const userId = req.user._id;
+    const { startDate, endDate } = req.query;
+
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+    end.setHours(23, 59, 59, 999);
+
+    const products = await Product.find({ userId, deleted: { $ne: true } });
+
+    let totalInventoryCost = 0;
+    let restockingCost = 0;
+    let categoryCostMap = {};
+    let totalQuantity = 0;
+
+    products.forEach(p => {
+      const cost = p.costPrice * p.quantity;
+      const createdAt = new Date(p.createdAt);
+      const restockedOn = new Date(p.lastRestockedOn);
+      
+      const isNew = createdAt >= start && createdAt <= end;
+      const isRestock = !isNew && restockedOn >= start && restockedOn <= end;
+
+      if (isNew) {
+        totalInventoryCost += cost;
+      } else if (isRestock) {
+        restockingCost += cost;
+      } else {
+        totalInventoryCost += cost;
+      }
+
+      if (!categoryCostMap[p.category]) {
+        categoryCostMap[p.category] = 0;
+      }
+      categoryCostMap[p.category] += cost;
+
+      totalQuantity += p.quantity;
+    });
+
+    const sales = await Sale.find({
+      userId,
+      createdAt: { $gte: start, $lte: end }
+    });
+
+    let soldQuantity = 0;
+    let consumedCost = 0;
+
+    sales.forEach(s => {
+      soldQuantity += s.quantity;
+      consumedCost += s.costPrice * s.quantity;
+    });
+
+    const stockMovementRatio = totalQuantity > 0 ? ((soldQuantity / totalQuantity) * 100).toFixed(2) : '0.00';
+
+    res.json({
+      totalInventoryCost,
+      restockingCost,
+      consumedCost,
+      stockMovementRatio,
+      categoryCostBreakdown: categoryCostMap
+    });
+
+  } catch (err) {
+    console.error('Error in /stock-cost-summary:', err);
+    res.status(500).json({ message: 'Failed to calculate cost summary' });
+  }
+});
+
+router.get('/customer-demographics', authMiddleware, async (req, res) => {
+  try {
+    const userId = req.user._id;
+
+    const demographics = await Sale.aggregate([
+      { $match: { userId } },
+      {
+        $group: {
+          _id: '$region',
+          count: { $sum: 1 }
+        }
+      },
+      {
+        $sort: { count: -1 }
+      }
+    ]);
+
+    const labels = demographics.map(d => d._id || 'Unknown');
+    const values = demographics.map(d => d.count);
+
+    res.json({ labels, values });
+  } catch (err) {
+    console.error("Demographics error:", err);
+    res.status(500).json({ error: 'Failed to fetch customer demographics' });
+  }
+});
+
+router.get('/top-customers', authMiddleware, async (req, res) => {
+  try {
+    const userId = req.user._id;
+
+    const topCustomers = await Sale.aggregate([
+      { $match: { userId } },
+      {
+        $group: {
+          _id: '$customerName',
+          totalSpent: { $sum: { $multiply: ['$quantity', '$salePrice'] } }
+        }
+      },
+      { $sort: { totalSpent: -1 } },
+      { $limit: 10 }
+    ]);
+
+    const labels = topCustomers.map(c => c._id || 'Unknown');
+    const values = topCustomers.map(c => c.totalSpent);
+
+    res.json({ labels, values });
+  } catch (err) {
+    console.error("Top customers error:", err);
+    res.status(500).json({ error: 'Failed to fetch top customers' });
+  }
+});
+
+router.get('/customer-metrics', authMiddleware, async (req, res) => {
+  try {
+    const userId = req.user._id;
+
+    const customers = await Sale.aggregate([
+      { $match: { userId } },
+      {
+        $group: {
+          _id: '$customerName',
+          totalSpent: { $sum: { $multiply: ['$quantity', '$salePrice'] } },
+          purchaseCount: { $sum: 1 }
+        }
+      }
+    ]);
+
+    const total = customers.length;
+    const newCustomers = customers.filter(c => c.purchaseCount === 1).length;
+    const repeat = customers.filter(c => c.purchaseCount > 1).length;
+    const ltv = customers.reduce((acc, c) => acc + c.totalSpent, 0) / (total || 1);
+
+    res.json({
+      total,
+      new: newCustomers,
+      repeat,
+      ltv
+    });
+  } catch (err) {
+    console.error("Customer metrics error:", err);
+    res.status(500).json({ error: 'Failed to fetch customer metrics' });
+  }
+});
+
+router.get('/wastage/by-category', authMiddleware, async (req, res) => {
+  try {
+    const expiredProducts = await Product.find({
+      userId: req.user._id,
+      expiryDate: { $lte: new Date(new Date().setHours(23, 59, 59, 999)) },
+    });
+
+    const breakdown = {};
+    expiredProducts.forEach(prod => {
+      breakdown[prod.category] = (breakdown[prod.category] || 0) + (prod.quantity * prod.costPrice);
+    });
+
+    res.json({
+      labels: Object.keys(breakdown),
+      values: Object.values(breakdown)
+    });
+  } catch (err) {
+    console.error('Error fetching wastage by category:', err);
+    res.status(500).json({ message: 'Failed to fetch data' });
+  }
+});
+
+// 2️⃣ Total monetary wastage
+router.get('/wastage/value', authMiddleware, async (req, res) => {
+  try {
+      const expired = await Product.find({
+      userId: req.user._id,
+      expiryDate: { $lte: new Date(new Date().setHours(23, 59, 59, 999)) },
+    });
+
+    const totalLoss = expired.reduce((sum, p) => sum + (p.costPrice * p.quantity), 0);
+    res.json({ totalLoss });
+  } catch (err) {
+    console.error('Error calculating loss value:', err);
+    res.status(500).json({ message: 'Failed to fetch total loss' });
+  }
+});
+
+// 3️⃣ Wastage alerts (Top 5 products lost)
+router.get('/wastage/alerts', authMiddleware, async (req, res) => {
+  try {
+    const expired = await Product.find({
+      userId: req.user._id,
+      expiryDate: { $lte: new Date(new Date().setHours(23, 59, 59, 999)) },
+    });
+
+    const topLost = expired
+      .map(p => ({
+        name: p.name,
+        category: p.category,
+        value: p.costPrice * p.quantity
+      }))
+      .sort((a, b) => b.value - a.value)
+      .slice(0, 5);
+
+    res.json(topLost);
+  } catch (err) {
+    console.error('Error fetching wastage alerts:', err);
+    res.status(500).json({ message: 'Failed to fetch alerts' });
   }
 });
 

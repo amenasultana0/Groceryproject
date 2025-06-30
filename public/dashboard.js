@@ -1,3 +1,4 @@
+//import { base } from '../models/Product.js';
 import { populateCategoryDropdown } from './utils/categoryHelper.js';
 
 // --- Google Login Redirect Handler ---
@@ -47,7 +48,6 @@ const notificationBadge = document.querySelector('.notification-btn .badge') || 
 const micButton = document.getElementById('micButton');
 const unitOfMeasurement = document.getElementById('unitOfMeasurement').value;
 const costPrice = parseFloat(document.getElementById('costPrice').value);
-//const sellingPrice = parseFloat(document.getElementById('sellingPrice').value);
 
 
 // --- State ---
@@ -109,6 +109,7 @@ function showNotification(message, type = 'info') {
 function openModal() {
   modal.classList.add('active');
   const today = new Date().toISOString().split('T')[0];
+  document.getElementById('addItemModal').classList.add('show');
   document.getElementById('purchaseDate').value = today;
   document.getElementById('purchaseDate').max = today;
   document.getElementById('expiryDate').min = today;
@@ -179,36 +180,58 @@ function stopScanner() {
   }
 }
 async function onScanSuccess(decodedText, decodedResult) {
-  stopScanner();
+  console.log("Scanned: ", decodedText);
+  await stopScanner();
   closeScannerModal();
-  // Only digits? Assume barcode
+
   const code = decodedText.replace(/\D/g, '');
   if (!code) {
     showNotification("Invalid code scanned.", "error");
     return;
   }
+
+  let productName = '';
+  let category = 'others';
+  let unitOfMeasurement = 'pcs';
+  let costPrice = '';
+  let expiryDate = new Date();
+  expiryDate.setDate(expiryDate.getDate() + 7);
+
   try {
     const res = await fetch(`https://world.openfoodfacts.org/api/v0/product/${code}.json`);
     const data = await res.json();
     if (data.status === 1) {
       const product = data.product;
-      document.getElementById('itemName').value = product.product_name || '';
-      document.getElementById('category').value = (product.categories_tags && product.categories_tags[0])
-        ? product.categories_tags[0].replace('en:', '') : 'others';
-      document.getElementById('quantity').value = 1;
-      const expiryDate = new Date();
-      expiryDate.setDate(expiryDate.getDate() + 7);
-      document.getElementById('expiryDate').value = expiryDate.toISOString().split('T')[0];
-      openModal();
-      showNotification(`Scanned: ${product.product_name || code}`, "success");
+      productName = product.product_name || '';
+      // Use first category tag if available, else fallback
+      if (Array.isArray(product.categories_tags) && product.categories_tags.length > 0) {
+        category = product.categories_tags[0].replace('en:', '');
+      }
+      // Try to extract unit from quantity string, fallback to 'pcs'
+      if (product.quantity) {
+        // e.g. "500 g" or "1 L"
+        const match = product.quantity.match(/(\d+)\s*([a-zA-Z]+)/);
+        unitOfMeasurement = match ? match[2] : 'pcs';
+      }
+      // OpenFoodFacts rarely has price, but if present:
+      costPrice = product.price || '';
+      showNotification(`Scanned: ${productName || code}`, "success");
     } else {
       showNotification("Product not found. Please enter details manually.", "error");
-      openModal();
     }
   } catch (err) {
     showNotification("API error. Please try again.", "error");
-    openModal();
   }
+
+  // Fill the form fields and open the modal
+  openModal();
+  document.getElementById('barcode').value = decodedText;
+  document.getElementById('itemName').value = productName;
+  document.getElementById('category').value = category;
+  document.getElementById('quantity').value = 1;
+  document.getElementById('unitOfMeasurement').value = unitOfMeasurement;
+  document.getElementById('costPrice').value = costPrice;
+  document.getElementById('expiryDate').value = expiryDate.toISOString().split('T')[0];
 }
 function onScanError(errorMessage) {
   // Optionally show scan errors in debug
@@ -303,6 +326,7 @@ async function loadItems() {
       .filter(item => item.createdAt)
       .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
     renderItems(recentItemsList, sortedItems.slice(0, 3));
+    renderOutOfStockList(items);
   } catch (err) {
     showNotification('Failed to load items from server', 'error');
   }
@@ -351,13 +375,13 @@ function renderItems(container, items) {
 function updateStats(items) {
   const expiringSoon = items.filter(item => isExpiringSoon(item.expiryDate)).length;
   const expired = items.filter(item => isExpired(item.expiryDate)).length;
-  const lowStock = items.filter(item => item.quantity <= 2 && item.quantity > 0).length;
+  const lowStock = items.filter(item => item.quantity <= 2).length;
   const outOfStock = items.filter(item => item.quantity === 0).length;
   document.querySelector('.stat-card:nth-child(1) .stat-number').textContent = expiringSoon;
   document.querySelector('.stat-card:nth-child(2) .stat-number').textContent = items.length;
   document.querySelector('.stat-card:nth-child(3) .stat-number').textContent = expired;
   document.querySelector('.stat-card:nth-child(4) .stat-number').textContent = lowStock;
-  document.querySelector('.stat-card:nth-child(5) .stat-number').textContent = outOfStock;
+  document.getElementById('outOfStockCount').textContent = outOfStock;
 }
 function handleSearch(e) {
   const term = e.target.value.toLowerCase();
@@ -388,7 +412,6 @@ function editItem(id) {
   document.getElementById('purchaseDate').value = item.purchaseDate;
   document.getElementById('expiryDate').value = item.expiryDate;
   document.getElementById('costPrice').value = item.costDate;
-  //document.getElementById('sellingPrice').value = item.sellingPrice;
   document.getElementById('unitOfMeasurement').value = item.unitOfMeasurement;
   document.getElementById('notes').value = item.notes;
   openModal();
@@ -422,7 +445,7 @@ function getItemFormData() {
     purchaseDate: document.getElementById('purchaseDate').value,
     unitOfMeasurement: document.getElementById('unitOfMeasurement').value,
     costPrice: parseFloat(document.getElementById('costPrice').value),
-    //sellingPrice: parseFloat(document.getElementById('sellingPrice').value),
+    barcode: document.getElementById('barcode').value,
     notes: document.getElementById('notes').value,
     createdAt: new Date().toISOString()
   };
@@ -580,8 +603,13 @@ document.getElementById('sidebarOverlay')?.addEventListener('click', closeSideba
 document.addEventListener('click', function(e) {
   if (window.innerWidth > 768) return; // Only on mobile
   
-  if (!sidebar.contains(e.target) && !sidebarToggleBtn.contains(e.target)) {
-    closeSidebar();
+  if (
+  sidebar && sidebarToggleBtn &&
+  !sidebar.contains(e.target) &&
+  !sidebarToggleBtn.contains(e.target)
+) {
+  closeSidebar();
+
   }
 });
 
@@ -672,7 +700,7 @@ micButton?.addEventListener('click', () => {
       searchInput.value = transcript.replace(/\.$/, "");
       searchInput.dispatchEvent(new Event('input')); // This triggers your search/filter logic
     }
-    showNotification(`You said: ${transcript}`, "info");
+    showNotification('You said:${transcript}', "info");
     micPanel.classList.add('hidden');
   };
 
@@ -685,40 +713,6 @@ micButton?.addEventListener('click', () => {
     micPanel.classList.add('hidden');
   };
 });
-
-// --- Out of Stock Sidebar Logic ---
-const outOfStockCard = document.querySelector('.stat-card.stat-out-of-stock');
-const outOfStockSidebar = document.getElementById('outOfStockSidebar');
-const outOfStockSidebarOverlay = document.getElementById('outOfStockSidebarOverlay');
-const outOfStockList = document.getElementById('outOfStockList');
-const closeSidebarBtn = document.querySelector('#outOfStockSidebar .close-sidebar');
-
-function openOutOfStockSidebar(items) {
-  // Populate the sidebar with out of stock items
-  outOfStockList.innerHTML = '';
-  const outOfStockItems = items.filter(item => Number(item.quantity) === 0);
-  if (outOfStockItems.length === 0) {
-    outOfStockList.innerHTML = '<div class="out-of-stock-item">No out of stock items!</div>';
-  } else {
-    outOfStockItems.forEach(item => {
-      outOfStockList.innerHTML += `<div class="out-of-stock-item"><i class='fas fa-ban' style='color:#dc3545;'></i> <span>${item.name}</span></div>`;
-    });
-  }
-  outOfStockSidebar.classList.add('active');
-  outOfStockSidebarOverlay.classList.add('active');
-}
-
-function closeOutOfStockSidebar() {
-  outOfStockSidebar.classList.remove('active');
-  outOfStockSidebarOverlay.classList.remove('active');
-}
-
-if (outOfStockCard) {
-  outOfStockCard.style.cursor = 'pointer';
-  outOfStockCard.addEventListener('click', () => openOutOfStockSidebar(currentItems));
-}
-if (closeSidebarBtn) closeSidebarBtn.addEventListener('click', closeOutOfStockSidebar);
-if (outOfStockSidebarOverlay) outOfStockSidebarOverlay.addEventListener('click', closeOutOfStockSidebar);
 
 // --- Initial Load ---
 window.addEventListener('DOMContentLoaded', async () => {
@@ -771,18 +765,34 @@ function handleLogout() {
   location.href = 'login.html';
 }
 
-// --- Navbar Dark Mode Toggle ---
-const darkModeToggle = document.getElementById('darkModeToggle');
-if (darkModeToggle) {
-  darkModeToggle.addEventListener('click', () => {
-    document.body.classList.toggle('dark-mode');
-    const icon = darkModeToggle.querySelector('i');
-    if (document.body.classList.contains('dark-mode')) {
-      icon.classList.remove('fa-moon');
-      icon.classList.add('fa-sun');
-    } else {
-      icon.classList.remove('fa-sun');
-      icon.classList.add('fa-moon');
-    }
+function renderOutOfStockList(items) {
+  const outofstockList = document.querySelector('.outofstock-list');
+  if (!outofstockList) return;
+  const outOfStockItems = items.filter(item => item.quantity === 0);
+  if (outOfStockItems.length === 0) {
+    outofstockList.innerHTML = '<li><span class="item-info"><i class="fas fa-cart-arrow-down"></i> No out of stock items</span></li>';
+    return;
+  }
+  outofstockList.innerHTML = outOfStockItems.map(item => `
+    <li>
+      <span class="item-info"><i class="fas fa-cart-arrow-down"></i> ${item.name}</span>
+      <span class="quantity">${item.quantity}</span>
+    </li>
+  `).join('');
+}
+
+// Out of Stock Sidebar Toggle
+const outOfStockCard = document.getElementById('outOfStockCard');
+const outOfStockSidebar = document.getElementById('outOfStockSidebar');
+const closeOutOfStockSidebar = document.getElementById('closeOutOfStockSidebar');
+
+if (outOfStockCard && outOfStockSidebar && closeOutOfStockSidebar) {
+  outOfStockCard.addEventListener('click', () => {
+    outOfStockSidebar.classList.add('open');
+    outOfStockSidebar.classList.remove('hidden');
+  });
+  closeOutOfStockSidebar.addEventListener('click', () => {
+    outOfStockSidebar.classList.remove('open');
+    outOfStockSidebar.classList.add('hidden');
   });
 }

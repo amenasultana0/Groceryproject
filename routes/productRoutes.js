@@ -2,6 +2,8 @@ const express = require('express');
 const Product = require('../models/Product');
 const authMiddleware = require('../middleware/authMiddleware');
 const { createNotification } = require('../public/utils/notificationHelper');
+const Sale = require('../models/Sales');
+const DailySales = require('../models/DailySales');
 
 const router = express.Router();
 
@@ -63,6 +65,7 @@ router.get('/expiring', authMiddleware, async (req, res) => {
 
 router.post('/add', authMiddleware, async (req, res) => {
   const { name, category, quantity, expiryDate, unitOfMeasurement, costPrice, barcode } = req.body;
+  const isRestock = req.body.isRestock || false;
 
   if (!name || quantity == null || !expiryDate) {
     return res.status(400).json({ error: 'Please provide all required fields: name, quantity, expiryDate' });
@@ -82,6 +85,8 @@ router.post('/add', authMiddleware, async (req, res) => {
       unitOfMeasurement,
       costPrice,
       barcode,
+      isRestock,
+      createdAt: new Date()
     });
     await product.save();
 
@@ -102,7 +107,7 @@ router.post('/add', authMiddleware, async (req, res) => {
 router.get('/inventory', authMiddleware, async (req, res) => {
   try {
     const allProducts = await Product.find({
-      userId: req.user.id,
+      userId: req.user._id,
       quantity: { $gt: 0 }
     })
       .populate('category', 'name')
@@ -127,7 +132,7 @@ router.get('/inventory', authMiddleware, async (req, res) => {
 
 router.get('/', authMiddleware, async (req, res) => {
   try {
-    const products = await Product.find({ userId: req.user.id }).sort({ createdAt: -1 });
+    const products = await Product.find({ userId: req.user._id }).sort({ createdAt: -1 });
     res.json(products);
   } catch (error) {
     console.error('Get Products Error:', error);
@@ -309,34 +314,10 @@ router.get('/low-stock', authMiddleware, async (req, res) => {
   }
 });
 
-// router.post('/scan-barcode', authMiddleware, async (req, res) => {
-//   console.log('Received scan barcode request:', req.body);
-//   const { barcode } = req.body;
-
-//   if (!barcode) {
-//     return res.status(400).json({ message: 'Barcode is required.' });
-//   }
-
-//   const product = await Product.findOne({ barcode: barcode, userId: req.user.id });
-
-//   if (!product) {
-//     return res.status(404).json({ message: 'No product found with this barcode.' });
-//   }
-
-//   if (product.quantity === 0) {
-//     return res.status(400).json({ message: 'Product already out of stock.' });
-//   }
-
-//   product.quantity -= 1;
-//   await product.save();
-
-//   res.status(200).json({ message: `${product.name} quantity reduced by 1.` });
-// });
-
 router.post('/scan-barcode', authMiddleware, async (req, res) => {
   try {
     const { barcode } = req.body;
-    const userId = req.user.id;
+    const userId = req.user._id;
 
     if (!barcode) {
       return res.status(400).json({ message: 'Barcode is required' });
@@ -359,9 +340,73 @@ router.post('/scan-barcode', authMiddleware, async (req, res) => {
   }
 });
 
+// routes/productRoutes.js or wherever you define product APIs
+router.get('/stock-levels', authMiddleware, async (req, res) => {
+  try {
+    const products = await Product.find({userId: req.user._id, deleted: { $ne: true } });
+
+    const stockData = {};
+    products.forEach(p => {
+      const key = p.category || 'Uncategorized';
+      stockData[key] = (stockData[key] || 0) + p.quantity;
+    });
+
+    const labels = Object.keys(stockData);
+    const values = Object.values(stockData);
+
+    res.json({ labels, values });
+  } catch (err) {
+    console.error('Stock level error:', err);
+    res.status(500).json({ error: 'Failed to fetch product' });
+  }
+});
+
+// GET /api/products/restock-due
+router.get('/restock-due', authMiddleware, async (req, res) => {
+  try {
+    const cutoffDate = new Date();
+    cutoffDate.setDate(cutoffDate.getDate() - 30); // 30 days ago
+
+    const products = await Product.find({
+      userId: req.user._id,
+      lastRestocked: { $lte: cutoffDate },
+      deleted: { $ne: true }
+    });
+
+    const results = products.map(p => ({
+      name: p.name,
+      category: p.category,
+      lastRestocked: p.lastRestocked
+    }));
+
+    res.json(results);
+  } catch (err) {
+    console.error('Restock due error:', err);
+    res.status(500).json({ error: 'Failed to fetch restock data' });
+  }
+});
+
+// GET /api/products/last-restocked
+router.get('/last-restocked', authMiddleware, async (req, res) => {
+  try {
+    const recentProducts = await Product.find({
+      userId: req.user._id,
+      isRestock: true
+    })
+    .sort({ createdAt: -1 })  // latest first
+    .limit(10);               // return only 10 latest restocked items
+
+    res.json(recentProducts);
+  } catch (err) {
+    console.error('Error fetching last restocked:', err);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+
 router.get('/:id', authMiddleware, async (req, res) => {
   try {
-    const product = await Product.findOne({ _id: req.params.id, userId: req.user.id });
+    const product = await Product.findOne({ _id: req.params.id, userId: req.user._id });
     if (!product) return res.status(404).json({ error: 'Product not found' });
     res.json(product);
   } catch (error) {
@@ -377,7 +422,7 @@ router.put('/:id', authMiddleware, async (req, res) => {
 
   try {
     const updatedProduct = await Product.findOneAndUpdate(
-      { _id: req.params.id, userId: req.user.id },
+      { _id: req.params.id, userId: req.user._id },
       { name, sku, category, quantity, unitOfMeasurement, costPrice, reorderThreshold, supplier, expiryDate },
       { new: true, runValidators: true }
     ).populate('category', 'name').populate('supplier', 'name');
@@ -411,18 +456,53 @@ router.delete('/:id', authMiddleware, async (req, res) => {
     res.status(500).json({ error: 'Failed to delete product' });
   }
 });
-router.post('/delete-by-barcode', authMiddleware, async (req, res) => {
+
+router.post('/deduct-by-barcode', authMiddleware, async (req, res) => {
   const { barcodes } = req.body;
   const userId = req.user._id;
   if (!Array.isArray(barcodes) || barcodes.length === 0) {
     return res.status(400).json({ message: 'Barcodes array is required.' });
   }
-  try {
-    const result = await Product.deleteMany({ barcode: { $in: barcodes }, userId });
-    res.json({ deletedCount: result.deletedCount });
-  } catch (err) {
-    res.status(500).json({ message: 'Error deleting products.' });
+  let updated = 0, deleted = 0, totalQuantityDeducted = 0;
+
+  for (const barcode of barcodes) {
+    const product = await Product.findOne({ barcode, userId });
+    if (product) {
+      if (product.quantity > 1) {
+        product.quantity -= 1;
+        await Sale.create({
+          productId: product._id,
+          userId,
+          quantity: 1,
+          salePrice: product.costPrice, // assuming you're selling at costPrice for now
+          costPrice: product.costPrice,
+          customerName: req.body.customerName || 'Walk-in',
+          region: req.body.region || 'Unknown'
+        });
+        await product.save();
+        updated++;
+        totalQuantityDeducted += 1;
+      } else {
+        await Product.deleteOne({ _id: product._id });
+        deleted++;
+        totalQuantityDeducted += 1;
+      }
+    }
   }
+
+  const today = new Date().toISOString().split("T")[0];
+  await DailySales.findOneAndUpdate(
+    { date: today, userId },
+    { $inc: { sales: totalQuantityDeducted, orders: 1 } },
+    { upsert: true, new: true }
+  );
+
+  res.json({
+    updated,
+    deleted,
+    totalQuantityDeducted,
+    message: `Updated: ${updated}, Deleted: ${deleted}`
+  });
 });
 
 module.exports = router;
