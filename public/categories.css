@@ -460,25 +460,52 @@ header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 1rem;
-    border: 1px solid #eee;
-    border-radius: 8px;
-    margin-bottom: 0.5rem;
-    background: #f8f9fa;
+    padding: 1.25rem;
+    border: 1px solid #e9ecef;
+    border-radius: 12px;
+    margin-bottom: 0.75rem;
+    background: white;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.shopping-list-item:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    border-color: #007bff;
+}
+
+.shopping-list-item::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 4px;
+    background: linear-gradient(135deg, #007bff, #45a049);
+    border-radius: 0 2px 2px 0;
 }
 
 .remove-item {
     background: #dc3545;
     color: white;
     border: none;
-    padding: 0.25rem 0.5rem;
-    border-radius: 4px;
+    padding: 0.5rem 0.75rem;
+    border-radius: 8px;
     cursor: pointer;
     transition: all 0.3s ease;
+    font-size: 0.9rem;
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
 }
 
 .remove-item:hover {
     background: #c82333;
+    transform: scale(1.05);
+    box-shadow: 0 2px 8px rgba(220, 53, 69, 0.3);
 }
 
 /* Footer */
