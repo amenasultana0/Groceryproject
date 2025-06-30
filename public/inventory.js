@@ -488,8 +488,68 @@ async function renderProducts(products) {
                 </div>`;
             categoryContainer.appendChild(card);
             card.querySelector('.restock-btn').addEventListener('click', (e) => {
+<<<<<<< Updated upstream
         const productData = JSON.parse(e.target.dataset.product);
         openRestockModal(productData);
+=======
+            const productData = JSON.parse(e.target.dataset.product);
+            openRestockModal(productData);
+        });
+
+        }
+        if (allCategoriesGrid) {
+    const cardAll = document.createElement('div');
+    cardAll.className = 'product-card';
+    cardAll.innerHTML = `
+        <img src="${imageUrl}" alt="${name}" />
+        <div class="card-body">
+            <h3>${name}</h3>
+            <p>₹${costPrice} • ${quantity} in stock</p>
+            <small class="added-date">Added on: ${new Date(product.createdAt).toLocaleDateString()}</small>
+            <button class="restock-btn" data-product='${JSON.stringify(product)}'>Restock</button>
+            <button class="delete-btn" data-id="${product._id}" title="Delete">
+                <i class="fas fa-trash"></i>
+            </button>
+            <div class="stock-bar-container">
+                <div class="stock-bar" style="width:${Math.min(100, (quantity / 150) * 100)}%; background:${quantity < 40 ? 'orange' : 'green'};"></div>
+            </div>
+        </div>`;
+    allCategoriesGrid.appendChild(cardAll);
+    cardAll.querySelector('.restock-btn').addEventListener('click', (e) => {
+        const productData = JSON.parse(e.target.dataset.product);
+        openRestockModal(productData);
+    });
+    }
+  }
+
+    document.addEventListener('click', async (e) => {
+    if (e.target.classList.contains('delete-btn')) {
+        const id = e.target.dataset.id;
+        const confirmDelete = confirm('Are you sure you want to delete this product?');
+        if (!confirmDelete) return;
+
+        try {
+        const token = getToken(); // Make sure this function exists and works
+        const res = await fetch(`http://localhost:3000/api/products/${id}`, {
+            method: 'DELETE',
+            headers: {
+            Authorization: `Bearer ${token}`
+            }
+        });
+
+        if (res.status === 204) {
+            const card = e.target.closest('.product-card');
+            if (card) card.remove();
+        } else {
+            const data = await res.json();
+            alert(data.error || 'Failed to delete product.');
+        }
+        } catch (err) {
+        console.error('Delete error:', err);
+        alert('Error deleting product.');
+        }
+    }
+>>>>>>> Stashed changes
     });
 
         }
