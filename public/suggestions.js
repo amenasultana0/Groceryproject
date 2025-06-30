@@ -1,4 +1,5 @@
-// Global Variables
+const backendBaseUrl = 'http://localhost:3000';
+
 let chatHistory = [];
 let suggestionHistory = [];
 let bookmarkedSuggestions = [];
@@ -19,7 +20,139 @@ const autoSuggestionsData = [
     "Customer retention strategies"
 ];
 
-// Sample responses for realistic chatbot behavior
+async function updateMetricCards() {
+    try {
+        const token = JSON.parse(localStorage.getItem('user') || '{}').token;
+        const res = await fetch('http://localhost:3000/api/reports/suggestions/metrics', {
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
+
+        if (!res.ok) throw new Error('Failed to fetch metric data');
+
+        const data = await res.json();
+
+        // Update DOM
+        document.getElementById('performanceScore').textContent = data.performanceScore + '%';
+        document.getElementById('topCategories').textContent = data.topCategories;
+        document.getElementById('activeSuggestions').textContent = data.activeSuggestions;
+        document.getElementById('lastAnalysis').textContent = 'Just now';
+    } catch (error) {
+        console.error('Metric update error:', error);
+    }
+}
+
+async function updateSuggestionMetrics() {
+  const token = JSON.parse(localStorage.getItem('user'))?.token || '';
+  try {
+    const response = await fetch('http://localhost:3000/api/reports/suggestions/metrics', {
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    });
+
+    const data = await response.json();
+
+    document.querySelectorAll('.metric-card')[0].querySelector('.metric-value').textContent = `${data.performanceScore}%`;
+    document.querySelectorAll('.metric-card')[1].querySelector('.metric-value').textContent = data.topCategories;
+    document.querySelectorAll('.metric-card')[2].querySelector('.metric-value').textContent = data.activeSuggestions;
+    document.querySelectorAll('.metric-card')[3].querySelector('.metric-value').textContent = formatTimeAgo(data.lastAnalysis);
+
+  } catch (error) {
+    console.error('Failed to fetch metrics:', error);
+  }
+}
+
+function formatTimeAgo(dateString) {
+  const now = new Date();
+  const then = new Date(dateString);
+  const diffMs = now - then;
+  const diffMin = Math.floor(diffMs / 60000);
+  return `${diffMin}m ago`;
+}
+
+document.addEventListener('DOMContentLoaded', updateSuggestionMetrics);
+
+
+async function logSuggestion(message, type = 'custom') {
+  const token = JSON.parse(localStorage.getItem('user'))?.token || '';
+  await fetch('http://localhost:3000/api/suggestions/add', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`
+    },
+    body: JSON.stringify({ message, type })
+  });
+}
+
+async function fetchReportsData() {
+    try {
+        const urls = [
+            `${backendBaseUrl}/api/products/low-stock`,
+            `${backendBaseUrl}/api/products/expiring-soon`,
+            `${backendBaseUrl}/api/reports/sales-trend`,
+            `${backendBaseUrl}/api/reports/sales-by-category`,
+            `${backendBaseUrl}/api/reports/top-products`,
+            `${backendBaseUrl}/api/reports/wastage/by-category`,
+            `${backendBaseUrl}/api/reports/wastage/value`,
+            `${backendBaseUrl}/api/reports/stock-turnover`,
+            `${backendBaseUrl}/api/reports/stock-cost-summary`,
+            `${backendBaseUrl}/api/products/stock-levels`
+        ];
+
+        const headers = { Authorization: `Bearer ${getToken()}` };
+
+        const responses = await Promise.all(urls.map(url =>
+            fetch(url, { headers })
+        ));
+
+        // Check for failed responses
+        for (let i = 0; i < responses.length; i++) {
+            if (!responses[i].ok) {
+                console.error(`❌ API call failed: ${urls[i]} — ${responses[i].status}`);
+                throw new Error(`Failed API: ${urls[i]} — Status ${responses[i].status}`);
+            }
+        }
+
+        const [
+            lowStock, expiringSoon, salesTrend, salesByCategory,
+            topProducts, wastageByCategory, wastageValue,
+            stockTurnover, stockCostSummary, stockLevels
+        ] = await Promise.all(responses.map(r => r.json()));
+
+        return {
+            lowStock,
+            expiringSoon,
+            salesTrend,
+            salesByCategory,
+            topProducts,
+            wastageByCategory,
+            wastageValue,
+            stockTurnover,
+            stockCostSummary,
+            stockLevels
+        };
+    } catch (err) {
+        console.error('❌ Failed to fetch reports data:', err.message);
+        return null;
+    }
+}
+
+function getToken() {
+  const userData = localStorage.getItem('user') || sessionStorage.getItem('user');
+  if (!userData) return undefined;
+
+  try {
+    const user = JSON.parse(userData);
+    return user.token || null;
+  } catch (err) {
+    console.error('Failed to parse user data:', err);
+    return undefined;
+  }
+}
+
 const botResponses = {
     'top-performers': {
         title: "Top Performing Categories Analysis",
@@ -73,7 +206,8 @@ document.addEventListener('DOMContentLoaded', function() {
     setupEventListeners();
     initializeSpeechRecognition();
     updateBookmarkDisplay();
-    loadBookmarks()
+    loadBookmarks();
+    updateMetricCards();
 });
 
 // Initialize chat functionality
@@ -180,18 +314,41 @@ function sendMessage() {
 
     // Simulate bot response delay
     setTimeout(() => {
-        const response = generateBotResponse(message);
+        const responseMeta = generateBotResponse(message);
+if (responseMeta.type === 'live') {
+    showTypingIndicator();
+
+    fetchReportsData().then(data => {
         hideTypingIndicator();
-        addMessage('bot', response.content, response.title);
-        
-        // Add to suggestion history
-        suggestionHistory.push({
-            query: message,
-            response: response.content,
-            timestamp: new Date()
-        });
+
+        if (!data) {
+            addMessage('bot', "❌ Sorry, I couldn't fetch live report data. Please try again later.", "Live Business Suggestion");
+            return;
+        }
+
+        const suggestions = generateLiveSuggestionsByCategory(data, responseMeta.category);
+        addMessage('bot', suggestions.join('<br><br>'), "📊 Live Insights: " + formatCategoryTitle(responseMeta.category));
+    });
+    } else {
+        addMessage('bot', 
+        "I'm here to help with real-time store insights. Please wait while I fetch live report data...",
+        "📍 I'm Listening..."
+    );
+
+    fetchReportsData().then(data => {
+        if (!data) {
+            addMessage('bot', "Sorry, I couldn't fetch real-time report data. Please try again later.");
+            return;
+        }
+
+        const suggestions = generateLiveSuggestions(data);
+        addMessage('bot', suggestions.join('<br><br>'), "🧠 AI Suggestions from Live Report Data");
+        hideTypingIndicator();
+    });
+
+    }
     }, 1500 + Math.random() * 1000); // Random delay between 1.5-2.5 seconds
-}
+    }
 
 // Add message to chat
 function addMessage(type, content, title = '') {
@@ -239,31 +396,23 @@ function addMessage(type, content, title = '') {
     });
 }
 
-// Generate bot response
 function generateBotResponse(message) {
     const lowerMessage = message.toLowerCase();
-    
-    // Check for specific keywords
+
     if (lowerMessage.includes('top perform') || lowerMessage.includes('best sell') || lowerMessage.includes('popular')) {
-        return botResponses['top-performers'];
+        return { type: 'live', category: 'top-performers' };
     } else if (lowerMessage.includes('optim') || lowerMessage.includes('improve') || lowerMessage.includes('better')) {
-        return botResponses['optimization'];
+        return { type: 'live', category: 'optimization' };
     } else if (lowerMessage.includes('strategy') || lowerMessage.includes('plan') || lowerMessage.includes('growth')) {
-        return botResponses['strategy'];
+        return { type: 'live', category: 'strategy' };
     } else if (lowerMessage.includes('performance') || lowerMessage.includes('metric') || lowerMessage.includes('kpi')) {
-        return botResponses['performance'];
+        return { type: 'live', category: 'performance' };
     } else if (lowerMessage.includes('customer') || lowerMessage.includes('client') || lowerMessage.includes('shopper')) {
-        return botResponses['customer'];
+        return { type: 'live', category: 'customer' };
     } else if (lowerMessage.includes('season') || lowerMessage.includes('holiday') || lowerMessage.includes('time')) {
-        return botResponses['seasonal'];
+        return { type: 'live', category: 'seasonal' };
     } else {
-        // Random default response
-        const defaultResponses = botResponses['default'];
-        const randomResponse = defaultResponses[Math.floor(Math.random() * defaultResponses.length)];
-        return {
-            title: "General Business Insights",
-            content: randomResponse + "\n\nSome specific areas I can help you with:\n• Performance analysis and KPI tracking\n• Customer behavior insights\n• Inventory optimization strategies\n• Seasonal planning and forecasting\n• Staff productivity improvements\n• Marketing and promotional strategies"
-        };
+        return { type: 'default' };
     }
 }
 
@@ -574,4 +723,135 @@ setInterval(() => {
         const newScore = Math.max(75, Math.min(95, currentScore + (Math.random() - 0.5) * 2));
         performanceScore.textContent = Math.round(newScore) + '%';
     }
-}, 30000); // Update every 30 seconds
+}, 30000);
+
+function generateLiveSuggestions(data) {
+    const suggestions = [];
+
+    // ✅ 1. Low Stock Alerts (based on quantity)
+    if (Array.isArray(data.lowStock)) {
+        data.lowStock.forEach(product => {
+            if (product.quantity < 10) {
+                suggestions.push(`🔁 <b>Restock:</b> ${product.name} is running low on stock (only ${product.quantity} left).`);
+            }
+        });
+    }
+
+    // ✅ 2. Expiring Soon + Not Moving
+    if (data.expiringSoon?.items?.length) {
+        data.expiringSoon.items.forEach(product => {
+            if (product.quantity > 0) {
+                suggestions.push(`⚠️ <b>Expiring Soon:</b> ${product.name} has unsold items that will expire by ${new Date(product.expiryDate).toLocaleDateString()}.`);
+            }
+        });
+    }
+
+    // ✅ 3. High Wastage Value
+    if (data.wastageValue?.totalLoss > 0) {
+        suggestions.push(`💸 <b>Reduce Waste:</b> You've lost ₹${data.wastageValue.totalLoss} worth of goods due to expiry. Consider lowering reorder quantities.`);
+    }
+
+    // ✅ 4. Top Products (opportunity to promote)
+    if (data.topProducts?.labels?.length) {
+        const top = data.topProducts.labels[0];
+        suggestions.push(`🏆 <b>Best Seller:</b> ${top} is your top-selling item recently. Consider featuring it in promotions.`);
+    }
+
+    // ✅ 5. Stock Turnover Check
+    if (data.stockTurnover?.values?.length) {
+        const latestRatio = parseFloat(data.stockTurnover.values.at(-1));
+        if (latestRatio < 1) {
+            suggestions.push(`📉 <b>Slow Inventory:</b> Your stock turnover ratio is below 1, which may indicate overstocking or slow sales.`);
+        }
+    }
+
+    return suggestions.length
+        ? suggestions
+        : ["✅ No critical issues found. Store is operating efficiently!"];
+}
+
+function generateLiveSuggestionsByCategory(data, category) {
+    const suggestions = [];
+
+    switch (category) {
+        case 'top-performers':
+            if (data.salesByCategory?.labels?.length && data.salesByCategory?.values?.length) {
+                const labels = data.salesByCategory.labels;
+                const values = data.salesByCategory.values;
+
+                const top = labels
+                    .map((label, idx) => ({ category: label, value: values[idx] }))
+                    .sort((a, b) => b.value - a.value)
+                    .slice(0, 3);
+
+                top.forEach((cat, idx) => {
+                    const rankEmoji = ['🥇', '🥈', '🥉'][idx] || '';
+                    suggestions.push(`${rankEmoji} <b>${cat.category}</b> - ₹${cat.value} in recent sales`);
+                });
+            }
+            break;
+
+        case 'optimization':
+            if (data.lowStock?.length) {
+                data.lowStock.forEach(p => {
+                    if (p.quantity < 10) {
+                        suggestions.push(`🔁 Restock <b>${p.name}</b> — only ${p.quantity} left.`);
+                    }
+                });
+            }
+            if (data.expiringSoon?.items?.length) {
+                data.expiringSoon.items.forEach(p => {
+                    suggestions.push(`⚠️ Reduce stock of <b>${p.name}</b> — expiring by ${new Date(p.expiryDate).toLocaleDateString()}.`);
+                });
+            }
+            break;
+
+        case 'strategy':
+            if (data.topProducts?.labels?.length) {
+                const top = data.topProducts.labels[0];
+                suggestions.push(`📈 Focus on <b>${top}</b> — top-selling item. Promote it more widely.`);
+            }
+            if (data.wastageValue?.totalLoss > 0) {
+                suggestions.push(`💸 You've lost ₹${data.wastageValue.totalLoss} to expiry. Adjust order volumes or shelf life.`);
+            }
+            break;
+
+        case 'performance':
+            if (data.stockTurnover?.values?.length) {
+                const turnover = data.stockTurnover.values.at(-1);
+                suggestions.push(`📦 Inventory turnover: ${turnover}.`);
+            }
+            if (data.stockCostSummary?.stockMovementRatio) {
+                suggestions.push(`📊 Stock movement ratio: ${data.stockCostSummary.stockMovementRatio}`);
+            }
+            break;
+
+        case 'customer':
+            suggestions.push(`👥 This section is under development. You can link it to actual customer data in the next update.`);
+            break;
+
+        case 'seasonal':
+            const month = new Date().getMonth();
+            if (month >= 2 && month <= 4) suggestions.push("🌸 Spring Strategy: Promote fresh produce, holiday goods, and cleaning items.");
+            else if (month >= 5 && month <= 7) suggestions.push("☀️ Summer Strategy: Push cold drinks, ice creams, and BBQ items.");
+            else if (month >= 8 && month <= 10) suggestions.push("🍂 Fall Focus: Stock school snacks, Halloween treats, and baking ingredients.");
+            else suggestions.push("❄️ Winter Focus: Promote warm foods, hot drinks, and party supplies.");
+            break;
+    }
+
+    return suggestions.length
+        ? suggestions
+        : ["✅ Store operations look healthy in this area."];
+}
+
+function formatCategoryTitle(category) {
+    const titles = {
+        'top-performers': "Top Performers",
+        'optimization': "Store Optimization",
+        'strategy': "Growth Strategy",
+        'performance': "Performance KPIs",
+        'customer': "Customer Insights",
+        'seasonal': "Seasonal Strategy"
+    };
+    return titles[category] || "Insights";
+}
