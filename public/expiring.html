@@ -25,6 +25,25 @@
     </style>
 </head>
 <body>
+    <!-- Expired List Button (top right) -->
+    <button id="showExpiredBtn" class="expired-list-btn">Expired List</button>
+
+    <!-- Expired List Sidebar -->
+    <div id="expiredSidebar" class="expired-sidebar">
+    <div class="expired-sidebar-header">
+        <span>Expired Items</span>
+        <button id="closeExpiredSidebar" class="close-sidebar-btn">&times;</button>
+    </div>
+    <button id="deleteAllExpiredBtn" class="delete-all-btn">Delete All
+        <i class="fas fa-trash"></i>
+    </button>
+    <div id="expiredItemsList" class="expired-items-list">
+        <!-- Expired items will be rendered here -->
+         <button class="delete-expired-btn" title="Delete">
+            <i class="fas fa-trash"></i>
+            </button>
+    </div>
+    </div>
     <div class="expiring-dashboard">
         <div class="header-section">
             <div class="header-left">

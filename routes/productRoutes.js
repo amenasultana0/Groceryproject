@@ -415,6 +415,35 @@ router.get('/last-restocked', authMiddleware, async (req, res) => {
   }
 });
 
+// GET all expired products
+router.get('/expired', authMiddleware, async (req, res) => {
+  try {
+    const now = new Date();
+    const expiredItems = await Product.find({ userId: req.user._id, expiryDate: { $lt: now } });
+    // Filter for unique items
+    const unique = [];
+    const seen = new Set();
+    for (const item of expiredItems) {
+      const key = `${item.name}|${item.expiryDate}|${item.category}`;
+      if (!seen.has(key)) {
+        seen.add(key);
+        unique.push(item);
+      }
+    }
+    res.json(unique); // Only send once
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to fetch expired items.' });
+  }
+});
+router.delete('/expired', authMiddleware, async (req, res) => {
+  try {
+    const now = new Date();
+    const result = await Product.deleteMany({ userId: req.user._id, expiryDate: { $lt: now } });
+    res.json({ deletedCount: result.deletedCount });
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to delete expired items.' });
+  }
+});
 
 router.get('/:id', authMiddleware, async (req, res) => {
   try {

@@ -36,8 +36,98 @@ sortBy?.addEventListener('change', loadItems);
 // Initialize
 document.addEventListener('DOMContentLoaded', async () => {
   await loadItems();
-  populateCategoryDropdown('categoryFilter')
+  populateCategoryDropdown('categoryFilter');
+
+  // --- Expired List Sidebar Logic ---
+  const showExpiredBtn = document.getElementById('showExpiredBtn');
+  const expiredSidebar = document.getElementById('expiredSidebar');
+  const closeExpiredSidebar = document.getElementById('closeExpiredSidebar');
+
+  showExpiredBtn?.addEventListener('click', function() {
+    expiredSidebar.classList.add('open');
+  });
+
+  closeExpiredSidebar?.addEventListener('click', function() {
+    expiredSidebar.classList.remove('open');
+  });
+  document.getElementById('showExpiredBtn').addEventListener('click', renderExpiredItems);
+  document.getElementById('deleteAllExpiredBtn').addEventListener('click', async () => {
+  if (!confirm('Delete all expired items?')) return;
+  const token = getToken();
+  const res = await fetch('http://localhost:3000/api/products/expired', {
+    method: 'DELETE',
+    headers: { Authorization: `Bearer ${token}` }
+  });
+  if (res.ok) {
+    await renderExpiredItems();
+    alert('All expired items deleted.');
+  } else {
+    alert('Failed to delete expired items.');
+  }
 });
+
+});
+
+async function fetchExpiredItems() {
+  const token = getToken(); // your auth token function
+  const res = await fetch('http://localhost:3000/api/products/expired', {
+    headers: { Authorization: `Bearer ${token}` }
+  });
+  if (!res.ok) throw new Error('Failed to fetch expired items');
+  return await res.json();
+}
+
+async function renderExpiredItems() {
+  const expiredItemsList = document.getElementById('expiredItemsList');
+  expiredItemsList.innerHTML = '<div>Loading...</div>';
+
+  try {
+    const items = await fetchExpiredItems();
+    if (!Array.isArray(items) || items.length === 0) {
+      expiredItemsList.innerHTML = '<div>No expired items.</div>';
+      return;
+    }
+    expiredItemsList.innerHTML = items.map(item => `
+      <div class="expired-item" data-id="${item._id}">
+        <strong>${item.name}</strong>
+        <span class="expired-category ${item.category ? item.category.toLowerCase() : ''}">
+          [${item.category}]
+        </span>
+        <div class="expired-date">Expired: ${new Date(item.expiryDate).toLocaleDateString()}</div>
+        <button class="delete-expired-btn" title="Delete">
+          <i class="fas fa-trash"></i>
+        </button>
+      </div>
+    `).join('');
+
+    // Attach event listeners AFTER rendering the items
+    expiredItemsList.querySelectorAll('.delete-expired-btn').forEach(btn => {
+      btn.addEventListener('click', async function(e) {
+        e.stopPropagation();
+        const itemDiv = btn.closest('.expired-item');
+        const id = itemDiv.getAttribute('data-id');
+        if (!confirm('Delete this expired item?')) return;
+        const token = getToken();
+        try {
+          const res = await fetch(`http://localhost:3000/api/products/${id}`, {
+            method: 'DELETE',
+            headers: { Authorization: `Bearer ${token}` }
+          });
+          if (res.ok) {
+            itemDiv.remove();
+          } else {
+            alert('Failed to delete item.');
+          }
+        } catch (err) {
+          alert('Error deleting item.');
+        }
+      });
+    });
+
+  } catch (err) {
+    expiredItemsList.innerHTML = '<div>Error loading expired items.</div>';
+  }
+}
 
 function getToken() {
   const userData = localStorage.getItem('user') || sessionStorage.getItem('user');
