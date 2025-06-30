@@ -23,8 +23,8 @@ router.post('/sale', authMiddleware, async (req, res) => {
     await Sale.create({
       userId: req.user._id,
       quantity,
-      salePrice: 0, // or actual value if you have it
-      costPrice: 0, // or actual value
+      salePrice: 0,
+      costPrice: Product.costPrice,
       customerName: customerName.trim(),
       region: region.trim()
     });

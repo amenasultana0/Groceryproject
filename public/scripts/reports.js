@@ -14,13 +14,6 @@ function getToken() {
   }
 }
 
-function normalizeStatus(status) {
-    if (!status) return '-';
-    status = status.toLowerCase().replace(/\s+/g, '');
-    if (status === 'expiringsoon') return 'expiring';
-    return status;
-}
-
 // Initialize charts
 let charts = {
     expiry: null,
@@ -34,104 +27,118 @@ let allItems = [];
 // Initialize date picker and event listeners
 document.addEventListener('DOMContentLoaded', function() {
 
-    // Export Report
-    document.getElementById('exportBtn').addEventListener('click', () => {
-        exportReportToCSV();
-    });
-
-    flatpickr("#dateRange", {
-        mode: "range",
-        dateFormat: "Y-m-d",
-        defaultDate: [
-            new Date(new Date().setDate(new Date().getDate() - 30)),
-            new Date()
-        ],
-        onChange: function(selectedDates) {
-            if (selectedDates.length === 2) {
-                generateReport();
-                renderStockCostMetrics();
-            }
-        }
-    });
-    initializeEventListeners();
+  document.getElementById('generateReport').addEventListener('click', () => {
+    console.log('✅ Generate Report button clicked');
     generateReport();
-    populateCategoryDropdown('categoryFilter');
-    updateKPIValues();
-    initializeSalesCharts();
-    renderStockLevelsChart();
-    renderStockTurnoverChart();
-    populateLowStockList();
-    fetchLastRestockedData().then(renderLastRestocked);
-    renderStockCostMetrics();
-    renderCustomerInsights();
-    fetchWastageByCategory();
-    fetchWastageValue();
-    fetchWastageAlerts();
+  });
 
+
+  const reportTypeDropdown = document.getElementById('reportType');
+
+  reportTypeDropdown.addEventListener('change', () => {
+    const selected = reportTypeDropdown.value;
+
+    const sectionMap = {
+      sales: 'salesReport',
+      inventory: 'inventoryReport',
+      stock: 'stockReport',
+      customers: 'customersReport',
+      wastage: 'wastageReport',
+      table: 'tableReport'
+    };
+
+    const sectionId = sectionMap[selected];
+    if (sectionId) {
+      const section = document.getElementById(sectionId);
+      if (section) {
+        section.scrollIntoView({ behavior: 'smooth' });
+      }
+    }
+  });
+
+  flatpickr("#dateRange", {
+      mode: "range",
+      dateFormat: "Y-m-d",
+      defaultDate: [
+          new Date(new Date().setDate(new Date().getDate() - 30)),
+          new Date()
+      ],
+      allowInput: false, 
+      onChange: function(selectedDates) {
+          if (selectedDates.length === 2) {
+              generateReport();
+              renderStockCostMetrics();
+          }
+      }
+  });
+  initializeEventListeners();
+  generateReport();
+  populateCategoryDropdown('categoryFilter');
+  updateKPIValues();
+  initializeSalesCharts();
+  renderStockLevelsChart();
+  renderStockTurnoverChart();
+  populateLowStockList();
+  fetchLastRestockedData().then(renderLastRestocked);
+  renderStockCostMetrics();
+  renderCustomerInsights();
+  fetchWastageByCategory();
+  fetchWastageValue();
+  fetchWastageAlerts();
+  renderDataTable(allItems);
 });
 
-function exportReportToCSV() {
-  if (!window.latestReportData || !window.latestReportData.items) {
-    alert("Please generate a report first.");
-    return;
+function initializeEventListeners() {
+
+  document.getElementById('exportReport').addEventListener('click', exportReport);
+  document.getElementById('exportCSV').addEventListener('click', exportToCSV);
+  const categoryFilter = document.getElementById('categoryFilter');
+  if (categoryFilter) {
+      categoryFilter.addEventListener('change', generateReport);
+  } else {
+      console.warn("categoryFilter element not found");
   }
 
-  const items = window.latestReportData.items;
-  const headers = ["Name", "Category", "Quantity", "Expiry Date", "Days Left", "Price"];
+  const chartToggle = document.getElementById('chartAllToggle');
+  if (chartToggle) {
+      chartToggle.addEventListener('change', () => {
+          const status = statusFilter?.value || 'all';
+          const filteredItems = filterItemsByStatus(allItems, status);
+          updateCharts({ ...generateChartData(filteredItems), items: filteredItems });
+      });
+  }
   
-  const csvRows = [
-    headers.join(","),
-    ...items.map(item =>
-      [
-        item.name,
-        item.category,
-        item.quantity,
-        new Date(item.expiryDate).toLocaleDateString(),
-        item.daysLeft,
-        item.costPrice
-      ].join(",")
-    )
-  ];
-
-  const blob = new Blob([csvRows.join("\n")], { type: 'text/csv' });
-  const url = URL.createObjectURL(blob);
-  
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = 'inventory-report.csv';
-  a.click();
-  URL.revokeObjectURL(url);
-}
-
-function initializeEventListeners() {
-    const categoryFilter = document.getElementById('categoryFilter');
-    if (categoryFilter) {
-        categoryFilter.addEventListener('change', generateReport);
-    } else {
-        console.warn("categoryFilter element not found");
-    }
-
-    const chartToggle = document.getElementById('chartAllToggle');
-    if (chartToggle) {
-        chartToggle.addEventListener('change', () => {
-            const status = statusFilter?.value || 'all';
-            const filteredItems = filterItemsByStatus(allItems, status);
-            updateCharts({ ...generateChartData(filteredItems), items: filteredItems });
-        });
-    }
-    
 
     const searchInput = document.getElementById('tableSearch');
     if (searchInput) {
-        searchInput.addEventListener('input', (e) => {
-            const searchTerm = e.target.value.toLowerCase();
-            const rows = document.querySelectorAll('#reportTableBody tr');
-            rows.forEach(row => {
-                const text = row.textContent.toLowerCase();
-                row.style.display = text.includes(searchTerm) ? '' : 'none';
-            });
-        });
+      searchInput.addEventListener('input', (e) => {
+          const searchTerm = e.target.value.toLowerCase();
+          const filtered = allItems.filter(item =>
+              (item.name || '').toLowerCase().includes(searchTerm) ||
+              (item.category || '').toLowerCase().includes(searchTerm)
+          );
+          renderDataTable(filtered);
+      });
     }
+
+    const tableFilter = document.getElementById('tableFilter');
+    if (tableFilter) {
+      tableFilter.addEventListener('change', () => {
+          const filter = tableFilter.value;
+          let filtered = allItems;
+
+          if (filter === 'sales') {
+              filtered = allItems.filter(item => item.salePrice); // Example filter
+          } else if (filter === 'inventory') {
+              filtered = allItems.filter(item => item.expiryDate);
+          } else if (filter === 'customers') {
+              filtered = []; // You can populate this once customer-level rows are available
+          }
+
+          renderDataTable(filtered);
+      });
+    }
+
 }
 
 async function updateKPIValues() {
@@ -148,9 +155,6 @@ async function updateKPIValues() {
 
         const avg = stats.orders ? stats.sales / stats.orders : 0;
         document.getElementById('avgOrderValue').textContent = `₹${avg.toFixed(2)}`;
-        
-        // Temporarily disable profit
-        document.getElementById('netProfit').textContent = `₹0.00`; // Placeholder for now
 
         const lowStockRes = await fetch('http://localhost:3000/api/products/low-stock', {
             headers: { 'Authorization': `Bearer ${getToken()}` }
@@ -161,6 +165,39 @@ async function updateKPIValues() {
     } catch (err) {
         console.error("Failed to update KPI values", err);
     }
+}
+
+function exportReport() {
+  window.print();
+}
+
+function exportToCSV() {
+    const items = Array.from(document.querySelectorAll('#reportTableBody tr'))
+        .map(row => {
+            const cells = row.querySelectorAll('td');
+            return {
+                name: cells[0].textContent.trim(),
+                category: cells[1].textContent.trim(),
+                price: cells[2].textContent.trim(),
+                quantity: cells[3].textContent.trim(),
+                value: cells[4].textContent.trim(),
+                expiryDate: cells[5].textContent.trim(),
+                daysLeft: cells[6].textContent.trim(),
+                status: cells[7].textContent.trim()
+            };
+        });
+    const headers = ['Name', 'Category', 'Price', 'Quantity', 'Value', 'Expiry Date', 'Days Left', 'Status'];
+    const csv = [
+        headers.join(','),
+        ...items.map(item => Object.values(item).join(','))
+    ].join('\n');
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'grocery-report.csv';
+    a.click();
+    window.URL.revokeObjectURL(url);
 }
 
 function initializeSalesCharts() {
@@ -398,8 +435,6 @@ async function renderStockLevelsChart() {
     });
     const data = await res.json();
 
-    console.log("Stock chart data:", data); // ✅ Add this
-
     const ctx = document.createElement('canvas');
     const container = document.getElementById('stockLevelsChart');
     container.innerHTML = '';
@@ -535,7 +570,7 @@ function renderLastRestocked(data) {
         <ul class="restock-group-list">
             ${items.map(i => `
             <li>
-                <strong>${i.name}</strong> — <span>${new Date(i.lastRestockedOn).toLocaleDateString()}</span>
+                <strong>${i.name}</strong> — <span>${formatDate(i.lastRestockedOn)}</span>
             </li>
             `).join('')}
         </ul>
@@ -547,9 +582,19 @@ function renderLastRestocked(data) {
 
 async function renderStockCostMetrics() {
   try {
-    const dateRangeInput = document.getElementById('dateRange').value.split(' to ');
-    const startDate = dateRangeInput[0];
-    const endDate = dateRangeInput[1] || startDate;
+    const dateRangeInput = document.getElementById('dateRange');
+    let startDate = '', endDate = '';
+
+    if (dateRangeInput && dateRangeInput.value.includes(' to ')) {
+      const parts = dateRangeInput.value.split(' to ');
+      startDate = parts[0];
+      endDate = parts[1];
+    } else {
+      // fallback: use today’s date
+      const today = new Date().toISOString().split('T')[0];
+      startDate = today;
+      endDate = today;
+    }
 
     const res = await fetch(`http://localhost:3000/api/reports/stock-cost-summary?startDate=${startDate}&endDate=${endDate}`, {
       headers: { Authorization: `Bearer ${getToken()}` }
@@ -687,53 +732,121 @@ async function fetchWastageAlerts() {
 }
 
 async function generateReport() {
-    
-    showLoading();
-    try {
-        const token = getToken();
-        const dateRange = document.getElementById('dateRange').value.split(' to ');
-        const startDate = dateRange[0];
-        const endDate = dateRange[1] || dateRange[0];
-        const category = document.getElementById('categoryFilter').value;
-        const user = JSON.parse(localStorage.getItem('user') || sessionStorage.getItem('user'));
+  const btn = document.getElementById('generateReport');
+  btn.disabled = true;
+  btn.textContent = 'Generating...';
 
-        const response = await fetch(`http://localhost:3000/api/reports/report`, {
-            method: 'POST',
-            headers: { 
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${getToken()}`
-            },
-            body: JSON.stringify({ startDate, endDate, category, status: 'all' }),
-        });
+  showLoading();
 
-        if (!response.ok) throw new Error("Failed to fetch report data");
-        const data = await response.json();
+  try {
+    // 👇 Scroll to table (adjust ID if needed)
+    document.getElementById('reportTableContainer')?.scrollIntoView({ behavior: 'smooth' });
 
-        allItems = (data.items || []).map(item => {
-            const expiry = new Date(item.expiryDate);
-            const now = new Date();
-            const daysLeft = Math.ceil((expiry - now) / (1000 * 60 * 60 * 24));
-            return { ...item, daysLeft };
-        });
+    const token = getToken();
+    const dateRangeInput = document.getElementById('dateRange');
+    let startDate = '', endDate = '';
 
-
-        const statsResponse = await fetch('http://localhost:3000/api/sales/stats', {
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${getToken()}`
-            }
-        });
-
-        const statsData = await statsResponse.json();
-
-        updateSalesAndOrdersUI(statsData.sales, statsData.orders);
-
-        hideLoading();
-    } catch (error) {
-        console.error('Error generating report:', error);
-        showError('Failed to generate report');
-        hideLoading();
+    if (dateRangeInput && dateRangeInput.value.includes(' to ')) {
+      const parts = dateRangeInput.value.split(' to ');
+      startDate = parts[0];
+      endDate = parts[1];
+    } else {
+      // fallback: use today’s date
+      const today = new Date().toISOString().split('T')[0];
+      startDate = today;
+      endDate = today;
     }
+
+    const category = document.getElementById('categoryFilter').value;
+
+    const response = await fetch(`http://localhost:3000/api/reports/report`, {
+      method: 'POST',
+      headers: { 
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${getToken()}`
+      },
+      body: JSON.stringify({ startDate, endDate, category, status: 'all' }),
+    });
+
+    if (!response.ok) throw new Error("Failed to fetch report data");
+    const data = await response.json();
+
+    allItems = (data.items || []).map(item => {
+      let daysLeft = '-';
+      if (item.expiryDate) {
+        const expiry = new Date(item.expiryDate);
+        if (!isNaN(expiry)) {
+          const now = new Date();
+          daysLeft = Math.ceil((expiry - now) / (1000 * 60 * 60 * 24));
+        }
+      }
+      return { ...item, daysLeft };
+    });
+
+
+    renderDataTable(allItems);
+
+    // 👇 Flash animation
+    const table = document.getElementById('dataTableBody');
+    table.classList.add('flash');
+    setTimeout(() => table.classList.remove('flash'), 300);
+
+    // 👇 Toast notification
+    showToast('✅ Report updated');
+
+    // 👇 Sales stats
+    const statsResponse = await fetch('http://localhost:3000/api/sales/stats', {
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${getToken()}`
+      }
+    });
+    const statsData = await statsResponse.json();
+    updateSalesAndOrdersUI(statsData.sales, statsData.orders);
+
+  } catch (error) {
+    console.error('Error generating report:', error);
+    showError('❌ Failed to generate report');
+  } finally {
+    hideLoading();
+    btn.disabled = false;
+    btn.textContent = 'Generate Report';
+  }
+}
+
+function formatDate(dateStr) {
+  const date = new Date(dateStr);
+  if (!dateStr || isNaN(date)) return '-';
+  return date.toLocaleDateString('en-IN', {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric'
+  });
+}
+
+function renderDataTable(items) {
+  const tbody = document.getElementById('dataTableBody');
+  tbody.innerHTML = '';
+
+  if (items.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="5">No data available</td></tr>`;
+    return;
+  }
+
+  items.forEach(item => {
+    const row = document.createElement('tr');
+    row.innerHTML = `
+      <td>${formatDate(item.expiryDate)}</td>
+      <td>${item.name}</td>
+      <td>${item.category || 'Uncategorized'}</td>
+      <td>${item.quantity}</td>
+      <td>₹${item.costPrice?.toFixed(2) || '0.00'}</td>
+    `;
+    tbody.appendChild(row);
+  });
+
+  // Update record count
+  document.getElementById('recordCount').textContent = items.length;
 }
 
 function updateSalesAndOrdersUI(totalSales, totalOrders) {
@@ -773,6 +886,18 @@ function showError(message) {
         toast.style.opacity = '0';
         setTimeout(() => toast.remove(), 300);
     }, 3000);
+}
+
+function showToast(message) {
+  const toast = document.createElement('div');
+  toast.className = 'success-toast';
+  toast.textContent = message;
+  document.body.appendChild(toast);
+
+  setTimeout(() => {
+    toast.style.opacity = '0';
+    setTimeout(() => toast.remove(), 300);
+  }, 2000);
 }
 
 // CUSTOMER INSIGHTS SECTION

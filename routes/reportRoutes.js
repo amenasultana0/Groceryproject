@@ -18,7 +18,7 @@ router.get('/report', authMiddleware, async (req, res) => {
     products.forEach(p => {
       const expiry = new Date(p.expiryDate);
       const daysLeft = Math.ceil((expiry - today) / (1000 * 60 * 60 * 24));
-      totalValue += (p.price || 0) * (p.quantity || 0);
+      totalValue += (p.costPrice || 0) * (p.quantity || 0);
 
       if (daysLeft < 0) expiredItems.push({ ...p._doc, daysLeft });
       else if (daysLeft <= 7) expiringSoon.push({ ...p._doc, daysLeft });
@@ -90,16 +90,17 @@ router.post('/report', authMiddleware, async (req, res) => {
       } else if (normalizedStatus === "Fresh" && daysLeft > 7) {
         fresh++;
         match = true;
-      } else if (!normalizedStatus || status === 'all') {
-        match = true;
-        if (daysLeft < 0) expired++;
-        else if (daysLeft <= 7) expiringSoon++;
-        else fresh++;
-      }
+      } else if (!normalizedStatus || normalizedStatus === 'all') {
+          match = true;
+          if (daysLeft < 0) expired++;
+          else if (daysLeft <= 7) expiringSoon++;
+          else fresh++;
+        }
+
 
       if (match) {
         filteredItems.push(item);
-        totalValue += (item.price || 0) * (item.quantity || 0);
+        totalValue += (item.costPrice || 0) * (item.quantity || 0);
       }
     }
 
@@ -332,7 +333,7 @@ router.get('/stock-cost-summary', authMiddleware, async (req, res) => {
     products.forEach(p => {
       const cost = p.costPrice * p.quantity;
       const createdAt = new Date(p.createdAt);
-      const restockedOn = new Date(p.lastRestockedOn);
+      const restockedOn = new Date(p.lastRestocked);
       
       const isNew = createdAt >= start && createdAt <= end;
       const isRestock = !isNew && restockedOn >= start && restockedOn <= end;
@@ -341,8 +342,6 @@ router.get('/stock-cost-summary', authMiddleware, async (req, res) => {
         totalInventoryCost += cost;
       } else if (isRestock) {
         restockingCost += cost;
-      } else {
-        totalInventoryCost += cost;
       }
 
       if (!categoryCostMap[p.category]) {
@@ -369,9 +368,9 @@ router.get('/stock-cost-summary', authMiddleware, async (req, res) => {
     const stockMovementRatio = totalQuantity > 0 ? ((soldQuantity / totalQuantity) * 100).toFixed(2) : '0.00';
 
     res.json({
-      totalInventoryCost,
-      restockingCost,
-      consumedCost,
+      totalInventoryCost: parseFloat(totalInventoryCost.toFixed(2)),
+      restockingCost: parseFloat(restockingCost.toFixed(2)),
+      consumedCost: parseFloat(consumedCost.toFixed(2)),
       stockMovementRatio,
       categoryCostBreakdown: categoryCostMap
     });
@@ -489,7 +488,6 @@ router.get('/wastage/by-category', authMiddleware, async (req, res) => {
   }
 });
 
-// 2️⃣ Total monetary wastage
 router.get('/wastage/value', authMiddleware, async (req, res) => {
   try {
       const expired = await Product.find({
@@ -505,7 +503,6 @@ router.get('/wastage/value', authMiddleware, async (req, res) => {
   }
 });
 
-// 3️⃣ Wastage alerts (Top 5 products lost)
 router.get('/wastage/alerts', authMiddleware, async (req, res) => {
   try {
     const expired = await Product.find({

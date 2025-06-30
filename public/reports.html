@@ -20,7 +20,7 @@
                 <a href="dashboard.html" class="btn-secondary back-btn" style="display: inline-flex; align-items: center; gap: 8px; font-size: 1rem; text-decoration: none;">
                         <i class="fas fa-arrow-left"></i> Back To Dashboard
                 </a>
-                <button id="exportBtn" class="btn-primary">
+                <button id="exportReport" class="btn-primary">
                     <i class="fas fa-download"></i> Export Report
                 </button>
             </div>
@@ -41,27 +41,18 @@
                 </select>
             </div>
             <div class="filter-group">
-                <label>Region</label>
-                <select id="regionFilter">
-                    <option value="">All Regions</option>
-                    <option value="north">North Region</option>
-                    <option value="south">South Region</option>
-                    <option value="east">East Region</option>
-                    <option value="west">West Region</option>
-                </select>
-            </div>
-            <div class="filter-group">
                 <label>Report Type</label>
                 <select id="reportType">
                     <option value="sales">Sales Report</option>
                     <option value="inventory">Inventory Report</option>
-                    <option value="revenue">Revenue Report</option>
+                    <option value="stock">Stock Report</option>
                     <option value="customers">Customer Report</option>
-                    <option value="expenses">Expense Report</option>
+                    <option value="wastage">Wastage Report</option>
+                    <option value="table">Table Report</option>
                 </select>
             </div>
             <button id="generateReport" class="btn-primary">
-                <i class="fas fa-sync"></i> Generate Report
+                <i class="fas fa-sync"></i> Update Report
             </button>
         </section>
 
@@ -76,16 +67,6 @@
                         <h3>Total Sales</h3>
                         <p id="totalSales">₹0</p>
                         <span id="salesGrowth" class="growth positive">+12.5%</span>
-                    </div>
-                </div>
-                <div class="kpi-card success" data-tooltip="Net profit after all expenses">
-                    <div class="kpi-icon">
-                        <i class="fas fa-chart-line"></i>
-                    </div>
-                    <div class="kpi-content">
-                        <h3>Net Profit</h3>
-                        <p id="netProfit">₹0</p>
-                        <span id="profitGrowth" class="growth positive">+8.3%</span>
                     </div>
                 </div>
                 <div class="kpi-card warning" data-tooltip="Total number of orders">
@@ -118,21 +99,11 @@
                         <span class="alert">Requires Attention</span>
                     </div>
                 </div>
-                <div class="kpi-card secondary" data-tooltip="Customer retention rate">
-                    <div class="kpi-icon">
-                        <i class="fas fa-users"></i>
-                    </div>
-                    <div class="kpi-content">
-                        <h3>Customer Retention</h3>
-                        <p id="retentionRate">0%</p>
-                        <span id="retentionGrowth" class="growth positive">+5.7%</span>
-                    </div>
-                </div>
             </div>
         </section>
 
         <!-- Sales Data Overview -->
-        <section class="sales-overview">
+        <section id="salesReport" class="sales-overview">
         <h2><i class="fas fa-chart-bar"></i> Sales Data Overview</h2>
         <div class="sales-grid">
             <!-- Full-width Sales Trend chart -->
@@ -185,7 +156,7 @@
 
 
         <!-- Inventory Management -->
-        <section class="inventory-section">
+        <section id="inventoryReport" class="inventory-section">
             <h2><i class="fas fa-boxes"></i> Inventory Management</h2>
             <div class="inventory-grid">
                 <div class="chart-card">
@@ -229,7 +200,7 @@
         </section>
 
         <!-- Stock Cost & Movement Metrics -->
-        <section class="revenue-section">
+        <section id="stockReport" class="revenue-section">
             <h2><i class="fas fa-coins"></i> Stock Cost & Movement Metrics</h2>
             <div class="revenue-grid">
                 <!-- Inventory Cost Breakdown Chart -->
@@ -281,7 +252,7 @@
 
 
         <!-- Customer Insights -->
-        <section class="customer-section">
+        <section id="customersReport" class="customer-section">
             <h2><i class="fas fa-users"></i> Customer Insights</h2>
             <div class="customer-grid">
                 <div class="chart-card">
@@ -329,7 +300,7 @@
         </section>
 
         <!-- Wastage & Losses -->
-        <section class="wastage-section">
+        <section id="wastageReport" class="wastage-section">
             <h2><i class="fas fa-trash-alt"></i> Wastage & Losses</h2>
             <div class="wastage-grid">
                 <div class="chart-card">
@@ -362,114 +333,8 @@
             </div>
         </section>
 
-        <!-- Promotions & Discounts -->
-        <section class="promotions-section">
-            <h2><i class="fas fa-percentage"></i> Promotions & Discounts</h2>
-            <div class="promotions-grid">
-                <div class="chart-card">
-                    <div class="chart-header">
-                        <h3>Promotion Effectiveness</h3>
-                    </div>
-                    <div class="chart-container">
-                        <div id="promotionEffectivenessChart"></div>
-                    </div>
-                </div>
-
-                <div class="metrics-card">
-                    <div class="metrics-header">
-                        <h3>Discount Summary</h3>
-                    </div>
-                    <div class="metrics-content">
-                        <div class="metric-item">
-                            <span class="label">Total Discounts Given</span>
-                            <span class="value" id="totalDiscounts">₹0</span>
-                        </div>
-                        <div class="metric-item">
-                            <span class="label">Discount Impact on Revenue</span>
-                            <span class="value" id="discountImpact">0%</span>
-                        </div>
-                        <div class="metric-item">
-                            <span class="label">Most Effective Promotion</span>
-                            <span class="value" id="bestPromotion">-</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- Returns & Refunds -->
-        <section class="returns-section">
-            <h2><i class="fas fa-undo"></i> Returns & Refunds</h2>
-            <div class="returns-grid">
-                <div class="chart-card">
-                    <div class="chart-header">
-                        <h3>Return Trends</h3>
-                    </div>
-                    <div class="chart-container">
-                        <div id="returnTrendsChart"></div>
-                    </div>
-                </div>
-
-                <div class="metrics-card">
-                    <div class="metrics-header">
-                        <h3>Return Metrics</h3>
-                    </div>
-                    <div class="metrics-content">
-                        <div class="metric-item">
-                            <span class="label">Return Rate</span>
-                            <span class="value" id="returnRate">0%</span>
-                        </div>
-                        <div class="metric-item">
-                            <span class="label">Total Refunds</span>
-                            <span class="value" id="totalRefunds">₹0</span>
-                        </div>
-                        <div class="metric-item">
-                            <span class="label">Most Returned Product</span>
-                            <span class="value" id="mostReturned">-</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- Tax & Compliance -->
-        <section class="tax-section">
-            <h2><i class="fas fa-file-invoice-dollar"></i> Tax & Compliance</h2>
-            <div class="tax-grid">
-                <div class="metrics-card">
-                    <div class="metrics-header">
-                        <h3>Tax Summary</h3>
-                    </div>
-                    <div class="metrics-content">
-                        <div class="metric-item">
-                            <span class="label">Total Tax Collected</span>
-                            <span class="value" id="totalTaxCollected">₹0</span>
-                        </div>
-                        <div class="metric-item">
-                            <span class="label">Tax Rate</span>
-                            <span class="value" id="taxRate">18%</span>
-                        </div>
-                        <div class="metric-item">
-                            <span class="label">Tax Due Date</span>
-                            <span class="value" id="taxDueDate">-</span>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="alert-card warning">
-                    <div class="alert-header">
-                        <i class="fas fa-exclamation-circle"></i>
-                        <h3>Compliance Alerts</h3>
-                    </div>
-                    <div class="alert-list" id="complianceAlerts">
-                        <!-- Populated by JavaScript -->
-                    </div>
-                </div>
-            </div>
-        </section>
-
         <!-- Detailed Data Table -->
-        <section class="data-table-section">
+        <section id="tableReport" class="data-table-section">
             <div class="table-header">
                 <h2>Detailed Data</h2>
                 <div class="table-actions">
@@ -495,12 +360,8 @@
                             <th data-sort="date">Date</th>
                             <th data-sort="product">Product</th>
                             <th data-sort="category">Category</th>
-                            <th data-sort="region">Region</th>
                             <th data-sort="quantity">Quantity</th>
-                            <th data-sort="revenue">Revenue</th>
                             <th data-sort="cost">Cost</th>
-                            <th data-sort="profit">Profit</th>
-                            <th data-sort="customer">Customer</th>
                         </tr>
                     </thead>
                     <tbody id="dataTableBody"></tbody>

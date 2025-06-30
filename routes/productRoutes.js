@@ -76,7 +76,7 @@ router.post('/add', authMiddleware, async (req, res) => {
   }
 
   try {
-    const product = new Product({
+    const productData = {
       name,
       category,
       quantity,
@@ -86,13 +86,19 @@ router.post('/add', authMiddleware, async (req, res) => {
       costPrice,
       barcode,
       isRestock,
-      createdAt: new Date()
-    });
+      lastRestockedOn: new Date(), 
+    };
+
+    productData.lastRestocked = new Date(); // ✅ Always set it
+    if (isRestock) {
+      productData.isRestock = true;
+    }
+
+    const product = new Product(productData);
     await product.save();
 
-    // Emit event after adding product
     const io = req.app.get('io');
-    io.emit('productAdded', product);  // Broadcast to all connected clients
+    io.emit('productAdded', product);
 
     await createNotification(`Product "${product.name}" added`, req.user._id, io);
 
@@ -396,7 +402,13 @@ router.get('/last-restocked', authMiddleware, async (req, res) => {
     .sort({ createdAt: -1 })  // latest first
     .limit(10);               // return only 10 latest restocked items
 
-    res.json(recentProducts);
+    const processed = recentProducts.map(p => ({
+      name: p.name,
+      category: p.category,
+      lastRestockedOn: p.lastRestockedOn || p.createdAt || null
+    }));
+
+    res.json(processed);
   } catch (err) {
     console.error('Error fetching last restocked:', err);
     res.status(500).json({ message: 'Server error' });
