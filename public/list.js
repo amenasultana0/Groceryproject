@@ -318,21 +318,21 @@ const categoryNames = {
 };
 
 // Fetch and render all items from backend
-async function loadShoppingList() {
-    const res = await fetch('http://localhost:3000/api/shopping-list', {
-  headers: {
-    'Content-Type': 'application/json',
-    'Authorization': 'Bearer ' + token
-  }
-}); 
-    const items = await res.json();
-        if (!Array.isArray(items)) {
-        console.error('API did not return an array:', items);
-        return;
-        }
-    renderItems(items);
-    updateStats(items);
-}
+// async function loadShoppingList() {
+//     const res = await fetch('http://localhost:3000/api/shopping-list', {
+//   headers: {
+//     'Content-Type': 'application/json',
+//     'Authorization': 'Bearer ' + token
+//   }
+// }); 
+//     const items = await res.json();
+//         if (!Array.isArray(items)) {
+//         console.error('API did not return an array:', items);
+//         return;
+//         }
+//     renderItems(items);
+//     updateStats(items);
+// }
 
 // Add item to backend
 async function addItem() {
@@ -365,7 +365,7 @@ async function addItem() {
     });
 
     document.getElementById('addItemForm').reset();
-    await loadShoppingList();
+    await filterItems();
     showNotification(`${name} added to your list!`);
 }
 
@@ -378,14 +378,13 @@ async function deleteItem(id) {
     'Authorization': 'Bearer ' + token
   }
     });
-    await loadShoppingList();
+    await filterItems();
     showNotification(`Item removed from list`);
 }
 
 // Render items
 function renderItems(items) {
-    const container = document.getElementById('groceryList');
-    
+    const container = document.getElementById('groceryList');    
     const filteredItems = getFilteredItems(items);
 
     if (!filteredItems || filteredItems.length === 0) {
@@ -481,7 +480,7 @@ async function togglePurchased(id, purchased) {
     'Authorization': 'Bearer ' + token },
         body: JSON.stringify({ purchased })
     });
-    await loadShoppingList();
+    await filterItems();
     showNotification(purchased ? "Item marked as purchased" : "Item marked as not purchased");
 }
 
@@ -514,7 +513,7 @@ async function saveEdit() {
     'Authorization': 'Bearer ' + token },
             body: JSON.stringify(updatedItem)
         });
-        await loadShoppingList();
+        await filterItems();
         closeEditModal();
         showNotification(`${updatedItem.name} updated successfully!`);
     }
@@ -535,7 +534,7 @@ async function clearPurchased() {
     'Authorization': 'Bearer ' + token
   }
     });
-    await loadShoppingList();
+    await filterItems();
     showNotification(`Purchased items cleared`);
 }
 
@@ -573,13 +572,20 @@ async function exportList() {
 
 // Filter items on input/change
 async function filterItems() {
-    const res = await fetch('http://localhost:3000/api/shopping-list');
+    const token = JSON.parse(localStorage.getItem('user'))?.token;
+    const res = await fetch('http://localhost:3000/api/shopping-list', {
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer ' + token
+        }
+    });
     const items = await res.json();
     if (!Array.isArray(items)) {
         console.error('API did not return an array:', items);
         return;
-        }
-    renderItems(getFilteredItems(items));
+    }
+    renderItems(items);
+    updateStats(items);
 }
 
 // Update stats
@@ -632,4 +638,4 @@ document.getElementById('categoryFilter').addEventListener('change', filterItems
 document.getElementById('statusFilter').addEventListener('change', filterItems);
 
 // Initialize
-document.addEventListener('DOMContentLoaded', loadShoppingList);
+document.addEventListener('DOMContentLoaded', filterItems);
