@@ -289,103 +289,208 @@ button {
 
 /* Pricing Section */
 .pricing {
-    padding: 6rem 2rem;
-    background-color: var(--bg-secondary);
+    padding: 3rem 0 2rem 0;
+    background: #f8f9fb;
+    text-align: center;
 }
 
 .pricing h2 {
-    text-align: center;
-    font-size: 2.5rem;
-    margin-bottom: 3rem;
-}
-
-.pricing-cards {
-    display: flex;
-    justify-content: center;
-    gap: 2rem;
-    max-width: 1200px;
-    margin: 0 auto;
-}
-
-.pricing-card {
-    background-color: var(--bg-primary);
-    padding: 2.5rem;
-    border-radius: 1rem;
-    box-shadow: var(--shadow-md);
-    flex: 1;
-    max-width: 350px;
-    position: relative;
-}
-
-.pricing-card.popular {
-    transform: scale(1.05);
-}
-
-.popular-badge {
-    position: absolute;
-    top: -1rem;
-    right: 2rem;
-    background-color: var(--primary);
-    color: var(--text-white);
-    padding: 0.5rem 1rem;
-    border-radius: 1rem;
-    font-size: 0.875rem;
-    font-weight: 500;
-}
-
-.plan-name {
-    font-size: 1.5rem;
-    font-weight: 600;
-    margin-bottom: 0.5rem;
-}
-
-.price {
-    font-size: 3rem;
+    font-size: 2rem;
     font-weight: 700;
     margin-bottom: 2rem;
 }
 
-.price span {
-    font-size: 1.125rem;
-    font-weight: 500;
-    color: var(--text-secondary);
+.pricing-cards {
+    display: flex;
+    flex-direction: row;
+    align-items: stretch;
+    justify-content: center;
+    gap: 2rem;
+    margin-bottom: 1.5rem;
 }
 
-.features-list {
+.pricing-card {
+    background: #fff;
+    border-radius: 18px;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.07);
+    padding: 2.5rem 2rem 2rem 2rem;
+    max-width: 350px;
+    width: 100%;
+    text-align: left;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.pricing-card.popular {
+    transform: scale(1.07);
+    box-shadow: 0 8px 32px rgba(0,102,255,0.13);
+    z-index: 2;
+    border: 2.5px solid #0066ff;
+}
+
+.pricing-card .plan-name {
+    font-size: 1.3rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+}
+
+.pricing-card .price {
+    font-size: 2.2rem;
+    font-weight: 800;
+    color: #1565c0;
+    margin-bottom: 1.2rem;
+}
+
+.pricing-card .features-list {
     list-style: none;
+    padding: 0;
+    margin: 0 0 1.5rem 0;
+}
+
+.pricing-card .features-list li {
+    margin-bottom: 0.7rem;
+    font-size: 1rem;
+    color: #333;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.pricing-card .plan-btn {
+    display: block;
+    width: 100%;
+    padding: 0.9rem 0;
+    background: #0066ff;
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    font-size: 1.1rem;
+    font-weight: 600;
+    text-align: center;
+    margin-top: 1rem;
+    transition: background 0.2s;
+}
+
+.pricing-card .plan-btn:hover {
+    background: #004bb5;
+}
+
+.pricing-note {
+    margin-top: 1.5rem;
+    font-size: 1.05rem;
+    color: #444;
+}
+
+.pricing-card .plan-desc {
+    font-size: 1.05rem;
+    color: #555;
+    margin-bottom: 0.7rem;
+    font-weight: 500;
+}
+
+.pricing-card.farmer-plan {
+    border-top: 5px solid #27ae60;
+}
+
+.pricing-card.store-plan {
+    border-top: 5px solid #1565c0;
+}
+
+.pricing-card.enterprise-plan {
+    border-top: 5px solid #8e24aa;
+}
+
+.plan-btn.green {
+    background: #27ae60;
+}
+
+.plan-btn.green:hover {
+    background: #219150;
+}
+
+.plan-btn.blue {
+    background: #1565c0;
+}
+
+.plan-btn.blue:hover {
+    background: #0d47a1;
+}
+
+.plan-btn.purple {
+    background: #8e24aa;
+}
+
+.plan-btn.purple:hover {
+    background: #6d1b7b;
+}
+
+.popular-badge.green {
+    background: #27ae60;
+    color: #fff;
+}
+
+.popular-badge.blue {
+    background: #1565c0;
+    color: #fff;
+}
+
+.popular-badge.purple {
+    background: #8e24aa;
+    color: #fff;
+}
+
+/* Testimonials section fixes */
+.testimonials {
+    background: #fff;
+    padding: 3rem 0 2rem 0;
+    text-align: center;
+}
+
+.testimonials h2 {
+    font-size: 2rem;
+    font-weight: 700;
     margin-bottom: 2rem;
 }
 
-.features-list li {
+.testimonials-grid {
     display: flex;
+    flex-direction: column;
+    gap: 2rem;
     align-items: center;
-    gap: 0.75rem;
-    margin-bottom: 1rem;
-    color: var(--text-secondary);
+    max-width: 800px;
+    margin: 0 auto;
 }
 
-.features-list i {
-    color: var(--success);
+.testimonial-card {
+    background: #f8f9fb;
+    border-radius: 14px;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.04);
+    padding: 1.5rem 2rem;
+    font-size: 1.1rem;
+    color: #222;
+    max-width: 600px;
+    margin: 0 auto;
 }
 
-.features-list i.fa-times {
-    color: var(--text-light);
+.testimonial-author {
+    margin-top: 1rem;
+    font-size: 1rem;
+    color: #1565c0;
+    font-weight: 600;
 }
 
-.plan-btn {
+.testimonial-author span {
     display: block;
-    width: 100%;
-    padding: 0.875rem;
-    text-align: center;
-    background-color: var(--primary);
-    color: var(--text-white);
-    border-radius: 0.5rem;
-    font-weight: 500;
-    transition: background-color 0.2s ease;
+    font-size: 0.95rem;
+    color: #555;
+    font-weight: 400;
 }
 
-.plan-btn:hover {
-    background-color: var(--primary-dark);
+/* Section spacing fixes */
+section {
+    margin-bottom: 0;
 }
 
 /* Footer */
@@ -490,7 +595,16 @@ button {
     }
 }
 
-/* ... existing code .../
+@media (max-width: 900px) {
+    .pricing-cards {
+        flex-direction: column;
+        align-items: center;
+    }
+    .pricing-card.popular {
+        transform: none;
+        border-width: 2px;
+    }
+}
 
 /* Authentication Pages */
 .auth-page {
