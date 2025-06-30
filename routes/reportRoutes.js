@@ -3,6 +3,7 @@ const authMiddleware = require('../middleware/authMiddleware');
 const router = express.Router();
 const Product = require('../models/Product');
 const Sale = require('../models/Sales');
+const Suggestion = require('../models/Suggestion');
 
 // GET: Basic summary (for legacy/simple use)
 router.get('/report', authMiddleware, async (req, res) => {
@@ -523,6 +524,47 @@ router.get('/wastage/alerts', authMiddleware, async (req, res) => {
   } catch (err) {
     console.error('Error fetching wastage alerts:', err);
     res.status(500).json({ message: 'Failed to fetch alerts' });
+  }
+});
+
+router.get('/suggestions/metrics', authMiddleware, async (req, res) => {
+  try {
+    const userId = req.user.id;
+
+    const [suggestionCount, categoryCount] = await Promise.all([
+      Suggestion.countDocuments({ userId }),
+      Product.distinct('category', { userId })
+    ]);
+
+    const performanceScore = Math.floor(Math.random() * 11) + 85; // 85–95% dummy score
+    const lastAnalysis = new Date();
+
+    res.json({
+      performanceScore,
+      topCategories: categoryCount.length,
+      activeSuggestions: suggestionCount,
+      lastAnalysis
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Failed to fetch suggestion metrics' });
+  }
+});
+
+// POST /api/suggestions/add
+router.post('/suggestions/add', authMiddleware, async (req, res) => {
+  const { message, type } = req.body;
+  try {
+    const suggestion = new Suggestion({
+      userId: req.user.id,
+      message,
+      type
+    });
+    await suggestion.save();
+    res.status(201).json({ message: 'Suggestion saved' });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Failed to save suggestion' });
   }
 });
 
