@@ -560,7 +560,7 @@
     top: 100%;
     right: 0;
     width: 320px;
-    background-color: var(--bg-primary);
+    background-color: wheat;
     border: 1px solid var(--border-light);
     border-radius: 0.5rem;
     box-shadow: var(--shadow-lg);
@@ -891,12 +891,12 @@ textarea:focus {
 /* Notification Dropdown Panel */
 #notificationsPanel {
     position: absolute;
-    top: 120px; /* adjust as needed */
+    top: 140px; /* adjust as needed */
     right: 7rem;
-    background: #fff;
+    background: whitesmoke;
     border-radius: 0.5rem;
     box-shadow: 0 4px 24px rgba(0,0,0,0.18);
-    z-index: 3000;
+    z-index: 1000;
     display: none;
     padding: 0.5rem 0;
     min-width: 300px;
@@ -906,11 +906,23 @@ textarea:focus {
 #notificationsPanel.active {
     display: block;
 }
-
+#clearNotificationsBtn {
+    background: #eeeaea;
+    color: #7e2c2c;
+    border: none;
+    border-radius: 4px;
+    padding-left: 20px;
+    font-size: 0.95rem;
+    cursor: pointer;
+    transition: background 0.2s;
+    margin-top: 10px;
+    margin-left: 20px;
+    
+}
 .notification-item {
     padding: 1rem 1.5rem;
     border-bottom: 1px solid #f0f0f0;
-    background: #f8f9fa;
+    background: #faf9f8;
     color: #212529;
     font-size: 1rem;
     display: flex;

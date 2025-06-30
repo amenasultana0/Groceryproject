@@ -545,23 +545,23 @@ function renderNotificationsPanel() {
     return;
   }
 
-  notificationsPanel.innerHTML = `
-    ${backendNotifications.map(n => `
-      <div class="notification-item${n.read ? '' : ' unread'}" data-id="${n._id}">
-        <span class="icon"><i class="fas fa-bell"></i></span>
-        <div class="content">
-          <div>${n.message}</div>
-          <div class="time">${new Date(n.createdAt).toLocaleString()}</div>
-        </div>
-        <button class="delete-notification-btn" title="Delete"><i class="fas fa-trash"></i></button>
+ notificationsPanel.innerHTML = `
+  <div>
+    <button id="clearNotificationsBtn" class="btn-secondary" style="margin-bottom: 10px;">
+      Clear All
+    </button>
+  </div>
+  ${backendNotifications.map(n => `
+    <div class="notification-item${n.read ? '' : ' unread'}" data-id="${n._id}">
+      <span class="icon"><i class="fas fa-bell"></i></span>
+      <div class="content">
+        <div>${n.message}</div>
+        <div class="time">${new Date(n.createdAt).toLocaleString()}</div>
       </div>
-    `).join('')}
-    <div>
-      <button id="clearNotificationsBtn" class="btn-secondary" style="margin-top: 10px;">
-        Clear All
-      </button>
+      <button class="delete-notification-btn" title="Delete"><i class="fas fa-trash"></i></button>
     </div>
-  `;
+  `).join('')}
+`;
 
   const clearBtn = document.getElementById('clearNotificationsBtn');
   if (clearBtn) {
@@ -746,7 +746,7 @@ micButton?.addEventListener('click', () => {
       searchInput.value = transcript.replace(/\.$/, "");
       searchInput.dispatchEvent(new Event('input')); // This triggers your search/filter logic
     }
-    showNotification('You said:${transcript}', "info");
+    showNotification(`You said: ${transcript}`, "info");
     micPanel.classList.add('hidden');
   };
 
