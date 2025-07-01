@@ -172,31 +172,74 @@ router.get('/sales-trend', authMiddleware, async (req, res) => {
   try {
     const { period } = req.query;
     const match = { userId: req.user._id };
+    let trend = [];
 
-    let groupByFormat;
-    switch (period) {
-      case 'daily': groupByFormat = '%Y-%m-%d'; break;
-      case 'weekly': groupByFormat = '%Y-%U'; break;
-      case 'monthly': groupByFormat = '%Y-%m'; break;
-      case 'yearly': groupByFormat = '%Y'; break;
-      default: groupByFormat = '%Y-%m-%d'; break;
+    if (period === 'weekly') {
+      // Group by ISO week number and year
+      trend = await Sale.aggregate([
+        { $match: match },
+        {
+          $group: {
+            _id: {
+              year: { $year: "$saleDate" },
+              week: { $isoWeek: "$saleDate" }
+            },
+            totalSales: { $sum: "$salePrice" }
+          }
+        },
+        { $sort: { "_id.year": 1, "_id.week": 1 } }
+      ]);
+
+      return res.json({
+        labels: trend.map(item => `Week ${item._id.week}, ${item._id.year}`),
+        values: trend.map(item => item.totalSales)
+      });
+
+    } else if (period === 'yearly') {
+      // Group by year
+      trend = await Sale.aggregate([
+        { $match: match },
+        {
+          $group: {
+            _id: { $dateToString: { format: "%Y", date: "$saleDate" } },
+            totalSales: { $sum: "$salePrice" }
+          }
+        },
+        { $sort: { _id: 1 } }
+      ]);
+
+    } else if (period === 'monthly') {
+      // Group by year-month
+      trend = await Sale.aggregate([
+        { $match: match },
+        {
+          $group: {
+            _id: { $dateToString: { format: "%Y-%m", date: "$saleDate" } },
+            totalSales: { $sum: "$salePrice" }
+          }
+        },
+        { $sort: { _id: 1 } }
+      ]);
+
+    } else {
+      // Default: daily
+      trend = await Sale.aggregate([
+        { $match: match },
+        {
+          $group: {
+            _id: { $dateToString: { format: "%Y-%m-%d", date: "$saleDate" } },
+            totalSales: { $sum: "$salePrice" }
+          }
+        },
+        { $sort: { _id: 1 } }
+      ]);
     }
-
-    const trend = await Sale.aggregate([
-      { $match: match },
-      {
-        $group: {
-          _id: { $dateToString: { format: groupByFormat, date: "$saleDate" } },
-          totalSales: { $sum: "$salePrice" }
-        }
-      },
-      { $sort: { _id: 1 } }
-    ]);
 
     res.json({
       labels: trend.map(item => item._id),
       values: trend.map(item => item.totalSales)
     });
+
   } catch (err) {
     console.error('Error in sales-trend route:', err.message);
     res.status(500).json({ message: 'Server error' });
@@ -334,15 +377,14 @@ router.get('/stock-cost-summary', authMiddleware, async (req, res) => {
     products.forEach(p => {
       const cost = p.costPrice * p.quantity;
       const createdAt = new Date(p.createdAt);
-      const restockedOn = new Date(p.lastRestocked);
+      const isRestock = p.isRestock === true;
       
-      const isNew = createdAt >= start && createdAt <= end;
-      const isRestock = !isNew && restockedOn >= start && restockedOn <= end;
-
-      if (isNew) {
-        totalInventoryCost += cost;
-      } else if (isRestock) {
-        restockingCost += cost;
+      if (createdAt >= start && createdAt <= end) {
+        if (isRestock) {
+          restockingCost += cost;
+        } else {
+          totalInventoryCost += cost;
+        }
       }
 
       if (!categoryCostMap[p.category]) {
@@ -353,9 +395,10 @@ router.get('/stock-cost-summary', authMiddleware, async (req, res) => {
       totalQuantity += p.quantity;
     });
 
+
     const sales = await Sale.find({
       userId,
-      createdAt: { $gte: start, $lte: end }
+      saleDate: { $gte: start, $lte: end }
     });
 
     let soldQuantity = 0;
@@ -366,7 +409,10 @@ router.get('/stock-cost-summary', authMiddleware, async (req, res) => {
       consumedCost += s.costPrice * s.quantity;
     });
 
-    const stockMovementRatio = totalQuantity > 0 ? ((soldQuantity / totalQuantity) * 100).toFixed(2) : '0.00';
+    const stockMovementRatio = totalInventoryCost > 0
+      ? ((consumedCost / totalInventoryCost) * 100).toFixed(2)
+      : '0.00';
+
 
     res.json({
       totalInventoryCost: parseFloat(totalInventoryCost.toFixed(2)),

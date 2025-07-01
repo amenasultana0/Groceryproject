@@ -150,7 +150,7 @@ async function updateKPIValues() {
         });
         const stats = await res.json();
 
-        document.getElementById('totalSales').textContent = `₹${stats.sales.toFixed(2)}`;
+        document.getElementById('totalSales').textContent = `${stats.sales.toFixed(2)}`;
         document.getElementById('totalOrders').textContent = stats.orders;
 
         const avg = stats.orders ? stats.sales / stats.orders : 0;
@@ -229,15 +229,9 @@ async function fetchSalesTrend(period) {
     if (salesTrendChart) salesTrendChart.destroy();
 
     salesTrendChart = new Chart(ctx, {
-      type: 'line',
+      type: data.labels.length === 1 ? 'bar' : 'line',
       data: {
-        labels: data.labels.map((label, index) => {
-          if (!label || label.toLowerCase().includes('customer') || label.toLowerCase().includes('walk')) {
-              const defaultNames = ['Ayesha', 'Rahul', 'Fatima', 'Kabir', 'Sana', 'Arjun', 'Meera', 'Zoya', 'Ishaan', 'Nina'];
-              return defaultNames[index % defaultNames.length];
-          }
-          return label;
-        }),
+        labels: data.labels.map((label, i) => label || `Label ${i + 1}`),
         datasets: [{
           label: 'Sales',
           data: data.values,
@@ -269,6 +263,7 @@ async function fetchSalesTrend(period) {
         },
         scales: {
           x: {
+            type: 'category',
             ticks: {
               font: { size: 10 }
             }
@@ -402,10 +397,24 @@ async function fetchRegionalPerformance() {
     const chart = document.createElement('canvas');
     chartContainer.appendChild(chart);
 
+    const defaultNames = ['North', 'South', 'East', 'West', 'Central'];
+        let defaultIndex = 0;
+        const cleanedLabels = (data.labels || []).map(label => {
+          if (
+            !label ||
+            label.toLowerCase().includes('customer') ||
+            label.toLowerCase().includes('walk') ||
+            label.toLowerCase().includes('unknown')
+          ) {
+            return defaultNames[defaultIndex++ % defaultNames.length];
+          }
+          return label;
+        });
+
     new Chart(chart.getContext('2d'), {
       type: 'pie',
       data: {
-        labels: data.labels,
+        labels: cleanedLabels,
         datasets: [{
           data: data.values,
           backgroundColor: ['#4c51bf', '#48bb78', '#f6ad55', '#e53e3e', '#319795']
@@ -596,7 +605,6 @@ async function renderStockCostMetrics() {
       startDate = parts[0];
       endDate = parts[1];
     } else {
-      // fallback: use today’s date
       const today = new Date().toISOString().split('T')[0];
       startDate = today;
       endDate = today;
@@ -609,7 +617,6 @@ async function renderStockCostMetrics() {
     const data = await res.json();
     if (!data || typeof data !== 'object') throw new Error('Invalid response');
 
-    // Safe formatter
     const safe = (num) => (typeof num === 'number' ? num.toFixed(2) : '0.00');
 
     // Set values
@@ -618,68 +625,80 @@ async function renderStockCostMetrics() {
     document.getElementById('operatingExpenses').textContent = `₹${safe(data.restockingCost)}`;
     document.getElementById('netProfitMargin').textContent = `${data.stockMovementRatio || '0.00'}%`;
 
-    // Check if data for chart exists
+    // ==== Pie Chart: Inventory Cost Breakdown ====
     const categories = data.categoryCostBreakdown ? Object.keys(data.categoryCostBreakdown) : [];
     const costs = data.categoryCostBreakdown ? Object.values(data.categoryCostBreakdown) : [];
 
-    // Pie Chart: Revenue Breakdown
     const revChartContainer = document.getElementById('revenueBreakdownChart');
     revChartContainer.innerHTML = '';
-    const revCanvas = document.createElement('canvas');
-    revChartContainer.appendChild(revCanvas);
+    if (categories.length > 0 && costs.some(v => v > 0)) {
+      const revCanvas = document.createElement('canvas');
+      revChartContainer.appendChild(revCanvas);
 
-    new Chart(revCanvas.getContext('2d'), {
-      type: 'pie',
-      data: {
-        labels: categories,
-        datasets: [{
-          data: costs,
-          backgroundColor: ['#4c51bf', '#48bb78', '#f6ad55', '#e53e3e', '#319795']
-        }]
-      },
-      options: {
-        responsive: true,
-        plugins: {
-          legend: {
-            position: 'bottom',
-            labels: { font: { size: 11 } }
+      new Chart(revCanvas.getContext('2d'), {
+        type: 'pie',
+        data: {
+          labels: categories,
+          datasets: [{
+            data: costs,
+            backgroundColor: ['#4c51bf', '#48bb78', '#f6ad55', '#e53e3e', '#319795']
+          }]
+        },
+        options: {
+          responsive: true,
+          plugins: {
+            legend: {
+              position: 'bottom',
+              labels: { font: { size: 11 } }
+            }
           }
         }
-      }
-    });
+      });
+    } else {
+      revChartContainer.innerHTML = '<p style="text-align:center; font-size: 13px;">No inventory cost data for this period.</p>';
+    }
 
-    // Bar Chart: Profit Margins (Stock Movement %)
+    // ==== Bar Chart: Stock Movement Ratio ====
     const profitChartContainer = document.getElementById('profitMarginsChart');
     profitChartContainer.innerHTML = '';
-    const profitCanvas = document.createElement('canvas');
-    profitChartContainer.appendChild(profitCanvas);
 
-    new Chart(profitCanvas.getContext('2d'), {
-      type: 'bar',
-      data: {
-        labels: ['Stock Movement'],
-        datasets: [{
-          label: '% of Stock Moved',
-          data: [parseFloat(data.stockMovementRatio) || 0],
-          backgroundColor: '#4c51bf'
-        }]
-      },
-      options: {
-        responsive: true,
-        scales: {
-          y: { beginAtZero: true, max: 100 }
+    const ratio = parseFloat(data.stockMovementRatio);
+    if (!isNaN(ratio) && ratio > 0) {
+      const profitCanvas = document.createElement('canvas');
+      profitChartContainer.appendChild(profitCanvas);
+
+      new Chart(profitCanvas.getContext('2d'), {
+        type: 'bar',
+        data: {
+          labels: ['Stock Movement'],
+          datasets: [{
+            label: '% of Stock Moved',
+            data: [ratio],
+            backgroundColor: '#4c51bf'
+          }]
+        },
+        options: {
+          responsive: true,
+          scales: {
+            y: { beginAtZero: true, max: 100 }
+          }
         }
-      }
-    });
+      });
+    } else {
+      profitChartContainer.innerHTML = '<p style="text-align:center; font-size: 13px;">No stock movement during this period.</p>';
+    }
 
   } catch (err) {
     console.error('Failed to render stock cost metrics:', err);
 
-    // Optional: show fallback UI
+    // Clear and show fallback
     document.getElementById('cogsValue').textContent = '₹0.00';
     document.getElementById('grossProfit').textContent = '₹0.00';
     document.getElementById('operatingExpenses').textContent = '₹0.00';
     document.getElementById('netProfitMargin').textContent = '0.00%';
+
+    document.getElementById('revenueBreakdownChart').innerHTML = '<p style="text-align:center;">Error loading chart</p>';
+    document.getElementById('profitMarginsChart').innerHTML = '<p style="text-align:center;">Error loading chart</p>';
   }
 }
 
@@ -859,7 +878,7 @@ function updateSalesAndOrdersUI(totalSales, totalOrders) {
     const totalSalesEl = document.getElementById('totalSales');
     const totalOrdersEl = document.getElementById('totalOrders');
 
-    if (totalSalesEl) totalSalesEl.textContent = `₹${totalSales.toFixed(2)}`;
+    if (totalSalesEl) totalSalesEl.textContent = `${totalSales.toFixed(2)}`;
     if (totalOrdersEl) totalOrdersEl.textContent = totalOrders;
 }
 

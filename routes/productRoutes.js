@@ -63,10 +63,8 @@ router.get('/expiring', authMiddleware, async (req, res) => {
   }
 });
 
-
 router.post('/add', authMiddleware, async (req, res) => {
-  const { name, category, quantity, expiryDate, unitOfMeasurement, costPrice, barcode } = req.body;
-  const isRestock = req.body.isRestock || false;
+  const { name, category, quantity, expiryDate, unitOfMeasurement, costPrice, barcode, isRestock } = req.body;
 
   if (!name || quantity == null || !expiryDate) {
     return res.status(400).json({ error: 'Please provide all required fields: name, quantity, expiryDate' });
@@ -77,7 +75,26 @@ router.post('/add', authMiddleware, async (req, res) => {
   }
 
   try {
-    const productData = {
+    const io = req.app.get('io');
+
+    if (isRestock) {
+      // Try to find an existing product to restock
+      const existingProduct = await Product.findOne({ name, category, userId: req.user._id, deleted: { $ne: true } });
+
+      if (existingProduct) {
+        existingProduct.quantity += quantity;
+        existingProduct.lastRestocked = new Date();
+        await existingProduct.save();
+
+        io.emit('productUpdated', existingProduct);
+        await createNotification(`Product "${existingProduct.name}" restocked`, req.user._id, io);
+
+        return res.status(200).json({ message: 'Product restocked successfully', product: existingProduct });
+      }
+    }
+
+    // Else: create a new product
+    const newProduct = new Product({
       name,
       category,
       quantity,
@@ -86,30 +103,22 @@ router.post('/add', authMiddleware, async (req, res) => {
       unitOfMeasurement,
       costPrice,
       barcode,
-      isRestock,
-      lastRestockedOn: new Date(), 
-    };
+      createdAt: new Date(),
+      lastRestocked: isRestock ? new Date() : null
+    });
 
-    productData.lastRestocked = new Date(); // ✅ Always set it
-    if (isRestock) {
-      productData.isRestock = true;
-    }
+    await newProduct.save();
 
-    const product = new Product(productData);
-    await product.save();
+    io.emit('productAdded', newProduct);
+    await createNotification(`Product "${newProduct.name}" added`, req.user._id, io);
 
-    const io = req.app.get('io');
-    io.emit('productAdded', product);
+    res.status(201).json({ message: 'Product added successfully', product: newProduct });
 
-    await createNotification(`Product "${product.name}" added`, req.user._id, io);
-
-    res.status(201).json({ message: 'Product added successfully', product });
   } catch (error) {
     console.error('Add Product Error:', error);
     res.status(500).json({ error: 'Server error' });
   }
 });
-
 
 router.get('/inventory', authMiddleware, async (req, res) => {
   try {
@@ -135,7 +144,6 @@ router.get('/inventory', authMiddleware, async (req, res) => {
     res.status(500).send('Server Error');
   }
 });
-
 
 router.get('/', authMiddleware, async (req, res) => {
   try {
