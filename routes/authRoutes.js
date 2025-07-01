@@ -40,7 +40,7 @@ router.post('/signup', async (req, res) => {
     const user = new User({ email, password });
     await user.save();
 
-    res.status(201).json({ message: 'User registered successfully', user: { id: user._id, email: user.email } });
+    res.status(201).json({ message: 'User registered successfully', user: { id: user._id, email: user.email, isNewUser: user.isNewUser} });
   } catch (error) {
     console.error('Signup Error:', error);
     res.status(500).json({ error: 'Server error' });
@@ -49,7 +49,7 @@ router.post('/signup', async (req, res) => {
 
 // POST /api/auth/register
  router.post('/register', async (req, res) => {
-   const { email, password } = req.body;
+   const { name, email, password } = req.body;
 
    try {
      const exists = await User.findOne({ email });
@@ -57,10 +57,15 @@ router.post('/signup', async (req, res) => {
        return res.status(400).json({ error: 'User already exists' });
      }
 
-     const user = new User({ email, password });
+     const user = new User({ email, password, isNewUser: true });
      await user.save();
 
-     res.status(201).json({ message: 'User registered successfully' });
+     res.status(201).json({ message: 'User registered successfully',
+      user: {
+        id: user._id,
+        email: user.email,
+        isNewUser: user.isNewUser
+      } });
    } catch (error) {
      res.status(500).json({ error: 'Server error' });
    }

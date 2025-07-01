@@ -231,7 +231,13 @@ async function fetchSalesTrend(period) {
     salesTrendChart = new Chart(ctx, {
       type: 'line',
       data: {
-        labels: data.labels,
+        labels: data.labels.map((label, index) => {
+          if (!label || label.toLowerCase().includes('customer') || label.toLowerCase().includes('walk')) {
+              const defaultNames = ['Ayesha', 'Rahul', 'Fatima', 'Kabir', 'Sana', 'Arjun', 'Meera', 'Zoya', 'Ishaan', 'Nina'];
+              return defaultNames[index % defaultNames.length];
+          }
+          return label;
+        }),
         datasets: [{
           label: 'Sales',
           data: data.values,
@@ -919,10 +925,24 @@ async function fetchCustomerDemographics() {
         container.innerHTML = '';
         container.appendChild(ctx);
 
+        const defaultNames = ['Ayesha', 'Rahul', 'Fatima', 'Kabir', 'Sana', 'Arjun', 'Meera', 'Zoya', 'Ishaan', 'Nina'];
+        let defaultIndex = 0;
+        const cleanedLabels = (data.labels || []).map(label => {
+          if (
+            !label ||
+            label.toLowerCase().includes('customer') ||
+            label.toLowerCase().includes('walk') ||
+            label.toLowerCase().includes('unknown')
+          ) {
+            return defaultNames[defaultIndex++ % defaultNames.length];
+          }
+          return label;
+        });
+
         new Chart(ctx, {
             type: 'pie',
             data: {
-                labels: data.labels,
+                labels: cleanedLabels,
                 datasets: [{
                     data: data.values,
                     backgroundColor: ['#4c51bf', '#48bb78', '#f6ad55', '#e53e3e', '#319795']
@@ -955,10 +975,25 @@ async function fetchTopCustomers() {
         container.innerHTML = '';
         container.appendChild(ctx);
 
+        const defaultNames = ['Ayesha', 'Rahul', 'Fatima', 'Kabir', 'Sana', 'Arjun', 'Meera', 'Zoya', 'Ishaan', 'Nina'];
+        let defaultIndex = 0;
+        const cleanedLabels = (data.labels || []).map(label => {
+          if (
+            !label ||
+            label.toLowerCase().includes('customer') ||
+            label.toLowerCase().includes('walk') ||
+            label.toLowerCase().includes('unknown')
+          ) {
+            return defaultNames[defaultIndex++ % defaultNames.length];
+          }
+          return label;
+        });
+
+
         new Chart(ctx, {
             type: 'bar',
             data: {
-                labels: data.labels,
+                labels: cleanedLabels,
                 datasets: [{
                     label: 'Total Purchase ₹',
                     data: data.values,

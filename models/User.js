@@ -19,6 +19,10 @@ const userSchema = new mongoose.Schema({
     required: function(){
     return !this.googleId;
   },
+  isNewUser: {
+  type: Boolean,
+  default: true,
+},
 },
 googleId: {
     type: String,

@@ -1,7 +1,7 @@
 document.getElementById('signupForm').addEventListener('submit', async function (e) {
   e.preventDefault();
 
-  const name = document.getElementById('name').value.trim();
+  const name = document.getElementById('name')?.value?.trim();
   const email = document.getElementById('email').value.trim();
   const password = document.getElementById('password').value.trim();
 
@@ -20,9 +20,9 @@ document.getElementById('signupForm').addEventListener('submit', async function 
     const data = await response.json();
 
     if (response.ok) {
-      alert('Signup successful! Please login.');
-      window.location.href = 'login.html';
-    } else {
+        window.location.href = '/public/personalization.html';
+      } 
+      else {
       alert(data.error || 'Signup failed');
     }
   } catch (error) {
