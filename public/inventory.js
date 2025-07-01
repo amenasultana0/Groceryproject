@@ -489,7 +489,7 @@ async function fetchImageURL(name) {
 
 async function fetchAndRenderProducts() {
     const token = getToken();
-    const res = await fetch(`http://localhost:3000/api/products`, {
+    const res = await fetch(`http://localhost:3000/api/products/inventory`, {
         headers: { Authorization: `Bearer ${token}` }
     });
     const products = await res.json(); // corrected name

@@ -462,6 +462,103 @@ router.delete('/expired', authMiddleware, async (req, res) => {
   }
 });
 
+router.post('/deduct-by-barcode', authMiddleware, async (req, res) => {
+  const { barcodes } = req.body;
+  const userId = req.user._id;
+  if (!Array.isArray(barcodes) || barcodes.length === 0) {
+    return res.status(400).json({ message: 'Barcodes array is required.' });
+  }
+  let updated = 0, deleted = 0, totalQuantityDeducted = 0;
+
+  for (const barcode of barcodes) {
+    const product = await Product.findOne({ barcode, userId });
+    if (product) {
+      if (product.quantity > 1) {
+        product.quantity -= 1;
+        await Sale.create({
+          productId: product._id,
+          userId,
+          quantity: 1,
+          salePrice: product.costPrice, // assuming you're selling at costPrice for now
+          costPrice: product.costPrice,
+          customerName: req.body.customerName || 'Walk-in',
+          region: req.body.region || 'Unknown'
+        });
+        await product.save();
+        updated++;
+        totalQuantityDeducted += 1;
+      } else {
+          product.quantity = 0; // Mark as out of stock
+          await product.save();
+          updated++;
+          totalQuantityDeducted += 1;
+        }
+    }
+  }
+
+  const today = new Date().toISOString().split("T")[0];
+  await DailySales.findOneAndUpdate(
+    { date: today, userId },
+    { $inc: { sales: totalQuantityDeducted, orders: 1 } },
+    { upsert: true, new: true }
+  );
+
+  res.json({
+    updated,
+    deleted,
+    totalQuantityDeducted,
+    message: `Updated: ${updated}, Deleted: ${deleted}`
+  });
+});
+
+router.get('/out-of-stock', authMiddleware, async (req, res) => {
+  try {
+    console.log("req.user:", req.user); // Add this
+    if (!req.user || !req.user._id) {
+      console.log("Missing user or user ID");
+      return res.status(401).json({ error: 'Unauthorized: Missing user ID' });
+    }
+
+    const outOfStockItems = await Product.find({
+      userId: req.user._id,
+      quantity: 0,
+      deleted: false
+    });
+
+    console.log("Out-of-stock items found:", outOfStockItems.length);
+    res.json(outOfStockItems);
+  } catch (err) {
+    console.error("Error in out-of-stock route:", err);
+    res.status(500).json({ error: 'Failed to fetch product' });
+  }
+});
+
+router.delete('/out-of-stock/:id', authMiddleware, async (req, res) => {
+  try {
+    const product = await Product.findOneAndDelete({ _id: req.params.id, userId: req.user.id });
+    if (!product) {
+      return res.status(404).json({ message: 'Product not found' });
+    }
+
+    const io = req.app.get('io');
+    io.emit('productDeleted', { id: req.params.id });
+    res.json({ message: 'Product permanently deleted' });
+  } catch (error) {
+    console.error('Out-of-stock delete error:', error);
+    res.status(500).json({ message: 'Failed to delete product' });
+  }
+});
+
+router.delete('/clear-out-of-stock', authMiddleware, async (req, res) => {
+  try {
+    const result = await Product.deleteMany({ userId: req.user._id, quantity: 0, deleted: false });
+    res.json({ message: 'Cleared out-of-stock items', deletedCount: result.deletedCount });
+  } catch (error) {
+    console.error('Clear out-of-stock error:', error);
+    res.status(500).json({ error: 'Failed to delete out-of-stock items' });
+  }
+});
+
 router.get('/:id', authMiddleware, async (req, res) => {
   try {
     const product = await Product.findOne({ _id: req.params.id, userId: req.user._id });
@@ -472,7 +569,6 @@ router.get('/:id', authMiddleware, async (req, res) => {
     res.status(500).json({ error: 'Failed to fetch product' });
   }
 });
-
 
 // PUT /api/products/:id - Update product
 router.put('/:id', authMiddleware, async (req, res) => {
@@ -513,54 +609,6 @@ router.delete('/:id', authMiddleware, async (req, res) => {
     console.error('Delete Product Error:', error);
     res.status(500).json({ error: 'Failed to delete product' });
   }
-});
-
-router.post('/deduct-by-barcode', authMiddleware, async (req, res) => {
-  const { barcodes } = req.body;
-  const userId = req.user._id;
-  if (!Array.isArray(barcodes) || barcodes.length === 0) {
-    return res.status(400).json({ message: 'Barcodes array is required.' });
-  }
-  let updated = 0, deleted = 0, totalQuantityDeducted = 0;
-
-  for (const barcode of barcodes) {
-    const product = await Product.findOne({ barcode, userId });
-    if (product) {
-      if (product.quantity > 1) {
-        product.quantity -= 1;
-        await Sale.create({
-          productId: product._id,
-          userId,
-          quantity: 1,
-          salePrice: product.costPrice, // assuming you're selling at costPrice for now
-          costPrice: product.costPrice,
-          customerName: req.body.customerName || 'Walk-in',
-          region: req.body.region || 'Unknown'
-        });
-        await product.save();
-        updated++;
-        totalQuantityDeducted += 1;
-      } else {
-        await Product.deleteOne({ _id: product._id });
-        deleted++;
-        totalQuantityDeducted += 1;
-      }
-    }
-  }
-
-  const today = new Date().toISOString().split("T")[0];
-  await DailySales.findOneAndUpdate(
-    { date: today, userId },
-    { $inc: { sales: totalQuantityDeducted, orders: 1 } },
-    { upsert: true, new: true }
-  );
-
-  res.json({
-    updated,
-    deleted,
-    totalQuantityDeducted,
-    message: `Updated: ${updated}, Deleted: ${deleted}`
-  });
 });
 
 module.exports = router;

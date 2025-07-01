@@ -168,8 +168,7 @@ function closeSidebar() {
   document.querySelector('.main-content').classList.add('sidebar-collapsed');
 }
 let lastScanErrorTime = 0;
-// --- Scanner Functions ---
-// --- Scanner Functions ---
+
 async function startScanner() {
   if (isScanning) return;
   isScanning = true;
@@ -272,18 +271,6 @@ function onScanError(errorMessage) {
   console.warn(errorMessage);
 }
 
-// function onScanError(errorMessage) {
-//   const now = Date.now();
-//   if (now - lastScanErrorTime > 3000) { // 3 second cooldown
-//     if (typeof errorMessage === 'string' && errorMessage.includes('No MultiFormat Readers')) {
-//       showNotification("QR code parse error. Please try again or enter details manually.", "error");
-//     } else {
-//       console.warn("Scan error:", errorMessage);
-//     }
-//     lastScanErrorTime = now;
-//   }
-// }
-
 // --- Scanner Modal Events ---
 scannerBtn?.addEventListener('click', () => {
   openScannerModal();
@@ -385,7 +372,7 @@ async function loadItems() {
       .slice(0, 3);
     renderItems(expiringItemsList, expiringItems);
     const sortedItems = items
-      .filter(item => item.createdAt)
+      .filter(item => item.createdAt && item.quantity > 0 && !item.deleted)
       .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
     renderItems(recentItemsList, sortedItems.slice(0, 3));
     renderOutOfStockList(items);
@@ -650,6 +637,39 @@ async function fetchUnreadNotificationCount() {
   }
 }
 
+async function fetchAndRenderOutOfStock() {
+  const res = await fetch('http://localhost:3000/api/products/out-of-stock', {
+    headers: { Authorization: `Bearer ${getToken()}` }
+  });
+
+  const items = await res.json();
+  const list = document.querySelector('.outofstock-sidebar-list');
+  const countSpan = document.getElementById('outOfStockCount');
+  
+  list.innerHTML = ''; // clear old list
+  countSpan.textContent = items.length;
+
+  if (items.length === 0) {
+    list.innerHTML = '<li class="empty-msg">All products are in stock.</li>';
+    return;
+  }
+
+  items.forEach(prod => {
+    const li = document.createElement('li');
+    li.className = 'outofstock-item';
+    li.innerHTML = `
+      <div class="item-info">
+        <strong>${prod.name}</strong> (${prod.category || 'Uncategorized'})
+        <p>Expired on: ${new Date(prod.expiryDate).toLocaleDateString()}</p>
+      </div>
+      <button class="delete-outofstock-btn" data-id="${prod._id}">🗑️</button>
+    `;
+    list.appendChild(li);
+  });
+
+  attachOutOfStockDeleteHandlers(); // attach delete events
+}
+
 // --- Event Listeners ---
 addItemBtn?.addEventListener('click', openModal);
 closeModalBtn?.addEventListener('click', closeModal);
@@ -794,8 +814,7 @@ window.addEventListener('DOMContentLoaded', async () => {
       renderNotificationsPanel();
     }
   }, 100);
- 
-
+  fetchAndRenderOutOfStock();
 });
 
 // --- Notification socket ---
@@ -830,23 +849,129 @@ function handleLogout() {
   location.href = 'login.html';
 }
 
+async function fetchAndRenderOutOfStockItems() {
+  const token = getToken();
+  try {
+    const res = await fetch(`http://localhost:3000/api/products/out-of-stock`, {
+      headers: {
+        Authorization: `Bearer ${getToken()}`
+      }
+    });
+
+    const items = await res.json();
+
+    const list = document.querySelector('.outofstock-sidebar-list');
+    list.innerHTML = '';
+
+    if (items.length === 0) {
+      list.innerHTML = `<li style="padding: 1rem;">🎉 No out of stock items</li>`;
+      return;
+    }
+
+    for (const item of items) {
+      const li = document.createElement('li');
+      li.setAttribute('data-id', item._id);
+      li.classList.add('outofstock-item');
+      li.innerHTML = `
+        <span class="item-info">
+          <i class="fas fa-box"></i> ${item.name} (${item.category || 'Uncategorized'})
+        </span>
+        <span class="quantity">${item.quantity}</span>
+        <button class="delete-outofstock-btn" title="Delete permanently">🗑️</button>
+      `;
+      list.appendChild(li);
+    }
+
+    document.getElementById('outOfStockCount').textContent = items.length;
+
+    attachOutOfStockDeleteHandlers(); // Make delete work after render
+  } catch (err) {
+    console.error('Error fetching out of stock items:', err);
+  }
+}
+
 function renderOutOfStockList(items) {
   const outofstockList = document.querySelector('.outofstock-list');
   if (!outofstockList) return;
+
   const outOfStockItems = items.filter(item => item.quantity === 0);
   if (outOfStockItems.length === 0) {
     outofstockList.innerHTML = '<li><span class="item-info"><i class="fas fa-cart-arrow-down"></i> No out of stock items</span></li>';
     return;
   }
+
   outofstockList.innerHTML = outOfStockItems.map(item => `
-    <li>
-      <span class="item-info"><i class="fas fa-cart-arrow-down"></i> ${item.name}</span>
+    <li data-id="${item._id}" class="outofstock-item">
+      <span class="item-info">
+        <i class="fas fa-box"></i> ${item.name} (${item.category || 'Uncategorized'})
+      </span>
       <span class="quantity">${item.quantity}</span>
+      <button class="delete-outofstock-btn" title="Delete permanently">🗑️</button>
     </li>
   `).join('');
+
+  // Attach delete button functionality
+  attachOutOfStockDeleteHandlers();
 }
 
-// Out of Stock Sidebar Toggle
+function attachOutOfStockDeleteHandlers() {
+  document.querySelectorAll('.delete-outofstock-btn').forEach(button => {
+    button.addEventListener('click', async () => {
+      const li = button.closest('li');
+      const productId = li?.dataset.id;
+      if (!productId) return;
+
+      const confirmDelete = confirm("Are you sure you want to permanently delete this product?");
+      if (!confirmDelete) return;
+
+      try {
+        const res = await fetch(`http://localhost:3000/api/products/${productId}`, {
+          method: 'DELETE',
+          headers: {
+            'Authorization': `Bearer ${getToken()}`
+          }
+        });
+
+        if (res.ok) {
+          showNotification("Product deleted successfully.", "success");
+          li.remove();
+          loadItems(); // refresh stats or dashboard
+        } else {
+          showNotification("Failed to delete product.", "error");
+        }
+      } catch (err) {
+        console.error('Delete error:', err);
+        showNotification("Error deleting product.", "error");
+      }
+    });
+  });
+}
+
+document.querySelectorAll('.delete-outofstock-btn').forEach(btn => {
+  btn.addEventListener('click', async (e) => {
+    const li = e.target.closest('li');
+    const id = li.getAttribute('data-id');
+    if (!id) return;
+
+    if (confirm('Are you sure you want to permanently delete this item?')) {
+      try {
+        const res = await fetch(`http://localhost:3000/api/products/out-of-stock/${id}`, {
+          method: 'DELETE',
+          headers: { Authorization: `Bearer ${getToken()}` }
+        });
+        if (res.ok) {
+          li.remove(); // remove from DOM
+          loadItems(); // refresh stats
+        } else {
+          alert('Failed to delete item.');
+        }
+      } catch (err) {
+        alert('Error deleting item.');
+      }
+    }
+  });
+});
+
 const outOfStockCard = document.getElementById('outOfStockCard');
 const outOfStockSidebar = document.getElementById('outOfStockSidebar');
 const closeOutOfStockSidebar = document.getElementById('closeOutOfStockSidebar');
@@ -855,9 +980,36 @@ if (outOfStockCard && outOfStockSidebar && closeOutOfStockSidebar) {
   outOfStockCard.addEventListener('click', () => {
     outOfStockSidebar.classList.add('open');
     outOfStockSidebar.classList.remove('hidden');
+    fetchAndRenderOutOfStockItems(); // 👈 call fetch here
   });
   closeOutOfStockSidebar.addEventListener('click', () => {
     outOfStockSidebar.classList.remove('open');
     outOfStockSidebar.classList.add('hidden');
   });
 }
+
+document.getElementById('clearAllOutOfStock').addEventListener('click', async () => {
+  const confirmClear = confirm('Are you sure you want to permanently delete all out of stock items?');
+  if (!confirmClear) return;
+
+  try {
+    const res = await fetch('http://localhost:3000/api/products/clear-out-of-stock', {
+      method: 'DELETE',
+      headers: {
+        Authorization: `Bearer ${getToken()}`
+      }
+    });
+
+    const result = await res.json();
+    if (res.ok) {
+      showNotification(`Deleted ${result.deletedCount} out-of-stock items.`, 'success');
+      fetchAndRenderOutOfStockItems();
+      loadItems(); // refresh stats
+    } else {
+      showNotification(result.error || 'Failed to clear out-of-stock items', 'error');
+    }
+  } catch (err) {
+    console.error(err);
+    showNotification('Server error while deleting.', 'error');
+  }
+});

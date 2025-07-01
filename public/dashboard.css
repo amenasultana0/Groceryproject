@@ -1283,6 +1283,77 @@ textarea:focus {
   all: unset;
 }
 
+.clear-all-btn {
+  background-color: transparent;
+  border: none;
+  color: var(--danger-color);
+  font-size: 1rem;
+  cursor: pointer;
+  padding: 0.2rem 0.5rem;
+}
+
+.clear-all-btn:hover {
+  color: #c0392b;
+}
+
+.outofstock-sidebar-list {
+  list-style: none;
+  padding: 1rem;
+}
+
+.outofstock-sidebar-list li {
+  background: #fff;
+  border: 1px solid var(--danger-color);
+  border-left: 4px solid var(--danger-color);
+  padding: 1rem;
+  border-radius: 12px;
+  margin-bottom: 1rem;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  transition: all 0.3s ease;
+}
+
+.outofstock-sidebar-list li:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+.outofstock-sidebar-list li .info {
+  flex-grow: 1;
+}
+
+.outofstock-sidebar-list li .info strong {
+  color: var(--danger-color);
+  font-size: 1rem;
+}
+
+.outofstock-sidebar-list li .info small {
+  color: #666;
+  font-size: 0.85rem;
+}
+
+.outofstock-sidebar-list li .quantity {
+  margin-left: 1rem;
+  color: var(--danger-color);
+  font-weight: bold;
+}
+
+.outofstock-sidebar-list li .delete-outofstock-btn {
+  background: none;
+  border: none;
+  color: #999;
+  cursor: pointer;
+  margin-left: 1rem;
+  font-size: 1rem;
+  transition: color 0.2s;
+}
+
+.outofstock-sidebar-list li .delete-outofstock-btn:hover {
+  color: var(--danger-color);
+}
+
 /* Remove special right-hand card sizing and grid layout */
 @media (min-width: 1024px) {
   .dashboard-grid {
