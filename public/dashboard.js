@@ -815,7 +815,26 @@ window.addEventListener('DOMContentLoaded', async () => {
     }
   }, 100);
   fetchAndRenderOutOfStock();
+  loadUserProfile();
 });
+
+function loadUserProfile() {
+  const userData = JSON.parse(localStorage.getItem('user') || sessionStorage.getItem('user'));
+  if (!userData) return;
+
+  const userName = userData.name || 'User';
+  const encodedName = encodeURIComponent(userName); // important to handle spaces/special chars
+
+  // Update avatar images
+  const avatarUrl = `https://ui-avatars.com/api/?name=${encodedName}&background=4c51bf&color=fff&size=128`;
+
+  document.querySelectorAll('#profileBtn img, #userAvatar').forEach(img => {
+    img.src = avatarUrl;
+  });
+
+  // Update name in popup
+  document.getElementById('userName').textContent = userName;
+}
 
 // --- Notification socket ---
 socket.on('newNotification', (data) => {
