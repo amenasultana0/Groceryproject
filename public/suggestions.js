@@ -25,13 +25,15 @@ const autoSuggestionsData = [
 async function updateMetricCards() {
     try {
         const token = JSON.parse(localStorage.getItem('user') || '{}').token;
-        const res = await fetch('http://localhost:3000/api/reports/suggestions/metrics', {
+        const res = await fetch(`${backendBaseUrl}/api/reports/suggestions/metrics`, {
             headers: {
-                'Authorization': `Bearer ${token}`
+                'Authorization': `Bearer ${getToken()}`
             }
         });
 
-        if (!res.ok) throw new Error('Failed to fetch metric data');
+        if (!res.ok) {
+            throw new Error(`API error ${res.status}: ${res.statusText}`);
+        }
 
         const data = await res.json();
 
@@ -48,9 +50,9 @@ async function updateMetricCards() {
 async function updateSuggestionMetrics() {
   const token = JSON.parse(localStorage.getItem('user'))?.token || '';
   try {
-    const response = await fetch('http://localhost:3000/api/reports/suggestions/metrics', {
+    const response = await fetch(`${backendBaseUrl}/api/reports/suggestions/metrics`, {
       headers: {
-        'Authorization': `Bearer ${token}`
+        'Authorization': `Bearer ${getToken()}`
       }
     });
 
@@ -79,11 +81,11 @@ document.addEventListener('DOMContentLoaded', updateSuggestionMetrics);
 
 async function logSuggestion(message, type = 'custom') {
   const token = JSON.parse(localStorage.getItem('user'))?.token || '';
-  await fetch('http://localhost:3000/api/suggestions/add', {
+  await fetch(`${backendBaseUrl}/api/suggestions/add`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      'Authorization': `Bearer ${token}`
+      'Authorization': `Bearer ${getToken()}`
     },
     body: JSON.stringify({ message, type })
   });
@@ -100,11 +102,11 @@ async function fetchReportsData() {
             `${backendBaseUrl}/api/reports/wastage/by-category`,
             `${backendBaseUrl}/api/reports/wastage/value`,
             `${backendBaseUrl}/api/reports/stock-turnover`,
-            `${backendBaseUrl}/api/reports/stock-cost-summary`,
+            // `${backendBaseUrl}/api/reports/stock-cost-summary`,
             `${backendBaseUrl}/api/products/stock-levels`
         ];
 
-        const headers = { Authorization: `Bearer ${getToken()}` };
+        const headers = { 'Content-Type': 'application/json', 'Authorization': `Bearer ${getToken()}` };
 
         const responses = await Promise.all(urls.map(url =>
             fetch(url, { headers })
@@ -121,7 +123,7 @@ async function fetchReportsData() {
         const [
             lowStock, expiringSoon, salesTrend, salesByCategory,
             topProducts, wastageByCategory, wastageValue,
-            stockTurnover, stockCostSummary, stockLevels
+            stockTurnover, stockLevels
         ] = await Promise.all(responses.map(r => r.json()));
 
         return {
@@ -133,7 +135,6 @@ async function fetchReportsData() {
             wastageByCategory,
             wastageValue,
             stockTurnover,
-            stockCostSummary,
             stockLevels
         };
     } catch (err) {
@@ -214,7 +215,12 @@ document.addEventListener('DOMContentLoaded', function() {
     updateBookmarkDisplay();
     loadBookmarks();
     updateMetricCards();
+    document.getElementById('exportBtn').addEventListener('click', exportReport);
 });
+
+function exportReport() {
+  window.print();
+}
 
 // Initialize chat functionality
 function initializeChat() {
@@ -471,6 +477,11 @@ function handleTemplateSelect(e) {
         case 'seasonal':
             message = 'Help me with seasonal inventory planning';
             break;
+        case 'inventory':
+            message = 'Help me optimize my inventory.';
+            break;
+        default:
+            message = '';
     }
     
     if (message) {
