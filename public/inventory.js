@@ -29,6 +29,23 @@ async function logOrder() {
   }
 }
 
+const defaultThresholds = {
+  fruits: 30,
+  vegetables: 20,
+  dairy: 15,
+  bakery: 10,
+  beverages: 25,
+  snacks: 20,
+  "frozen foods": 15,
+  "spices & masalas": 10,
+  "cleaning items": 10,
+  toiletries: 8,
+  "canned goods": 12,
+  staples: 50,
+  "baby products": 5,
+  condiments: 10
+};
+
 let scannedOnce = false;
 let scannedBarcodes = [];
 let html5QrCode = null;
@@ -215,18 +232,26 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Grid/List View
     document.getElementById('gridViewBtn')?.addEventListener('click', () => {
-        document.getElementById('gridViewBtn').classList.add('active');
-        document.getElementById('listViewBtn').classList.remove('active');
-        document.getElementById('product-display').classList.add('product-grid');
-        document.getElementById('product-display').classList.remove('product-list');
+      document.getElementById('gridViewBtn').classList.add('active');
+      document.getElementById('listViewBtn').classList.remove('active');
+      document.getElementById('product-display').classList.add('product-grid');
+      document.getElementById('product-display').classList.remove('product-list');
     });
 
     document.getElementById('listViewBtn')?.addEventListener('click', () => {
-        document.getElementById('listViewBtn').classList.add('active');
-        document.getElementById('gridViewBtn').classList.remove('active');
-        document.getElementById('product-display').classList.remove('product-grid');
-        document.getElementById('product-display').classList.add('product-list');
+      document.getElementById('listViewBtn').classList.add('active');
+      document.getElementById('gridViewBtn').classList.remove('active');
+      document.getElementById('product-display').classList.remove('product-grid');
+      document.getElementById('product-display').classList.add('product-list');
     });
+
+    document.getElementById('categoryName').addEventListener('input', (e) => {
+      const val = e.target.value.trim().toLowerCase();
+      const defaultThreshold = defaultThresholds[val];
+      if (defaultThreshold) {
+        document.getElementById('lowStockThreshold').value = defaultThreshold;
+      }
+  });
 
     // Category modal
     const addCategoryBtn = document.getElementById('addCategoryBtn');
@@ -243,50 +268,67 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     categoryForm.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const name = document.getElementById('categoryName').value.trim();
-        const icon = document.getElementById('categoryIcon').value.trim() || 'fas fa-box';
-        if (!name) return;
+      e.preventDefault();
 
-        const res = await fetch(`http://localhost:3000/api/categories`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${getToken()}`
-            },
-            body: JSON.stringify({ name, icon })
-        });
-        const data = await res.json();
-        if (res.ok) {
-            const dataTarget = sanitizeCategory(name);
-            const navList = document.querySelector('.inventory-nav ul');
-            const newNavItem = document.createElement('li');
-            newNavItem.innerHTML = `
-                <div class="sidebar-category-item">
-                    <a href="#" data-target="${dataTarget}" class="category-link">
-                        <i class="${icon}"></i><span>${name}</span>
-                    </a>
-                    <button class="delete-category-btn" data-id="${data._id}" title="Delete ${name}">🗑️</button>
-                </div>`;
-            navList.appendChild(newNavItem);
+      const name = document.getElementById('categoryName').value.trim();
+      const icon = document.getElementById('categoryIcon').value.trim() || 'fas fa-box';
+      const thresholdInput = document.getElementById('lowStockThreshold');
+      const lowerName = name.toLowerCase();
 
-            const productDisplay = document.getElementById('product-display');
-            const newCategoryDiv = document.createElement('div');
-            newCategoryDiv.classList.add('category-grid');
-            newCategoryDiv.id = dataTarget;
-            productDisplay.appendChild(newCategoryDiv);
+      // Apply default if input is empty and a default exists
+      if (!thresholdInput.value && defaultThresholds[lowerName]) {
+          thresholdInput.value = defaultThresholds[lowerName];
+      }
 
-            newNavItem.querySelector('a').addEventListener('click', handleCategoryNavClick);
-            newNavItem.querySelector('button').addEventListener('click', handleDeleteCategory);
+      // Parse value AFTER applying default
+      const lowStockThreshold = parseInt(thresholdInput.value, 10);
 
-            syncCategoryAcrossPages(name);
-            closeModal();
-            fetchAndRenderProducts();
-            fetchAndRenderLowStock();
-        } else {
-            alert(data?.message || 'Error adding category');
-        }
-    });
+      if (!name || isNaN(lowStockThreshold)) {
+          alert("Please enter valid category name and threshold");
+          return;
+      }
+
+      const res = await fetch(`http://localhost:3000/api/categories`, {
+          method: 'POST',
+          headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${getToken()}`
+          },
+          body: JSON.stringify({ name, icon, lowStockThreshold })
+      });
+
+      const data = await res.json();
+      if (res.ok) {
+          const dataTarget = sanitizeCategory(name);
+          const navList = document.querySelector('.inventory-nav ul');
+          const newNavItem = document.createElement('li');
+          newNavItem.innerHTML = `
+              <div class="sidebar-category-item">
+                  <a href="#" data-target="${dataTarget}" class="category-link">
+                      <i class="${icon}"></i><span>${name}</span>
+                  </a>
+                  <button class="delete-category-btn" data-id="${data._id}" title="Delete ${name}">🗑️</button>
+              </div>`;
+          navList.appendChild(newNavItem);
+
+          const productDisplay = document.getElementById('product-display');
+          const newCategoryDiv = document.createElement('div');
+          newCategoryDiv.classList.add('category-grid');
+          newCategoryDiv.id = dataTarget;
+          productDisplay.appendChild(newCategoryDiv);
+
+          newNavItem.querySelector('a').addEventListener('click', handleCategoryNavClick);
+          newNavItem.querySelector('button').addEventListener('click', handleDeleteCategory);
+
+          syncCategoryAcrossPages(name);
+          closeModal();
+          fetchAndRenderProducts();
+          fetchAndRenderLowStock();
+      } else {
+          alert(data?.message || 'Error adding category');
+      }
+  });
+
 
     document.getElementById('userAvatar')?.addEventListener('click', () => {
         document.getElementById('profileMenu')?.classList.toggle('hidden');
@@ -488,10 +530,6 @@ async function renderProducts(products) {
                 </div>`;
             categoryContainer.appendChild(card);
             card.querySelector('.restock-btn').addEventListener('click', (e) => {
-<<<<<<< Updated upstream
-        const productData = JSON.parse(e.target.dataset.product);
-        openRestockModal(productData);
-=======
             const productData = JSON.parse(e.target.dataset.product);
             openRestockModal(productData);
         });
@@ -549,35 +587,7 @@ async function renderProducts(products) {
         alert('Error deleting product.');
         }
     }
->>>>>>> Stashed changes
     });
-
-        }
-        if (allCategoriesGrid) {
-    const cardAll = document.createElement('div');
-    cardAll.className = 'product-card';
-    cardAll.innerHTML = `
-        <img src="${imageUrl}" alt="${name}" />
-        <div class="card-body">
-            <h3>${name}</h3>
-            <p>₹${costPrice} • ${quantity} in stock</p>
-            <small class="added-date">Added on: ${new Date(product.createdAt).toLocaleDateString()}</small>
-            <button class="restock-btn" data-product='${JSON.stringify(product)}'>Restock</button>
-            <button class="delete-btn" data-id="${product._id}" title="Delete">
-                <i class="fas fa-trash"></i>
-            </button>
-            <div class="stock-bar-container">
-                <div class="stock-bar" style="width:${Math.min(100, (quantity / 150) * 100)}%; background:${quantity < 40 ? 'orange' : 'green'};"></div>
-            </div>
-        </div>`;
-    allCategoriesGrid.appendChild(cardAll);
-    cardAll.querySelector('.restock-btn').addEventListener('click', (e) => {
-        const productData = JSON.parse(e.target.dataset.product);
-        openRestockModal(productData);
-    });
-    }
-  }
-
 }
 document.addEventListener('click', async (e) => {
   // Always find the closest .delete-btn, even if the icon is clicked

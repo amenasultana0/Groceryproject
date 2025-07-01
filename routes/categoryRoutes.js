@@ -19,7 +19,7 @@ router.get('/', authMiddleware, async (req, res) => {
 // Add a new category
 router.post('/', authMiddleware, async (req, res) => {
   try {
-    const { name, icon } = req.body;
+    const { name, icon, lowStockThreshold } = req.body;
 
     // Check if category already exists for this user (case-insensitive)
     const existingCategory = await Category.findOne({
@@ -35,6 +35,7 @@ router.post('/', authMiddleware, async (req, res) => {
       name,
       icon,
       user: req.user.id,
+      lowStockThreshold: parseInt(lowStockThreshold, 10),
       items: []
     });
 

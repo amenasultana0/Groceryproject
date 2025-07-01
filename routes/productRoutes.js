@@ -4,6 +4,7 @@ const authMiddleware = require('../middleware/authMiddleware');
 const { createNotification } = require('../public/utils/notificationHelper');
 const Sale = require('../models/Sales');
 const DailySales = require('../models/DailySales');
+const Category = require('../models/Category');
 
 const router = express.Router();
 
@@ -300,17 +301,33 @@ router.get('/ingredients', authMiddleware, async (req, res) => {
   }
 });
 
-// Example route for low stock products
 router.get('/low-stock', authMiddleware, async (req, res) => {
   try {
-    const threshold = 30; // Change this limit as needed
     const today = new Date();
-    today.setHours(0, 0, 0, 0); // Normalize to midnight
+    today.setHours(0, 0, 0, 0);
 
-    const lowStockItems = await Product.find({
+    // Fetch products that are not expired
+    const products = await Product.find({
       userId: req.user._id,
-      quantity: { $lt: threshold },
-      expiryDate: { $gt: today.setHours(23, 59, 59, 999) }  // Only show non-expired items
+      expiryDate: { $gte: today }
+    });
+
+    console.log(`Fetched ${products.length} products for user ${req.user._id}`);
+
+    // Fetch categories with threshold info
+    const categories = await Category.find({ user: req.user._id });
+    const thresholdMap = new Map();
+    categories.forEach(cat => {
+      thresholdMap.set(cat.name.toLowerCase(), cat.lowStockThreshold ?? 20);
+    });
+
+    const lowStockItems = products.filter(prod => {
+      const categoryKey = prod.category?.toLowerCase()?.trim() || '';
+      const threshold = thresholdMap.get(categoryKey) ?? 20;
+
+      console.log(`Product: ${prod.name}, Qty: ${prod.quantity}, Category: ${prod.category}, Threshold: ${threshold}`);
+
+      return prod.quantity < threshold;
     });
 
     res.json(lowStockItems);

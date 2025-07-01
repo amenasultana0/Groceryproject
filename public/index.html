@@ -214,7 +214,7 @@
         function showExpiryNotification(productName, expiryDate) {
             if (Notification.permission === "granted") {
                 new Notification("Expiry Alert!", {
-                    body: ${productName} expires on ${expiryDate}. Use it soon!,
+                    body: `${productName} expires on ${expiryDate}. Use it soon!`,
                     icon: "https://cdn-icons-png.flaticon.com/512/1046/1046840.png" // optional icon
                 });
             }
