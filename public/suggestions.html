@@ -3,31 +3,35 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GroceryTrack - AI Suggestions</title>
+    <title>GroceryTrack - AI Business Intelligence</title>
     <link rel="stylesheet" href="suggestions.css">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 </head>
 <body>
     <div class="container">
-        <!-- Header -->
+        <!-- Professional Header -->
         <header class="header">
             <div class="header-content">
-                <h1><i class="fas fa-shopping-cart"></i> GroceryTrack AI Assistant</h1>
+                <div class="header-brand">
+                    <h1><i class="fas fa-brain"></i> GroceryTrack AI</h1>
+                    <p class="header-subtitle">Business Intelligence & Strategic Insights</p>
+                </div>
                 <div class="header-actions">
                     <button class="btn-icon" id="voiceBtn" title="Voice Input">
                         <i class="fas fa-microphone"></i>
                     </button>
-                    <button class="btn-icon" id="fullscreenBtn" title="Fullscreen Chat">
+                    <button class="btn-icon" id="fullscreenBtn" title="Fullscreen Mode">
                         <i class="fas fa-expand"></i>
                     </button>
-                    <button class="btn-icon" id="exportBtn" title="Export Chat">
+                    <button class="btn-icon" id="exportBtn" title="Export Insights">
                         <i class="fas fa-download"></i>
                     </button>
                 </div>
             </div>
         </header>
 
-        <!-- Dashboard Overview -->
+        <!-- Key Performance Metrics -->
         <section class="dashboard-overview">
             <div class="metric-cards">
                 <div class="metric-card">
@@ -37,6 +41,7 @@
                     <div class="metric-info">
                         <h3>Performance Score</h3>
                         <span class="metric-value" id="performanceScore">87%</span>
+                        <span class="metric-trend positive">+5.2% vs last month</span>
                     </div>
                 </div>
                 <div class="metric-card">
@@ -46,6 +51,7 @@
                     <div class="metric-info">
                         <h3>Top Categories</h3>
                         <span class="metric-value" id="topCategories">12</span>
+                        <span class="metric-trend">High performers</span>
                     </div>
                 </div>
                 <div class="metric-card">
@@ -53,8 +59,9 @@
                         <i class="fas fa-lightbulb"></i>
                     </div>
                     <div class="metric-info">
-                        <h3>Active Suggestions</h3>
+                        <h3>Active Insights</h3>
                         <span class="metric-value" id="activeSuggestions">24</span>
+                        <span class="metric-trend">Ready to implement</span>
                     </div>
                 </div>
                 <div class="metric-card">
@@ -64,55 +71,66 @@
                     <div class="metric-info">
                         <h3>Last Analysis</h3>
                         <span class="metric-value" id="lastAnalysis">2m ago</span>
+                        <span class="metric-trend">Real-time data</span>
                     </div>
                 </div>
             </div>
         </section>
 
-        <!-- Main Content -->
+        <!-- Main Content Area -->
         <div class="main-content">
-            <!-- Sidebar -->
+            <!-- Intelligent Sidebar -->
             <aside class="sidebar">
                 <div class="sidebar-section">
-                    <h3>Quick Actions</h3>
+                    <h3>Quick Insights</h3>
                     <button class="quick-action-btn" data-action="top-performers">
                         <i class="fas fa-trophy"></i>
-                        Analyze Top Performers
+                        <span>Top Performers Analysis</span>
                     </button>
                     <button class="quick-action-btn" data-action="optimization">
                         <i class="fas fa-cogs"></i>
-                        Optimization Tips
+                        <span>Optimization Strategies</span>
                     </button>
                     <button class="quick-action-btn" data-action="strategy">
                         <i class="fas fa-chess"></i>
-                        Strategy Suggestions
+                        <span>Strategic Planning</span>
                     </button>
                 </div>
 
                 <div class="sidebar-section">
-                    <h3>Suggestion Templates</h3>
+                    <h3>Analysis Templates</h3>
                     <div class="template-list">
                         <div class="template-item" data-template="performance">
                             <i class="fas fa-chart-bar"></i>
-                            Performance Analysis
+                            <span>Performance Analysis</span>
                         </div>
                         <div class="template-item" data-template="customer">
                             <i class="fas fa-users"></i>
-                            Customer Insights
+                            <span>Customer Insights</span>
                         </div>
                         <div class="template-item" data-template="seasonal">
                             <i class="fas fa-calendar"></i>
-                            Seasonal Planning
+                            <span>Seasonal Planning</span>
+                        </div>
+                        <div class="template-item" data-template="inventory">
+                            <i class="fas fa-boxes"></i>
+                            <span>Inventory Optimization</span>
                         </div>
                     </div>
                 </div>
 
                 <div class="sidebar-section">
-                    <h3>Bookmarked Suggestions</h3>
+                    <h3>Saved Insights</h3>
                     <div class="bookmark-list" id="bookmarkList">
                         <div class="bookmark-item">
-                            <span>Increase dairy section visibility</span>
-                            <button class="bookmark-btn" data-bookmark="dairy-visibility">
+                            <span>Dairy section optimization</span>
+                            <button class="bookmark-btn" data-bookmark="dairy-optimization">
+                                <i class="fas fa-bookmark"></i>
+                            </button>
+                        </div>
+                        <div class="bookmark-item">
+                            <span>Staff scheduling improvements</span>
+                            <button class="bookmark-btn" data-bookmark="staff-scheduling">
                                 <i class="fas fa-bookmark"></i>
                             </button>
                         </div>
@@ -120,16 +138,23 @@
                 </div>
             </aside>
 
-            <!-- Chat Container -->
+            <!-- AI Chat Interface -->
             <main class="chat-container">
                 <div class="chat-header">
                     <div class="ai-status">
                         <div class="status-indicator online"></div>
                         <span>AI Assistant Online</span>
+                        <span class="status-detail">Ready to analyze your data</span>
                     </div>
                     <div class="chat-actions">
-                        <button class="btn-small" id="clearChatBtn">Clear Chat</button>
-                        <button class="btn-small" id="printChatBtn">Print</button>
+                        <button class="btn-small" id="clearChatBtn">
+                            <i class="fas fa-trash"></i>
+                            Clear
+                        </button>
+                        <button class="btn-small" id="printChatBtn">
+                            <i class="fas fa-print"></i>
+                            Print
+                        </button>
                     </div>
                 </div>
 
@@ -140,7 +165,16 @@
                         </div>
                         <div class="message-content">
                             <div class="message-text">
-                                Hello! I'm your GroceryTrack AI Assistant. I'm here to help you analyze your store's performance and provide actionable suggestions to improve your business. What would you like to explore today?
+                                👋 Welcome to GroceryTrack AI! I'm here to help you unlock insights from your store's data and provide actionable recommendations to boost your business performance.
+
+**What would you like to explore today?**
+• Store performance analysis
+• Customer behavior insights  
+• Inventory optimization strategies
+• Revenue growth opportunities
+• Operational efficiency improvements
+
+Simply ask me anything about your business, or use the quick action buttons to get started!
                             </div>
                             <div class="message-time">Just now</div>
                         </div>
@@ -161,7 +195,7 @@
                 <div class="chat-input-container">
                     <div class="auto-suggestions" id="autoSuggestions"></div>
                     <div class="chat-input-wrapper">
-                        <input type="text" id="chatInput" placeholder="Ask me anything about your store's performance..." autocomplete="off">
+                        <input type="text" id="chatInput" placeholder="Ask me about your store's performance, customer insights, or optimization strategies..." autocomplete="off">
                         <button id="sendBtn" class="send-btn">
                             <i class="fas fa-paper-plane"></i>
                         </button>
@@ -170,11 +204,11 @@
             </main>
         </div>
 
-        <!-- Suggestion History Modal -->
+        <!-- Insight History Modal -->
         <div class="modal" id="historyModal">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h3>Suggestion History</h3>
+                    <h3>Insight History</h3>
                     <button class="modal-close" id="closeHistoryModal">
                         <i class="fas fa-times"></i>
                     </button>
@@ -185,11 +219,11 @@
             </div>
         </div>
 
-        <!-- Export Modal -->
+        <!-- Export Options Modal -->
         <div class="modal" id="exportModal">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h3>Export Conversation</h3>
+                    <h3>Export Insights</h3>
                     <button class="modal-close" id="closeExportModal">
                         <i class="fas fa-times"></i>
                     </button>
@@ -198,17 +232,20 @@
                     <div class="export-options">
                         <button class="export-btn" data-format="pdf">
                             <i class="fas fa-file-pdf"></i>
-                            Export as PDF
+                            <span>Export as PDF Report</span>
                         </button>
                         <button class="export-btn" data-format="txt">
                             <i class="fas fa-file-alt"></i>
-                            Export as Text
+                            <span>Export as Text Document</span>
                         </button>
                         <button class="export-btn" data-format="json">
                             <i class="fas fa-file-code"></i>
-                            Export as JSON
+                            <span>Export as JSON Data</span>
                         </button>
-                        <button class="export-btn" data-format="html">Export as HTML</button>
+                        <button class="export-btn" data-format="html">
+                            <i class="fas fa-file-code"></i>
+                            <span>Export as HTML Report</span>
+                        </button>
                     </div>
                 </div>
             </div>
@@ -220,7 +257,8 @@
                 <div class="voice-circle"></div>
                 <div class="voice-ripple"></div>
             </div>
-            <p>Listening...</p>
+            <p>Listening for your question...</p>
+            <p class="voice-hint">Speak clearly and naturally</p>
         </div>
     </div>
 

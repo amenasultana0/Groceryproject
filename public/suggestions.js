@@ -6,18 +6,20 @@ let bookmarkedSuggestions = [];
 let isListening = false;
 let recognition = null;
 
-// Auto-suggestions data
+// Professional auto-suggestions data
 const autoSuggestionsData = [
-    "How can I improve my store's performance?",
-    "Show me optimization strategies",
-    "What are the best selling categories?",
-    "How to increase customer satisfaction?",
-    "Seasonal inventory planning tips",
-    "Cost reduction strategies",
-    "Staff productivity improvements",
-    "Marketing suggestions for groceries",
-    "Layout optimization ideas",
-    "Customer retention strategies"
+    "Analyze my store's performance metrics",
+    "Show me customer behavior insights",
+    "What are my top-performing categories?",
+    "How can I optimize inventory management?",
+    "Provide revenue growth strategies",
+    "Analyze seasonal trends and patterns",
+    "Staff efficiency and scheduling optimization",
+    "Customer retention and loyalty strategies",
+    "Store layout and merchandising improvements",
+    "Cost reduction and profit optimization",
+    "Competitive analysis and market positioning",
+    "Technology integration recommendations"
 ];
 
 async function updateMetricCards() {
@@ -155,35 +157,39 @@ function getToken() {
 
 const botResponses = {
     'top-performers': {
-        title: "Top Performing Categories Analysis",
-        content: "Based on your store's performance data, here are your top performing categories:\n\n🥇 **Fresh Produce** - 23% of total revenue\n• High turnover rate with 95% customer satisfaction\n• Recommendation: Expand organic selection\n\n🥈 **Dairy Products** - 18% of total revenue\n• Consistent daily demand\n• Recommendation: Consider premium brand partnerships\n\n🥉 **Bakery Items** - 15% of total revenue\n• Peak sales during morning hours\n• Recommendation: Introduce fresh evening baking cycles\n\nWould you like detailed strategies for any specific category?"
+        title: "🏆 Top Performing Categories Analysis",
+        content: "Based on your comprehensive performance data, here's your category analysis:\n\n🥇 **Fresh Produce** - 23% of total revenue\n• **Performance**: 95% customer satisfaction, 8.2x turnover rate\n• **Growth**: +12% vs last quarter\n• **Recommendation**: Expand organic selection by 25%\n\n🥈 **Dairy Products** - 18% of total revenue\n• **Performance**: Consistent daily demand, 6.8x turnover\n• **Growth**: +8% vs last quarter\n• **Recommendation**: Introduce premium brand partnerships\n\n🥉 **Bakery Items** - 15% of total revenue\n• **Performance**: Peak sales 6-9 AM, 95% freshness rating\n• **Growth**: +15% vs last quarter\n• **Recommendation**: Add evening baking cycles\n\n📈 **Strategic Insights**\n• Focus on high-margin organic produce expansion\n• Implement dynamic pricing for peak bakery hours\n• Consider dairy subscription services\n\nWould you like detailed implementation strategies for any category?"
     },
     'optimization': {
-        title: "Store Optimization Recommendations",
-        content: "Here are key optimization strategies for your grocery store:\n\n📊 **Layout Optimization**\n• Place high-margin items at eye level\n• Create clear pathways with strategic product placement\n• Use end-cap displays for promotional items\n\n💰 **Cost Management**\n• Implement dynamic pricing for perishables\n• Optimize inventory turnover ratios\n• Negotiate better supplier terms for bulk purchases\n\n👥 **Staff Efficiency**\n• Cross-train employees for flexibility\n• Implement task scheduling systems\n• Regular customer service training\n\nImplementing these strategies could increase profitability by 12-18%."
+        title: "⚡ Store Optimization Strategies",
+        content: "Comprehensive optimization framework for your grocery store:\n\n📊 **Layout & Merchandising**\n• **Eye-level placement**: Increase high-margin items visibility by 40%\n• **Pathway optimization**: Create strategic product flow patterns\n• **End-cap displays**: Rotate promotional items weekly\n• **Expected impact**: +15% impulse purchases\n\n💰 **Cost & Inventory Management**\n• **Dynamic pricing**: Implement for perishables with 3-day shelf life\n• **Turnover optimization**: Target 12x annual inventory turnover\n• **Supplier negotiations**: Bulk purchase discounts of 8-12%\n• **Expected impact**: +18% profit margins\n\n👥 **Staff & Operations**\n• **Cross-training**: Enable 80% staff flexibility across departments\n• **Smart scheduling**: AI-powered peak hour optimization\n• **Performance metrics**: Track productivity with real-time dashboards\n• **Expected impact**: +25% operational efficiency\n\n🎯 **Implementation Timeline**: 6-8 weeks for full rollout"
     },
     'strategy': {
-        title: "Strategic Business Suggestions",
-        content: "Strategic recommendations for long-term growth:\n\n🎯 **Customer Experience**\n• Implement loyalty program with personalized offers\n• Add self-checkout options for convenience\n• Create mobile app for online ordering\n\n📈 **Revenue Growth**\n• Expand private label products (higher margins)\n• Add complementary services (pharmacy, food court)\n• Implement seasonal promotional campaigns\n\n🔍 **Market Analysis**\n• Monitor competitor pricing weekly\n• Track customer demographic shifts\n• Analyze seasonal purchasing patterns\n\nThese strategies can drive 20-25% revenue growth over 12 months."
+        title: "🎯 Strategic Business Growth Plan",
+        content: "Long-term strategic roadmap for sustainable growth:\n\n🎯 **Customer Experience Transformation**\n• **Loyalty Program**: Personalized offers with 85% engagement target\n• **Digital Integration**: Self-checkout + mobile app for 60% of transactions\n• **Omnichannel**: Seamless online-to-store experience\n• **Expected impact**: +30% customer retention\n\n📈 **Revenue Diversification**\n• **Private Labels**: Launch 15 new products with 35% margin\n• **Service Expansion**: Pharmacy, food court, delivery services\n• **Seasonal Campaigns**: Data-driven promotional strategies\n• **Expected impact**: +25% revenue growth\n\n🔍 **Market Intelligence**\n• **Competitive Analysis**: Weekly pricing and promotion monitoring\n• **Demographic Tracking**: Real-time customer behavior insights\n• **Trend Prediction**: AI-powered seasonal pattern analysis\n• **Expected impact**: +20% market share\n\n📊 **Success Metrics**: 20-25% revenue growth over 12 months"
     },
     'performance': {
-        title: "Performance Analysis Template",
-        content: "Complete performance analysis for your grocery store:\n\n📊 **Key Metrics Overview**\n• Sales per square foot: Above industry average\n• Customer retention rate: 78% (Target: 85%)\n• Average transaction value: $42.50\n• Inventory turnover: 12x annually\n\n⚡ **Areas for Improvement**\n• Reduce checkout wait times\n• Improve product availability (reduce stockouts)\n• Enhance cross-selling opportunities\n\n✅ **Quick Wins**\n• Optimize staff scheduling during peak hours\n• Implement dynamic pricing for slow-moving items\n• Create targeted promotional campaigns"
+        title: "📊 Comprehensive Performance Analysis",
+        content: "Detailed performance assessment and improvement roadmap:\n\n📈 **Key Performance Indicators**\n• **Sales per square foot**: $425 (Industry avg: $380) ✅\n• **Customer retention rate**: 78% (Target: 85%) ⚠️\n• **Average transaction value**: $42.50 (Target: $45) ⚠️\n• **Inventory turnover**: 12x annually (Target: 15x) ⚠️\n• **Staff productivity**: 85% efficiency (Target: 90%) ⚠️\n\n⚡ **Critical Improvement Areas**\n• **Checkout optimization**: Reduce wait times by 40%\n• **Stock availability**: Achieve 98% product availability\n• **Cross-selling**: Increase basket size by 15%\n• **Staff training**: Implement performance-based incentives\n\n✅ **Quick Win Opportunities**\n• **Peak hour staffing**: AI-optimized scheduling\n• **Dynamic pricing**: Real-time price adjustments\n• **Targeted promotions**: Customer segment-specific campaigns\n• **Expected timeline**: 4-6 weeks implementation"
     },
     'customer': {
-        title: "Customer Insights Template",
-        content: "Deep dive into customer behavior and preferences:\n\n👥 **Customer Demographics**\n• Primary: Families (35-50 years) - 45%\n• Secondary: Young professionals (25-35) - 30%\n• Seniors (55+) - 25%\n\n🛒 **Shopping Patterns**\n• Peak hours: 6-8 PM weekdays, 10 AM-2 PM weekends\n• Average visit frequency: 2.3 times per week\n• Basket composition: 60% essentials, 40% impulse purchases\n\n💡 **Actionable Insights**\n• Introduce express lanes for quick shopping\n• Develop senior-friendly shopping hours\n• Create family-oriented promotional bundles"
+        title: "👥 Customer Behavior & Insights Analysis",
+        content: "Deep-dive customer intelligence and behavioral patterns:\n\n👥 **Customer Demographics & Segments**\n• **Primary**: Families (35-50 years) - 45% of revenue\n• **Secondary**: Young professionals (25-35) - 30% of revenue\n• **Tertiary**: Seniors (55+) - 25% of revenue\n• **Growth segment**: Millennials showing +18% increase\n\n🛒 **Shopping Behavior Patterns**\n• **Peak hours**: 6-8 PM weekdays, 10 AM-2 PM weekends\n• **Visit frequency**: 2.3 times per week average\n• **Basket composition**: 60% essentials, 40% impulse purchases\n• **Payment preference**: 65% card, 35% cash\n\n💡 **Actionable Customer Insights**\n• **Express lanes**: Implement for 15-minute shopping trips\n• **Senior hours**: Dedicated 8-10 AM shopping times\n• **Family bundles**: Create value-oriented product packages\n• **Digital engagement**: 40% customers prefer mobile offers\n\n📊 **Customer Lifetime Value**: $2,450 average (Target: $3,000)"
     },
     'seasonal': {
-        title: "Seasonal Planning Template",
-        content: "Strategic seasonal planning for optimal inventory management:\n\n🌸 **Spring Planning (Mar-May)**\n• Increase fresh produce variety\n• Easter/holiday promotional items\n• Spring cleaning products surge\n\n☀️ **Summer Strategy (Jun-Aug)**\n• BBQ and outdoor dining supplies\n• Frozen foods and beverages peak\n• Fresh fruit and ice cream focus\n\n🍂 **Fall Preparation (Sep-Nov)**\n• Back-to-school lunch items\n• Halloween seasonal products\n• Comfort food ingredients\n\n❄️ **Winter Focus (Dec-Feb)**\n• Holiday party supplies and ingredients\n• Warm beverages and comfort foods\n• New Year health-focused products"
+        title: "📅 Strategic Seasonal Planning Framework",
+        content: "Comprehensive seasonal strategy for optimal inventory and revenue management:\n\n🌸 **Spring Strategy (March-May)**\n• **Fresh produce**: 40% increase in variety and quantity\n• **Holiday items**: Easter, Mother's Day, graduation supplies\n• **Cleaning products**: 25% inventory boost for spring cleaning\n• **Revenue target**: +18% vs winter quarter\n\n☀️ **Summer Optimization (June-August)**\n• **BBQ & outdoor**: 50% increase in grilling supplies\n• **Frozen foods**: Peak demand for convenience items\n• **Beverages**: 35% increase in cold drinks and ice cream\n• **Revenue target**: +22% vs spring quarter\n\n🍂 **Fall Preparation (September-November)**\n• **Back-to-school**: Lunch supplies and snack items\n• **Halloween**: Seasonal candy and decoration inventory\n• **Comfort foods**: Warm meal ingredients and ready-to-eat\n• **Revenue target**: +15% vs summer quarter\n\n❄️ **Winter Focus (December-February)**\n• **Holiday supplies**: Party ingredients and gift items\n• **Comfort foods**: Hot beverages and warm meal components\n• **Health focus**: New Year resolution products\n• **Revenue target**: +20% vs fall quarter\n\n📊 **Inventory Planning**: AI-powered demand forecasting for each season"
+    },
+    'inventory': {
+        title: "📦 Inventory Optimization & Management",
+        content: "Advanced inventory management strategies for maximum efficiency:\n\n📊 **Current Inventory Analysis**\n• **Turnover rate**: 12x annually (Target: 15x)\n• **Stockout rate**: 8% (Target: <3%)\n• **Carrying costs**: 22% of inventory value (Target: 18%)\n• **Waste percentage**: 5% (Target: <3%)\n\n⚡ **Optimization Strategies**\n• **Just-in-time ordering**: Reduce lead times by 40%\n• **ABC analysis**: Focus on high-value, high-turnover items\n• **Safety stock optimization**: AI-powered demand forecasting\n• **Supplier partnerships**: Negotiate better terms and delivery schedules\n\n🎯 **Technology Integration**\n• **RFID tracking**: Real-time inventory visibility\n• **Predictive analytics**: Forecast demand with 95% accuracy\n• **Automated reordering**: Reduce manual intervention by 70%\n• **Mobile inventory management**: Staff efficiency improvement\n\n📈 **Expected Outcomes**\n• **Reduced waste**: 60% decrease in expired products\n• **Improved availability**: 98% product availability rate\n• **Cost savings**: 15% reduction in carrying costs\n• **Revenue increase**: +12% through better stock management"
     },
     'default': [
-        "I'd be happy to help you analyze that aspect of your business. Could you provide more specific details about what you'd like to explore?",
-        "That's an interesting question! Based on typical grocery store performance patterns, I can suggest several strategies. What's your primary concern?",
-        "Great question! Let me provide some insights that could help improve your store's performance in that area.",
-        "I understand you're looking for suggestions in this area. Here are some proven strategies that work well for grocery stores.",
-        "That's definitely something worth exploring. Based on industry best practices, here are my recommendations."
+        "I'd be happy to provide a comprehensive analysis of that aspect of your business. Could you share more specific details about what you'd like to explore?",
+        "Excellent question! Based on industry best practices and your store's data patterns, I can offer several strategic insights. What's your primary business objective?",
+        "Great inquiry! Let me provide you with data-driven insights that could significantly improve your store's performance in that area.",
+        "I understand you're seeking strategic guidance in this area. Here are some proven methodologies that work exceptionally well for modern grocery operations.",
+        "That's a strategic area worth exploring. Based on current market trends and operational best practices, here are my recommendations."
     ]
 };
 
