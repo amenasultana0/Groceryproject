@@ -200,6 +200,11 @@ document.addEventListener('DOMContentLoaded', () => {
         fetchAndRenderLowStock();
     });
 
+    if (localStorage.getItem('inventoryNeedsRefresh') === 'true') {
+      fetchAndRenderProducts();  // ⬅️ Force refresh inventory
+      localStorage.removeItem('inventoryNeedsRefresh');
+    }
+
     // Search
     const searchInput = document.getElementById('searchInput');
     if (searchInput) {
@@ -511,6 +516,7 @@ async function renderProducts(products) {
         const imageUrl = await fetchImageURL(name);
 
         if (categoryContainer) {
+          console.log(`🔍 Product: "${name}" | Category: "${category}" → ID: "${categoryId}" → Found:`, !!categoryContainer);
             const card = document.createElement('div');
             card.className = 'product-card';
             const progress = Math.min(100, (quantity / 150) * 100);

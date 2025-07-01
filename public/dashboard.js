@@ -343,7 +343,7 @@ async function handleAddItem(e) {
     });
     if (!response.ok) throw new Error('Failed to add item');
     closeModal();
-    loadItems(); // or fetchAndRenderProducts(), depending on your codebase
+    loadItems();
     showNotification('Item added successfully!', 'success');
   } catch (err) {
     showNotification('Error adding item. Please try again.', 'error');

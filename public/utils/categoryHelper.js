@@ -26,7 +26,7 @@ export async function populateCategoryDropdown(selectId) {
   select.appendChild(allOption);
 
   const defaultCategories = [
-    "fruits", "vegetables", "dairy", "meat", "bakery",
+    "fruits", "vegetables", "dairy", "meats", "bakery",
     "beverages", "snacks", "frozen", "grains", "condiments"
   ];
 
