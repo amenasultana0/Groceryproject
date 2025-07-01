@@ -568,7 +568,10 @@ async function renderProducts(products) {
 
     document.addEventListener('click', async (e) => {
     if (e.target.classList.contains('delete-btn')) {
-        const id = e.target.dataset.id;
+        const button = e.target.closest('.delete-btn');
+        const id = button?.dataset.id;
+        if (!id) return alert("Product ID missing");
+
         const confirmDelete = confirm('Are you sure you want to delete this product?');
         if (!confirmDelete) return;
 
